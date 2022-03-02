@@ -1,2 +1,4 @@
 # O7
-A functional-imperative Lisp-like static language on the Dotnet platform
+(WORK IN PROGRESS!)
+
+A functional-imperative Lisp-like static language compiling to Dart
