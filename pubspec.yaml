@@ -8,7 +8,8 @@ environment:
 
 
 dependencies:
-    either_dart: ^0.1.14
+    either_dart: ^0.1.4
+    tuple: ^2.0.0
 #   path: ^1.8.0
 
 dev_dependencies:
