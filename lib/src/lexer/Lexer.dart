@@ -48,9 +48,10 @@ class Lexer {
         if (currByte != ASCII.MINUS.index && (currByte < ASCII.DIGIT_0.index || currByte > ASCII.DIGIT_9.index)) {
             return Left(IntError("Int lexical error: expected the first symbol to be a digit or '-'"));
         }
-        ++ind;
         bool isNegative = currByte == ASCII.MINUS.index;
-        while (ind < walkLen &&
+        ++ind;
+        if (ind <= walkLen) currByte = inp[ind];
+        while (ind <= walkLen &&
             ((currByte >= ASCII.DIGIT_0.index && currByte <= ASCII.DIGIT_9.index)
             || currByte == ASCII.UNDERSCORE.index)) {
             currByte = inp[ind];
@@ -58,15 +59,17 @@ class Lexer {
         }
 
         // Check if we're near the end of the input
-        if (ind == walkLen ) {
-            currByte = inp[ind + 1];
+        if (ind == (walkLen + 1)) {
+            currByte = inp[ind];
             if (currByte >= ASCII.DIGIT_0.index && currByte <= ASCII.DIGIT_9.index) {
                 ++ind;
             }
         }
+
         var digitList = Uint8List.fromList(inp.sublist(isNegative ? start + 1 : start, ind)
                            .where((x) => x != ASCII.UNDERSCORE.index)
                            .toList());
+
         if (checkIntRange(digitList, isNegative)) {
             var actualInt = intOfDigits(digitList);
             return Right(Tuple2(IntToken(isNegative ? (-1)*actualInt : actualInt), ind));
@@ -83,9 +86,9 @@ class Lexer {
 
     static int intOfDigits(Uint8List digits) {
         int result = 0;
-        int ind = digits.length - 1;
+
         int powerOfTen = 1;
-        while (ind > -1) {
+        for (int ind = digits.length - 1; ind > -1; --ind) {
             int digitValue = (digits[ind] - ASCII.DIGIT_0.index)*powerOfTen;
             result += digitValue;
             powerOfTen *= 10;
