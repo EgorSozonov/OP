@@ -8,7 +8,7 @@ import 'package:o7/src/lexer/Lexer.dart';
 void main() {
 
     test("lex boolean 1", () {
-        var inp = Uint8List.fromList([ASCII.F_LOWER.index, ASCII.A_LOWER.index, ASCII.L_LOWER.index, ASCII.S_LOWER.index, ASCII.E_LOWER.index]);
+        var inp = Uint8List.fromList("false".codeUnits);
         var res = Lexer.lexBool(inp, 0, 3);
         expect(res.isRight, true);
         var r = res.right;

@@ -15,26 +15,34 @@ void main(List<String> arguments) async {
     //var inp = Uint8List.fromList([ASCII.T_LOWER.index, ASCII.R_LOWER.index, ASCII.U_LOWER.index, ASCII.E_LOWER.index]);
     // var inp = Uint8List.fromList([ASCII.DIGIT_1.index, ASCII.DIGIT_2.index, ASCII.DIGIT_3.index, ASCII.DIGIT_4.index]);
     // var res = Lexer.lexInt(inp, 0, 2);
-    print("lexed");
-    var inp = Uint8List.fromList([ASCII.MINUS.index, ASCII.DIGIT_1.index, ASCII.DIGIT_2.index, ASCII.DIGIT_3.index, ASCII.DIGIT_4.index, ASCII.SPACE.index, ASCII.DIGIT_2.index]);
-    var res = Lexer.lexInt(inp, 0, 3);
-    if (res.isRight) {
-        print("Found a token");
-        var token = res.right.item1;
-        if (token is BoolToken) {
-            print(token.val);
-        } else if (token is IntToken) {
-            print(token.val);
-        }
-    } else if (res.isLeft) {
-        print("Some kind of error");
-        var err = res.left;
-        if (err is IntError) {
-            print(err.val);
-        } else if (err is BoolError) {
-            print(err.val);
-        } else if (err is EndOfInputError) {
-            print("End of input error");
-        }
+    var inp = Uint8List.fromList("true 1 2 false true 3 ".codeUnits);
+    var res = Lexer.lexicallyAnalyze(inp);
+    if (res.item2 != null) {
+        print("Lexer error");
+
+        print(res.item2.toString());
+        print(res.item1);
+    } else {
+        print("Lexer successful");
+        print(res.item1);
     }
+    // if (res.isRight) {
+    //     print("Found a token");
+    //     var token = res.right.item1;
+    //     if (token is BoolToken) {
+    //         print(token.val);
+    //     } else if (token is IntToken) {
+    //         print(token.val);
+    //     }
+    // } else if (res.isLeft) {
+    //     print("Some kind of error");
+    //     var err = res.left;
+    //     if (err is IntError) {
+    //         print(err.val);
+    //     } else if (err is BoolError) {
+    //         print(err.val);
+    //     } else if (err is EndOfInputError) {
+    //         print("End of input error");
+    //     }
+    // }
 }

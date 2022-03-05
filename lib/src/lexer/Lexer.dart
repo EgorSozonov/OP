@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import "dart:typed_data";
 import "package:either_dart/either.dart";
 import 'package:o7/src/types/ASCII.dart';
@@ -8,16 +9,38 @@ import 'package:tuple/tuple.dart';
 import "../types/Token.dart";
 
 class Lexer {
-    static List<Token> lexicallyAnalyze(Uint8List inp) {
-        if (inp.length < 2) return [];
+    static Tuple2<List<Token>, LexError?> lexicallyAnalyze(Uint8List inp) {
+        LexError? err;
+        if (inp.length < 2) return Tuple2([], err);
 
         int i = 0;
         List<Token> result = [];
         final walkLen = inp.length - 2;
-        for (var j = 0; j < walkLen; ++j) {
+        while (i <= walkLen) {
 
+            int cChar = inp[i];
+            if (cChar > 127) return Tuple2(result, NonAsciiError());
+            Either<LexError, Tuple2<Token, int>> mbToken;
+
+            if (cChar == ASCII.SPACE.index) {
+                ++i;
+            } else {
+                if (cChar == ASCII.MINUS.index || (cChar >= ASCII.DIGIT_0.index && cChar <= ASCII.DIGIT_9.index)) {
+                    mbToken = lexInt(inp, i, walkLen);
+                } else if (cChar >= ASCII.A_LOWER.index && cChar <= ASCII.Z_LOWER.index) {
+                    mbToken = lexBool(inp, i, walkLen);
+                } else {
+                    mbToken = Left(UnexpectedSymbolError(String.fromCharCode(inp[i])));
+                }
+                if (mbToken.isRight) {
+                    result.add(mbToken.right.item1);
+                    i = mbToken.right.item2;
+                } else {
+                    return Tuple2(result, mbToken.left);
+                }
+            }
         }
-        return result;
+        return Tuple2(result, err);
     }
     // "int" range from -9,223,372,036,854,775,808
     // to 9,223,372,036,854,775,807
@@ -41,7 +64,7 @@ class Lexer {
         ]);
 
     static Either<LexError, Tuple2<Token, int>> lexInt(Uint8List inp, int start, int walkLen) {
-        if (start >= walkLen) return Left(EndOfInputError());
+        if (start > walkLen) return Left(EndOfInputError());
 
         var ind = start;
         var currByte = inp[start];
@@ -104,7 +127,7 @@ class Lexer {
                            .toList());
             if (charList[0] == ASCII.A_LOWER.index && charList[1] == ASCII.L_LOWER.index
                && charList[2] == ASCII.S_LOWER.index && charList[3] == ASCII.E_LOWER.index) {
-                return Right(Tuple2(BoolToken(false), start + 4));
+                return Right(Tuple2(BoolToken(false), start + 5));
             } else {
                 return err;
             }

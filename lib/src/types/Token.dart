@@ -21,6 +21,11 @@ class IntToken extends Token {
 
     @override
     int get hashCode => val.hashCode;
+
+    @override
+    String toString() {
+        return "Int $val";
+    }
 }
 
 class BoolToken extends Token {
@@ -32,4 +37,9 @@ class BoolToken extends Token {
 
     @override
     int get hashCode => val.hashCode;
+
+    @override
+    String toString() {
+        return "Bool $val";
+    }
 }
