@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:o7/src/types/ASCII.dart';
+import 'package:o7/src/utils/ASCII.dart';
 import 'package:o7/src/types/Token.dart';
 import "package:test/test.dart";
 import 'package:o7/src/lexer/Lexer.dart';

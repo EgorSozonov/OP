@@ -1,28 +1,59 @@
 import 'dart:ffi';
+import 'dart:mirrors';
 import "dart:typed_data";
 import "package:either_dart/either.dart";
-import 'package:o7/src/types/ASCII.dart';
+import 'package:o7/src/utils/ASCII.dart';
 
 import "package:o7/src/types/LexError.dart";
 import 'package:tuple/tuple.dart';
 
 import "../types/Token.dart";
+import '../utils/Stack.dart';
 
 class Lexer {
-    static Tuple2<List<Token>, LexError?> lexicallyAnalyze(Uint8List inp) {
+    static Tuple2<List<Expr>, LexError?> lexicallyAnalyze(Uint8List inp) {
         LexError? err;
         if (inp.length < 2) return Tuple2([], err);
 
         int i = 0;
-        List<Token> result = [];
-        final walkLen = inp.length - 2;
+        var curr = ListExpr([]);
+        var result = [curr];
+        Stack<ListExpr> backtrack = Stack();
+
+        final walkLen = inp.length - 1;
         while (i <= walkLen) {
 
             int cChar = inp[i];
             if (cChar > 127) return Tuple2(result, NonAsciiError());
-            Either<LexError, Tuple2<Token, int>> mbToken;
+            Either<LexError, Tuple2<Expr, int>> mbToken;
 
             if (cChar == ASCII.SPACE.index) {
+                ++i;
+            } else if (cChar == ASCII.COLON_SEMI.index) {
+                var prevList = backtrack.peek();
+
+                if (prevList != null) {
+                    prevList = backtrack.pop();
+                    curr = ListExpr([]);
+                    prevList.val.add(curr);
+                } else {
+                    var newList = ListExpr([]);
+                    curr.val.add(newList);
+                }
+                ++i;
+            } else if (cChar == ASCII.CURLY_OPEN.index) {
+                backtrack.push(curr);
+                var newList = ListExpr([]);
+                curr.val.add(newList);
+                curr = newList;
+                ++i;
+            } else if (cChar == ASCII.CURLY_CLOSE.index) {
+                if (backtrack.peek() == null) {
+                    return Tuple2(result, ExtraClosingCurlyBraceError());
+                }
+                var back = backtrack.pop();
+                curr = ListExpr([]);
+                back.val.add(curr);
                 ++i;
             } else {
                 if (cChar == ASCII.MINUS.index || (cChar >= ASCII.DIGIT_0.index && cChar <= ASCII.DIGIT_9.index)) {
@@ -33,7 +64,7 @@ class Lexer {
                     mbToken = Left(UnexpectedSymbolError(String.fromCharCode(inp[i])));
                 }
                 if (mbToken.isRight) {
-                    result.add(mbToken.right.item1);
+                    curr.val.add(mbToken.right.item1);
                     i = mbToken.right.item2;
                 } else {
                     return Tuple2(result, mbToken.left);
@@ -63,7 +94,7 @@ class Lexer {
             56, 48, 55
         ]);
 
-    static Either<LexError, Tuple2<Token, int>> lexInt(Uint8List inp, int start, int walkLen) {
+    static Either<LexError, Tuple2<Expr, int>> lexInt(Uint8List inp, int start, int walkLen) {
         if (start > walkLen) return Left(EndOfInputError());
 
         var ind = start;
@@ -79,14 +110,6 @@ class Lexer {
             || currByte == ASCII.UNDERSCORE.index)) {
             currByte = inp[ind];
             ++ind;
-        }
-
-        // Check if we're near the end of the input
-        if (ind == (walkLen + 1)) {
-            currByte = inp[ind];
-            if (currByte >= ASCII.DIGIT_0.index && currByte <= ASCII.DIGIT_9.index) {
-                ++ind;
-            }
         }
 
         var digitList = Uint8List.fromList(inp.sublist(isNegative ? start + 1 : start, ind)
@@ -119,9 +142,9 @@ class Lexer {
         return result;
     }
 
-    static Either<LexError, Tuple2<Token, int>> lexBool(Uint8List inp, int start, int walkLen) {
-        int remainingLength = walkLen + 2 - start;
-        final Either<LexError, Tuple2<Token, int>> err = Left(BoolError("Boolean lexical error: expected either 'true' or 'false'"));
+    static Either<LexError, Tuple2<Expr, int>> lexBool(Uint8List inp, int start, int walkLen) {
+        int remainingLength = walkLen + 1 - start;
+        final Either<LexError, Tuple2<Expr, int>> err = Left(BoolError("Boolean lexical error: expected either 'true' or 'false'"));
         if (remainingLength >= 5 && inp[start] == ASCII.F_LOWER.index) {
             var charList = Uint8List.fromList(inp.sublist(start + 1, start + 5)
                            .toList());

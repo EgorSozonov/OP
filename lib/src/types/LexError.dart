@@ -3,6 +3,9 @@ class LexError {}
 class EndOfInputError extends LexError {
 }
 
+class ExtraClosingCurlyBraceError extends LexError {
+}
+
 class NonAsciiError extends LexError {
 }
 
