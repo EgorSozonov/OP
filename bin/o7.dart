@@ -11,15 +11,18 @@ void main(List<String> arguments) async {
     // var file = File.fromUri(Uri.parse("~/Toys/tmp.txt"));
     // var bytes = await file.readAsBytes();
     // var resLex = Lexer.lexicallyAnalyze(bytes);
-    //var inp = Uint8List.fromList([ASCII.F_LOWER.index, ASCII.A_LOWER.index, ASCII.L_LOWER.index, ASCII.S_LOWER.index, ASCII.E_LOWER.index]);
-    //var inp = Uint8List.fromList([ASCII.T_LOWER.index, ASCII.R_LOWER.index, ASCII.U_LOWER.index, ASCII.E_LOWER.index]);
-    // var inp = Uint8List.fromList([ASCII.DIGIT_1.index, ASCII.DIGIT_2.index, ASCII.DIGIT_3.index, ASCII.DIGIT_4.index]);
-    // var res = Lexer.lexInt(inp, 0, 2);
+
+
+
+
+    //var inp = Uint8List.fromList("1  1 2 3 { true -10 false } { true -10 false } 1 2 3 ".codeUnits);
     var inp = Uint8List.fromList("true { 1 2 { false } { true -1 false } } false true 3".codeUnits);
+
     var expected = ListExpr([BoolToken(true), ListExpr([IntToken(1), IntToken(2),
     ListExpr([BoolToken(false)]), ListExpr([BoolToken(true), IntToken(-1), BoolToken(false)])]),
             BoolToken(false), BoolToken(true), IntToken(3)]);
     var res = Lexer.lexicallyAnalyze(inp);
+
     if (res.item2 != null) {
         print("Lexer error");
         print(res.item2.toString());
@@ -27,13 +30,15 @@ void main(List<String> arguments) async {
     } else {
         print("Lexer successful with ${res.item1.length} expressions");
         print(res.item1);
-        print("Expected:");
-        print(expected);
-
+        // print("Expected:");
+        // print(expected);
     }
 
+    // var inp = Uint8List.fromList([ASCII.F_LOWER.index, ASCII.A_LOWER.index, ASCII.L_LOWER.index, ASCII.S_LOWER.index, ASCII.E_LOWER.index]);
+    // var inp = Uint8List.fromList([ASCII.T_LOWER.index, ASCII.R_LOWER.index, ASCII.U_LOWER.index, ASCII.E_LOWER.index]);
+    // var inp = Uint8List.fromList(Uint8List.fromList("-1234".codeUnits));
+    // var res = Lexer.lexInt(inp, 0, 4);
 
-    //
     // if (res.isRight) {
     //     print("Found a token");
     //     var token = res.right.item1;

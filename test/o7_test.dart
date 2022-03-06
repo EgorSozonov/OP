@@ -36,11 +36,11 @@ void main() {
 
 
     test("lex int 2", () {
-        var inp = Uint8List.fromList([ASCII.MINUS.index, ASCII.DIGIT_1.index, ASCII.DIGIT_2.index, ASCII.DIGIT_3.index, ASCII.DIGIT_4.index]);
+        var inp = Uint8List.fromList([ASCII.MINUS.index, ASCII.DIGIT_1.index]);
         var res = Lexer.lexInt(inp, 0, 3);
         expect(res.isRight, true);
         var r = res.right;
         expect(r.item1 is IntToken, true);
-        expect((r.item1 as IntToken).val, -1234);
+        expect((r.item1 as IntToken).val, -1);
     });
 }

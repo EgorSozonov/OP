@@ -3,12 +3,11 @@ import 'dart:mirrors';
 import "dart:typed_data";
 import "package:either_dart/either.dart";
 import 'package:o7/src/utils/ASCII.dart';
-
 import "package:o7/src/types/LexError.dart";
 import 'package:tuple/tuple.dart';
-
 import "../types/Token.dart";
 import '../utils/Stack.dart';
+
 
 class Lexer {
     static Tuple2<List<Expr>, LexError?> lexicallyAnalyze(Uint8List inp) {
@@ -22,7 +21,6 @@ class Lexer {
 
         final walkLen = inp.length - 1;
         while (i <= walkLen) {
-
             int cChar = inp[i];
             if (cChar > 127) return Tuple2(result, NonAsciiError());
             Either<LexError, Tuple2<Expr, int>> mbToken;
@@ -42,9 +40,10 @@ class Lexer {
                 }
                 ++i;
             } else if (cChar == ASCII.CURLY_OPEN.index) {
-                backtrack.push(curr);
+                print("'{' at index $i");
                 var newList = ListExpr([]);
                 curr.val.add(newList);
+                backtrack.push(curr);
                 curr = newList;
                 ++i;
             } else if (cChar == ASCII.CURLY_CLOSE.index) {
@@ -52,8 +51,8 @@ class Lexer {
                     return Tuple2(result, ExtraClosingCurlyBraceError());
                 }
                 var back = backtrack.pop();
-                curr = ListExpr([]);
-                back.val.add(curr);
+                curr = back;
+
                 ++i;
             } else {
                 if (cChar == ASCII.MINUS.index || (cChar >= ASCII.DIGIT_0.index && cChar <= ASCII.DIGIT_9.index)) {
@@ -103,15 +102,19 @@ class Lexer {
             return Left(IntError("Int lexical error: expected the first symbol to be a digit or '-'"));
         }
         bool isNegative = currByte == ASCII.MINUS.index;
-        ++ind;
-        if (ind <= walkLen) currByte = inp[ind];
+        if (isNegative) {
+            ++ind;
+            if (ind <= walkLen) currByte = inp[ind];
+        }
+
         while (ind <= walkLen &&
             ((currByte >= ASCII.DIGIT_0.index && currByte <= ASCII.DIGIT_9.index)
             || currByte == ASCII.UNDERSCORE.index)) {
-            currByte = inp[ind];
             ++ind;
-        }
+            if (ind <= walkLen) currByte = inp[ind];
 
+        }
+        print("start = $start, ind = $ind");
         var digitList = Uint8List.fromList(inp.sublist(isNegative ? start + 1 : start, ind)
                            .where((x) => x != ASCII.UNDERSCORE.index)
                            .toList());
@@ -132,7 +135,7 @@ class Lexer {
 
     static int intOfDigits(Uint8List digits) {
         int result = 0;
-
+        print("intof digits ${digits}");
         int powerOfTen = 1;
         for (int ind = digits.length - 1; ind > -1; --ind) {
             int digitValue = (digits[ind] - ASCII.DIGIT_0.index)*powerOfTen;
