@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import "package:o7/o7.dart" as o7;
 import "dart:io";
 import 'package:o7/src/lexer/Lexer.dart';
+import 'package:o7/src/types/ParenType.dart';
 import 'package:o7/src/utils/ASCII.dart';
 import 'package:o7/src/types/LexError.dart';
 import 'package:o7/src/types/Token.dart';
@@ -15,12 +16,12 @@ void main(List<String> arguments) async {
 
 
 
-    //var inp = Uint8List.fromList("1  1 2 3 { true -10 false } { true -10 false } 1 2 3 ".codeUnits);
-    var inp = Uint8List.fromList("true { 1 2 { false } { true -1 false } } false true 3".codeUnits);
+    var inp = Uint8List.fromList("1 2 3; 4 [ 5 ] 6; true (false [true]); ".codeUnits);
+    //var inp = Uint8List.fromList("true { 1 2 [ false ] { true -1 false } } false true 3".codeUnits);
 
     var expected = ListExpr([BoolToken(true), ListExpr([IntToken(1), IntToken(2),
-    ListExpr([BoolToken(false)]), ListExpr([BoolToken(true), IntToken(-1), BoolToken(false)])]),
-            BoolToken(false), BoolToken(true), IntToken(3)]);
+            ListExpr([BoolToken(false)], ExprLexicalType.DataInitializer), ListExpr([BoolToken(true), IntToken(-1), BoolToken(true)], ExprLexicalType.CurlyBraces)], ExprLexicalType.CurlyBraces),
+            BoolToken(false), BoolToken(true), IntToken(3)], ExprLexicalType.CurlyBraces);
     var res = Lexer.lexicallyAnalyze(inp);
 
     if (res.item2 != null) {
@@ -30,8 +31,8 @@ void main(List<String> arguments) async {
     } else {
         print("Lexer successful with ${res.item1.length} expressions");
         print(res.item1);
-        // print("Expected:");
-        // print(expected);
+        print("Expected:");
+        print(expected);
     }
 
     // var inp = Uint8List.fromList([ASCII.F_LOWER.index, ASCII.A_LOWER.index, ASCII.L_LOWER.index, ASCII.S_LOWER.index, ASCII.E_LOWER.index]);

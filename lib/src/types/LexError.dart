@@ -6,7 +6,16 @@ class EndOfInputError extends LexError {
 class ExtraClosingCurlyBraceError extends LexError {
 }
 
+class ExtraClosingParenError extends LexError {
+}
+
+class ExtraClosingBracketError extends LexError {
+}
+
 class NonAsciiError extends LexError {
+}
+
+class EmptyStackError extends LexError {
 }
 
 class UnexpectedSymbolError extends LexError {

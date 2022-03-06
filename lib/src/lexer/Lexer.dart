@@ -2,6 +2,7 @@ import 'dart:ffi';
 import 'dart:mirrors';
 import "dart:typed_data";
 import "package:either_dart/either.dart";
+import 'package:o7/src/types/ParenType.dart';
 import 'package:o7/src/utils/ASCII.dart';
 import "package:o7/src/types/LexError.dart";
 import 'package:tuple/tuple.dart';
@@ -15,9 +16,13 @@ class Lexer {
         if (inp.length < 2) return Tuple2([], err);
 
         int i = 0;
-        var curr = ListExpr([]);
+        var curr = ListExpr([], ExprLexicalType.CurlyBraces);
         var result = [curr];
         Stack<ListExpr> backtrack = Stack();
+        backtrack.push(curr);
+        var firstList = ListExpr([], ExprLexicalType.Statement);
+        curr.val.add(firstList);
+        curr = firstList;
 
         final walkLen = inp.length - 1;
         while (i <= walkLen) {
@@ -31,28 +36,53 @@ class Lexer {
                 var prevList = backtrack.peek();
 
                 if (prevList != null) {
-                    prevList = backtrack.pop();
-                    curr = ListExpr([]);
+                    curr = ListExpr([], ExprLexicalType.Statement);
                     prevList.val.add(curr);
                 } else {
-                    var newList = ListExpr([]);
-                    curr.val.add(newList);
+                    return Tuple2(result, EmptyStackError());
                 }
+
                 ++i;
             } else if (cChar == ASCII.CURLY_OPEN.index) {
-                print("'{' at index $i");
-                var newList = ListExpr([]);
+
+                var newList = ListExpr([], ExprLexicalType.CurlyBraces);
                 curr.val.add(newList);
                 backtrack.push(curr);
                 curr = newList;
                 ++i;
             } else if (cChar == ASCII.CURLY_CLOSE.index) {
-                if (backtrack.peek() == null) {
+                if (backtrack.peek() == null || curr.pType != ExprLexicalType.CurlyBraces) {
                     return Tuple2(result, ExtraClosingCurlyBraceError());
                 }
                 var back = backtrack.pop();
                 curr = back;
 
+                ++i;
+            } else if (cChar == ASCII.PARENTHESES_OPEN.index) {
+                var newList = ListExpr([], ExprLexicalType.Statement);
+                curr.val.add(newList);
+                backtrack.push(curr);
+                curr = newList;
+                ++i;
+            } else if (cChar == ASCII.PARENTHESES_CLOSE.index) {
+                if (backtrack.peek() == null || curr.pType != ExprLexicalType.Statement) {
+                    return Tuple2(result, ExtraClosingParenError());
+                }
+                var back = backtrack.pop();
+                curr = back;
+                ++i;
+            }  else if (cChar == ASCII.BRACKET_OPEN.index) {
+                var newList = ListExpr([], ExprLexicalType.DataInitializer);
+                curr.val.add(newList);
+                backtrack.push(curr);
+                curr = newList;
+                ++i;
+            } else if (cChar == ASCII.BRACKET_CLOSE.index) {
+                if (backtrack.peek() == null || curr.pType != ExprLexicalType.DataInitializer) {
+                    return Tuple2(result, ExtraClosingBracketError());
+                }
+                var back = backtrack.pop();
+                curr = back;
                 ++i;
             } else {
                 if (cChar == ASCII.MINUS.index || (cChar >= ASCII.DIGIT_0.index && cChar <= ASCII.DIGIT_9.index)) {
@@ -114,7 +144,7 @@ class Lexer {
             if (ind <= walkLen) currByte = inp[ind];
 
         }
-        print("start = $start, ind = $ind");
+
         var digitList = Uint8List.fromList(inp.sublist(isNegative ? start + 1 : start, ind)
                            .where((x) => x != ASCII.UNDERSCORE.index)
                            .toList());
@@ -135,7 +165,6 @@ class Lexer {
 
     static int intOfDigits(Uint8List digits) {
         int result = 0;
-        print("intof digits ${digits}");
         int powerOfTen = 1;
         for (int ind = digits.length - 1; ind > -1; --ind) {
             int digitValue = (digits[ind] - ASCII.DIGIT_0.index)*powerOfTen;
