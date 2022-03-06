@@ -16,7 +16,7 @@ void main(List<String> arguments) async {
 
 
 
-    var inp = Uint8List.fromList("1 2 3; x [ y _yz ] helmet + !!; true (false [true]); ".codeUnits);
+    var inp = Uint8List.fromList("1 2 3; x [ y _yz ] 12_345 + !!; true (false [true]); ".codeUnits);
     //var inp = Uint8List.fromList("true { 1 2 [ false ] { true -1 false } } false true 3".codeUnits);
 
     var expected = ListExpr([BoolToken(true), ListExpr([IntToken(1), IntToken(2),
@@ -31,8 +31,8 @@ void main(List<String> arguments) async {
     } else {
         print("Lexer successful with ${res.item1.length} expressions");
         print(res.item1);
-        print("Expected:");
-        print(expected);
+        // print("Expected:");
+        // print(expected);
     }
 
     // var inp = Uint8List.fromList([ASCII.F_LOWER.index, ASCII.A_LOWER.index, ASCII.L_LOWER.index, ASCII.S_LOWER.index, ASCII.E_LOWER.index]);

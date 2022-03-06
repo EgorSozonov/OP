@@ -86,7 +86,9 @@ class Lexer {
                 curr = back;
                 ++i;
             } else {
-                if (cChar == ASCII.MINUS.index || (cChar >= ASCII.DIGIT_0.index && cChar <= ASCII.DIGIT_9.index)) {
+                if ((cChar >= ASCII.DIGIT_0.index && cChar <= ASCII.DIGIT_9.index)
+                    || (i < walkLen && cChar == ASCII.UNDERSCORE.index
+                        && inp[i + 1] >= ASCII.DIGIT_0.index && inp[i + 1] <= ASCII.DIGIT_9.index)) {
                     mbToken = lexInt(inp, i, walkLen);
                 } else if ((cChar >= ASCII.A_LOWER.index && cChar <= ASCII.Z_LOWER.index)
                         || (cChar >= ASCII.A_UPPER.index && cChar <= ASCII.Z_UPPER.index)
@@ -134,12 +136,8 @@ class Lexer {
 
         var ind = start;
         var currByte = inp[start];
-        if (currByte != ASCII.MINUS.index && (currByte < ASCII.DIGIT_0.index || currByte > ASCII.DIGIT_9.index)) {
-            return Left(IntError("Int lexical error: expected the first symbol to be a digit or '-'"));
-        }
 
-        // TODO change to underscore, add lookahead
-        bool isNegative = currByte == ASCII.MINUS.index;
+        bool isNegative = currByte == ASCII.UNDERSCORE.index;
         if (isNegative) {
             ++ind;
             if (ind <= walkLen) currByte = inp[ind];
@@ -167,11 +165,18 @@ class Lexer {
 
 
     static bool checkIntRange(Uint8List digits, bool isNegative) {
-        // TODO actually check range
         if (digits.length < 19) return true;
-        return false;
+        if (digits.length > 19) return false;
+        return isNegative ? _isLexicographicallyLE(digits, minInt) : _isLexicographicallyLE(digits, maxInt);
     }
 
+    static bool _isLexicographicallyLE(Uint8List a, Uint8List b) {
+        for (int i = 0; i < a.length; ++i) {
+            if (a[i] < b[i]) return true;
+            if (a[i] > b[i]) return false;
+        }
+        return true;
+    }
 
     static int intOfDigits(Uint8List digits) {
         int result = 0;
