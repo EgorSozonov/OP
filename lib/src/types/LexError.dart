@@ -26,6 +26,31 @@ class UnexpectedSymbolError extends LexError {
 class IntError extends LexError {
     String val = "";
     IntError(this.val);
+
+    @override
+    String toString() {
+        return "IntError: $val";
+    }
+}
+
+class WordError extends LexError {
+    String val = "";
+    WordError(this.val);
+
+    @override
+    String toString() {
+        return "WordError: $val";
+    }
+}
+
+class OperatorError extends LexError {
+    String val = "";
+    OperatorError(this.val);
+
+    @override
+    String toString() {
+        return "OperatorError: $val";
+    }
 }
 
 class BoolError extends LexError {

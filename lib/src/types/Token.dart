@@ -1,11 +1,16 @@
-import 'package:o7/src/types/ParenType.dart';
-import 'package:tuple/tuple.dart';
+import 'dart:typed_data';
 
-import '../utils/Stack.dart';
+import 'package:o7/src/types/OperatorSymb.dart';
+import "package:o7/src/types/ParenType.dart";
+import "package:tuple/tuple.dart";
+
+import "../utils/Stack.dart";
 
 class Expr {}
 
 
+/// A list of tokens, which can be a statement, a list of statements,
+/// or a data initializer
 class ListExpr extends Expr {
     List<Expr> val = [];
     ExprLexicalType pType;
@@ -69,6 +74,7 @@ class ListExpr extends Expr {
     }
 }
 
+/// A valid int64 token
 class IntToken extends Expr {
     int val = 0;
     IntToken(this.val);
@@ -85,6 +91,18 @@ class IntToken extends Expr {
     }
 }
 
+/// Identifier or reserved word
+class WordToken extends Expr {
+    Uint8List val;
+    WordToken(this.val);
+
+    @override
+    String toString() {
+        return "Word ${String.fromCharCodes(this.val)}";
+    }
+}
+
+
 class BoolToken extends Expr {
     bool val = false;
     BoolToken(this.val);
@@ -98,5 +116,16 @@ class BoolToken extends Expr {
     @override
     String toString() {
         return "Bool $val";
+    }
+}
+
+
+class OperatorToken extends Expr {
+    List<OperatorSymb> val;
+    OperatorToken(this.val);
+
+    @override
+    String toString() {
+        return "Operator $val";
     }
 }

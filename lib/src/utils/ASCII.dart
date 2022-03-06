@@ -35,10 +35,10 @@ enum ASCII {
     //misc characters
 
     SPACE,                                           // space
-    EXCLAMAION_MARK,                                 // !
+    EXCLAMATION_MARK,                                 // !
     QUOTATION_MARK_DOUBLE,                           // "
     HASHTAG,                                         // #
-    SING_DOLLAR,                                     // $
+    DOLLAR,                                     // $
     PERCENT,                                         // %
     AMPERSAND,                                       // &
     QUOTATION_MARK_SINGLE,                           // '
@@ -49,7 +49,7 @@ enum ASCII {
     COMMA,                                           // ,
     MINUS,                                           // -
     DOT,                                             // .
-    SLASH_FOWARD,                                    // /
+    SLASH_FORWARD,                                    // /
     DIGIT_0,                                         // 0
     DIGIT_1,                                         // 1
     DIGIT_2,                                         // 2

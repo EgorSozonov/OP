@@ -1,11 +1,11 @@
-import 'dart:typed_data';
+import "dart:typed_data";
 import "package:o7/o7.dart" as o7;
 import "dart:io";
-import 'package:o7/src/lexer/Lexer.dart';
-import 'package:o7/src/types/ParenType.dart';
-import 'package:o7/src/utils/ASCII.dart';
-import 'package:o7/src/types/LexError.dart';
-import 'package:o7/src/types/Token.dart';
+import "package:o7/src/lexer/Lexer.dart";
+import "package:o7/src/types/ParenType.dart";
+import "package:o7/src/utils/ASCII.dart";
+import "package:o7/src/types/LexError.dart";
+import "package:o7/src/types/Token.dart";
 
 void main(List<String> arguments) async {
     // print("Hello world: ${o7.calculate()}!");
@@ -16,7 +16,7 @@ void main(List<String> arguments) async {
 
 
 
-    var inp = Uint8List.fromList("1 2 3; 4 [ 5 ] 6; true (false [true]); ".codeUnits);
+    var inp = Uint8List.fromList("1 2 3; x [ y _yz ] helmet + !!; true (false [true]); ".codeUnits);
     //var inp = Uint8List.fromList("true { 1 2 [ false ] { true -1 false } } false true 3".codeUnits);
 
     var expected = ListExpr([BoolToken(true), ListExpr([IntToken(1), IntToken(2),
