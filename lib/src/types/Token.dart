@@ -91,6 +91,19 @@ class IntToken extends Expr {
     }
 }
 
+
+/// A floating-point number token
+class FloatToken extends Expr {
+    double val = 0;
+    FloatToken(this.val);
+
+    @override
+    String toString() {
+        return "Float $val";
+    }
+}
+
+
 /// Identifier or reserved word
 class WordToken extends Expr {
     Uint8List val;

@@ -18,10 +18,12 @@ class NonAsciiError extends LexError {
 class EmptyStackError extends LexError {
 }
 
+
 class UnexpectedSymbolError extends LexError {
     String val = "";
     UnexpectedSymbolError(this.val);
 }
+
 
 class IntError extends LexError {
     String val = "";
@@ -33,6 +35,18 @@ class IntError extends LexError {
     }
 }
 
+
+class FloatError extends LexError {
+    String val = "";
+    FloatError(this.val);
+
+    @override
+    String toString() {
+        return "FloatError: $val";
+    }
+}
+
+
 class WordError extends LexError {
     String val = "";
     WordError(this.val);
@@ -43,6 +57,7 @@ class WordError extends LexError {
     }
 }
 
+
 class OperatorError extends LexError {
     String val = "";
     OperatorError(this.val);
@@ -52,6 +67,7 @@ class OperatorError extends LexError {
         return "OperatorError: $val";
     }
 }
+
 
 class BoolError extends LexError {
     String val = "";

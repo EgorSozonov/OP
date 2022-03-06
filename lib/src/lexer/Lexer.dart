@@ -1,5 +1,3 @@
-import "dart:ffi";
-import "dart:mirrors";
 import "dart:typed_data";
 import "package:either_dart/either.dart";
 import "package:o7/src/types/ParenType.dart";
@@ -89,7 +87,7 @@ class Lexer {
                 if ((cChar >= ASCII.DIGIT_0.index && cChar <= ASCII.DIGIT_9.index)
                     || (i < walkLen && cChar == ASCII.UNDERSCORE.index
                         && inp[i + 1] >= ASCII.DIGIT_0.index && inp[i + 1] <= ASCII.DIGIT_9.index)) {
-                    mbToken = lexInt(inp, i, walkLen);
+                    mbToken = lexNumber(inp, i, walkLen);
                 } else if ((cChar >= ASCII.A_LOWER.index && cChar <= ASCII.Z_LOWER.index)
                         || (cChar >= ASCII.A_UPPER.index && cChar <= ASCII.Z_UPPER.index)
                         || cChar == ASCII.UNDERSCORE.index) {
@@ -131,7 +129,7 @@ class Lexer {
             56, 48, 55
         ]);
 
-    static Either<LexError, Tuple2<Expr, int>> lexInt(Uint8List inp, int start, int walkLen) {
+    static Either<LexError, Tuple2<Expr, int>> lexNumber(Uint8List inp, int start, int walkLen) {
         if (start > walkLen) return Left(EndOfInputError());
 
         var ind = start;
@@ -142,6 +140,7 @@ class Lexer {
             ++ind;
             if (ind <= walkLen) currByte = inp[ind];
         }
+        bool isFloating = false;
 
         while (ind <= walkLen &&
             ((currByte >= ASCII.DIGIT_0.index && currByte <= ASCII.DIGIT_9.index)
@@ -150,16 +149,70 @@ class Lexer {
             if (ind <= walkLen) currByte = inp[ind];
         }
 
-        var digitList = Uint8List.fromList(inp.sublist(isNegative ? start + 1 : start, ind)
+        // In case the next symbol is a dot, this will be a floating-point number
+        if (ind < walkLen && inp[ind] == ASCII.DOT.index) {
+            var nextBt = inp[ind + 1];
+            if (nextBt >= ASCII.DIGIT_0.index && nextBt <= ASCII.DIGIT_9.index) {
+                isFloating = true;
+                // Skipping the dot
+                ++ind;
+                currByte = nextBt;
+                while (ind <= walkLen &&
+                        ((currByte >= ASCII.DIGIT_0.index && currByte <= ASCII.DIGIT_9.index)
+                        || currByte == ASCII.UNDERSCORE.index)) {
+                    ++ind;
+                    if (ind <= walkLen) currByte = inp[ind];
+                }
+            }
+        }
+        int startingDigit = isNegative ? start + 1 : start;
+        var mbNumber = isFloating ? lexFloat(inp, startingDigit, ind - 1, isNegative)
+                                  : lexInt(inp, startingDigit, ind - 1, isNegative);
+        if (mbNumber.isLeft) {
+            return Left(mbNumber.left);
+        } else {
+            return Right(Tuple2(mbNumber.right, ind));
+        }
+        // var digitList = Uint8List.fromList(inp.sublist(isNegative ? start + 1 : start, ind)
+        //                    .where((x) => x != ASCII.UNDERSCORE.index)
+        //                    .toList());
+
+        // if (checkIntRange(digitList, isNegative)) {
+        //     var actualInt = intOfDigits(digitList);
+        //     return Right(Tuple2(IntToken(isNegative ? (-1)*actualInt : actualInt), ind));
+        // } else {
+        //     return Left(
+        //         IntError("Int lexical error: number outside range [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807]"));
+        // }
+    }
+
+
+    static Either<LexError, Expr> lexInt(Uint8List inp, int start, int endInclusive, bool isNegative) {
+        var digitList = Uint8List.fromList(inp.sublist(start, endInclusive + 1)
                            .where((x) => x != ASCII.UNDERSCORE.index)
                            .toList());
 
         if (checkIntRange(digitList, isNegative)) {
             var actualInt = intOfDigits(digitList);
-            return Right(Tuple2(IntToken(isNegative ? (-1)*actualInt : actualInt), ind));
+            return Right(IntToken(isNegative ? (-1)*actualInt : actualInt));
         } else {
             return Left(
                 IntError("Int lexical error: number outside range [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807]"));
+        }
+    }
+
+    static Either<LexError, Expr> lexFloat(Uint8List inp, int start, int endInclusive, bool isNegative) {
+        var digitList = Uint8List.fromList(inp.sublist(start, endInclusive + 1)
+                           .where((x) => x != ASCII.UNDERSCORE.index)
+                           .toList());
+        var str = (isNegative ? "-" : "") + String.fromCharCodes(digitList);
+        var mbFloat = double.tryParse(str);
+
+        if (mbFloat != null) {
+            return Right(FloatToken(mbFloat));
+        } else {
+            return Left(
+                IntError("Float lexical error: '$str' not parsing as a floating-point number"));
         }
     }
 
@@ -170,6 +223,7 @@ class Lexer {
         return isNegative ? _isLexicographicallyLE(digits, minInt) : _isLexicographicallyLE(digits, maxInt);
     }
 
+
     static bool _isLexicographicallyLE(Uint8List a, Uint8List b) {
         for (int i = 0; i < a.length; ++i) {
             if (a[i] < b[i]) return true;
@@ -177,6 +231,7 @@ class Lexer {
         }
         return true;
     }
+
 
     static int intOfDigits(Uint8List digits) {
         int result = 0;
