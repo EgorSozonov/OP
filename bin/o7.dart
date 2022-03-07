@@ -13,10 +13,7 @@ void main(List<String> arguments) async {
     // var bytes = await file.readAsBytes();
     // var resLex = Lexer.lexicallyAnalyze(bytes);
 
-
-
-
-    var inp = Uint8List.fromList("1 2 3; x [ y _yz ] _12.345 + !!; true (false [true]); ".codeUnits);
+    var inp = Uint8List.fromList("a { b".codeUnits + [ASCII.EMPTY_LF.index] + "c".codeUnits + [ASCII.EMPTY_LF.index] + " (123 + 456) } d; ".codeUnits);
     //var inp = Uint8List.fromList("true { 1 2 [ false ] { true -1 false } } false true 3".codeUnits);
 
     var expected = ListExpr([BoolToken(true), ListExpr([IntToken(1), IntToken(2),

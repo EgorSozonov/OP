@@ -4,7 +4,7 @@ import "package:o7/src/types/ParenType.dart";
 import "package:o7/src/utils/ASCII.dart";
 import "package:o7/src/types/LexError.dart";
 import "package:tuple/tuple.dart";
-import '../types/OperatorSymb.dart';
+import "../types/OperatorSymb.dart";
 import "../types/Token.dart";
 import "../utils/Stack.dart";
 
@@ -29,9 +29,20 @@ class Lexer {
             if (cChar > 127) return Tuple2(result, NonAsciiError());
             Either<LexError, Tuple2<Expr, int>> mbToken;
 
-            if (cChar == ASCII.SPACE.index) {
+            if (cChar == ASCII.SPACE.index || cChar == ASCII.EMPTY_CR.index) {
                 ++i;
+            } else if (cChar == ASCII.EMPTY_LF.index) {
+                if (backtrack.peek() != null && backtrack.peek()?.pType == ExprLexicalType.CurlyBraces) {
+                    // we are in a CurlyBraces context, so a newline means a new statement
+                    var back = backtrack.peek();
+                    var newStatement = ListExpr([], ExprLexicalType.Statement);
+                    back?.val.add(newStatement);
+                    curr = newStatement;
+                }
+                ++i;
+
             } else if (cChar == ASCII.COLON_SEMI.index) {
+                // TODO check that we're neither in a statement nor in a datainit
                 var prevList = backtrack.peek();
 
                 if (prevList != null) {
@@ -45,17 +56,28 @@ class Lexer {
             } else if (cChar == ASCII.CURLY_OPEN.index) {
 
                 var newList = ListExpr([], ExprLexicalType.CurlyBraces);
+                var newCurr = ListExpr([], ExprLexicalType.Statement);
+                newList.val.add(newCurr);
                 curr.val.add(newList);
                 backtrack.push(curr);
-                curr = newList;
+                backtrack.push(newList);
+                curr = newCurr;
                 ++i;
             } else if (cChar == ASCII.CURLY_CLOSE.index) {
-                if (backtrack.peek() == null || curr.pType != ExprLexicalType.CurlyBraces) {
+                if (backtrack.peek() == null || backtrack.peek()?.pType != ExprLexicalType.CurlyBraces) {
+                    if (backtrack.peek() == null) {
+                        print("backtrack is null") ;
+                    } else {
+                        print("pType is ${backtrack.peek()?.pType}, len is ${backtrack.peek()?.val.length}");
+                    }
+
                     return Tuple2(result, ExtraClosingCurlyBraceError());
                 }
-                var back = backtrack.pop();
-                curr = back;
-
+                var backCurlyBrace = backtrack.pop();
+                if (backtrack.peek() == null) {
+                    return Tuple2(result, ExtraClosingCurlyBraceError());
+                }
+                curr = backtrack.pop();
                 ++i;
             } else if (cChar == ASCII.PARENTHESES_OPEN.index) {
                 var newList = ListExpr([], ExprLexicalType.Statement);
@@ -254,7 +276,7 @@ class Lexer {
         }
         int startOfLetters = i;
         while (i <= walkLen &&
-            ((currByte >= ASCII.A_LOWER.index && currByte <= ASCII.Z_LOWER.index)
+            (  (currByte >= ASCII.A_LOWER.index && currByte <= ASCII.Z_LOWER.index)
             || (currByte >= ASCII.A_UPPER.index && currByte <= ASCII.Z_UPPER.index))) {
             ++i;
             if (i <= walkLen) currByte = inp[i];
