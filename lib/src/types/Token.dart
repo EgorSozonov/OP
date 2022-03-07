@@ -1,32 +1,30 @@
-import 'dart:typed_data';
-
-import 'package:o7/src/types/OperatorSymb.dart';
+import "dart:typed_data";
+import "package:o7/src/types/OperatorSymb.dart";
 import "package:o7/src/types/ParenType.dart";
 import "package:tuple/tuple.dart";
-
 import "../utils/Stack.dart";
 
 typedef ListLoc = Tuple2<ListExpr, int>;
 class Expr {
     static bool equal(Expr a, Expr b) {
-        if (a is ListExpr && b is ListExpr) return false;
-        ListExpr aa = a as ListExpr;
-        ListExpr bb = b as ListExpr;
+        if (a is! ListExpr || b is! ListExpr) return a == b;
 
         var backtrackA = Stack<ListLoc>();
         var backtrackB = Stack<ListExpr>();
 
-        backtrackA.push(Tuple2(aa, 0));
-        backtrackB.push(bb);
+        backtrackA.push(Tuple2(a, 0));
+        backtrackB.push(b);
         int i = 0;
         while (backtrackA.peek() != null) {
             if (backtrackB.peek() == null) return false;
+
             var listA = backtrackA.pop();
             var listB = backtrackB.pop();
             i = listA.item2;
             if (listA.item1.pType != listB.pType || listA.item1.val.length != listB.val.length) {
                 return false;
             }
+
             while (i < listA.item1.val.length) {
                 var itmA = listA.item1.val[i];
                 var itmB = listB.val[i];
@@ -35,6 +33,9 @@ class Expr {
                     backtrackB.push(listB);
                     listA = Tuple2(itmA, 0);
                     listB = itmB;
+                    if (listA.item1.pType != listB.pType || listA.item1.val.length != listB.val.length) {
+                        return false;
+                    }
                     i = 0;
                 } else if (itmA != itmB) {
                     return false;
@@ -43,6 +44,7 @@ class Expr {
                 }
 
             }
+
         }
         return true;
     }
@@ -150,7 +152,7 @@ class WordToken extends Expr {
     WordToken(this.val);
 
     @override
-    bool operator ==(Object o) => (o is WordToken) ? (val == o.val) : false;
+    bool operator ==(Object o) => (o is WordToken) ? (String.fromCharCodes(this.val) == String.fromCharCodes(o.val)) : false;
 
     @override
     int get hashCode => val.hashCode;
@@ -192,5 +194,39 @@ class OperatorToken extends Expr {
     @override
     String toString() {
         return "Operator $val";
+    }
+}
+
+
+class StringToken extends Expr {
+    String val;
+    StringToken(this.val);
+
+    @override
+    bool operator ==(Object o) => (o is StringToken) ? (val == o.val) : false;
+
+    @override
+    int get hashCode => val.hashCode;
+
+    @override
+    String toString() {
+        return "String $val";
+    }
+}
+
+
+class CommentToken extends Expr {
+    String val;
+    CommentToken(this.val);
+
+    @override
+    bool operator ==(Object o) => (o is CommentToken) ? (val == o.val) : false;
+
+    @override
+    int get hashCode => val.hashCode;
+
+    @override
+    String toString() {
+        return "Comment $val";
     }
 }

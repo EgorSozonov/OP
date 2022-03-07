@@ -15,16 +15,28 @@ void main(List<String> arguments) async {
 
     var inp = Uint8List.fromList("a { b".codeUnits + [ASCII.emptyLF.index] + "c".codeUnits + [ASCII.emptyLF.index] + " (123 + 456 111); } d; ".codeUnits);
     //var inp = Uint8List.fromList("true { 1 2 [ false ] { true -1 false } } false true 3".codeUnits);
+    var innp = """
+        a b
+        # c d"
+        {
+            12 + y
+            x foo [12.34 fa]
+        }
+""";
 
     var expected = ListExpr([BoolToken(true), ListExpr([IntToken(1), IntToken(2),
-            ListExpr([BoolToken(false)], ExprLexicalType.dataInitializer), ListExpr([BoolToken(true), IntToken(-1), BoolToken(true)], ExprLexicalType.curlyBraces)], ExprLexicalType.curlyBraces),
+            ListExpr([WordToken(Uint8List.fromList("false".codeUnits))], ExprLexicalType.dataInitializer), ListExpr([BoolToken(true), IntToken(-1), BoolToken(true)], ExprLexicalType.curlyBraces)], ExprLexicalType.curlyBraces),
+            BoolToken(false), BoolToken(true), IntToken(3)], ExprLexicalType.curlyBraces);
+    var expected2 = ListExpr([BoolToken(true), ListExpr([IntToken(1), IntToken(2),
+            ListExpr([BoolToken(true), IntToken(-1), BoolToken(true)], ExprLexicalType.curlyBraces)], ExprLexicalType.curlyBraces),
             BoolToken(false), BoolToken(true), IntToken(3)], ExprLexicalType.curlyBraces);
 
 
-    var res = Lexer.lexicallyAnalyze(inp);
-    var eqRes = Expr.equal(expected, expected);
-    print("eqRes = $eqRes");
-    return;
+    var res = Lexer.lexicallyAnalyze(Uint8List.fromList(innp.codeUnits));
+    // var eqRes = Expr.equal(expected, expected2);
+    // print("eqRes = $eqRes");
+    // return;
+
     if (res.item2 != null) {
         print("Lexer error");
         print(res.item2.toString());

@@ -8,6 +8,7 @@ import "../types/OperatorSymb.dart";
 import "../types/Token.dart";
 import "../utils/Stack.dart";
 
+typedef LexResult = Either<LexError, Tuple2<Expr, int>>;
 
 class Lexer {
     static Tuple2<List<Expr>, LexError?> lexicallyAnalyze(Uint8List inp) {
@@ -27,7 +28,7 @@ class Lexer {
         while (i <= walkLen) {
             int cChar = inp[i];
             if (cChar > 127) return Tuple2(result, NonAsciiError());
-            Either<LexError, Tuple2<Expr, int>> mbToken;
+            LexResult mbToken;
 
             if (cChar == ASCII.space.index || cChar == ASCII.emptyCR.index) {
                 ++i;
@@ -117,6 +118,10 @@ class Lexer {
                         || (cChar >= ASCII.aUpper.index && cChar <= ASCII.zUpper.index)
                         || cChar == ASCII.underscore.index) {
                     mbToken = lexWord(inp, i, walkLen);
+                } else if (cChar == ASCII.hashtag.index) {
+                    mbToken = lexComment(inp, i, walkLen);
+                } else if (cChar == ASCII.quotationMarkDouble.index) {
+                    mbToken = lexStringLiteral(inp, i, walkLen);
                 } else if (isOperatorSymb(cChar) != OperatorSymb.notASymb) {
                     mbToken = lexOperator(inp, i, walkLen);
                 } else {
@@ -154,7 +159,7 @@ class Lexer {
             56, 48, 55
         ]);
 
-    static Either<LexError, Tuple2<Expr, int>> lexNumber(Uint8List inp, int start, int walkLen) {
+    static LexResult lexNumber(Uint8List inp, int start, int walkLen) {
         if (start > walkLen) return Left(EndOfInputError());
 
         var ind = start;
@@ -270,7 +275,7 @@ class Lexer {
     }
 
 
-    static Either<LexError, Tuple2<Expr, int>> lexWord(Uint8List inp, int start, int walkLen) {
+    static LexResult lexWord(Uint8List inp, int start, int walkLen) {
         int i = start;
         var currByte = inp[i];
         while (i <= walkLen && (currByte == ASCII.underscore.index)) {
@@ -298,7 +303,7 @@ class Lexer {
     /// Operators
     /// Lexes a sequence of 1 to 3 of any of the following symbols:
     /// & + - / * ! ~ $ % ^ | > < ? =
-    static Either<LexError, Tuple2<Expr, int>> lexOperator(Uint8List inp, int start, int walkLen) {
+    static LexResult lexOperator(Uint8List inp, int start, int walkLen) {
         int i = start;
         List<OperatorSymb> result = [];
         var currByte = inp[i];
@@ -334,5 +339,61 @@ class Lexer {
         if (symb == ASCII.questionMark.index) return OperatorSymb.question;
         if (symb == ASCII.equalTo.index) return OperatorSymb.equals;
         return OperatorSymb.notASymb;
+    }
+
+
+    /// Reads symbols from '#' until a newline, or until the '.#' combination
+    /// Accepts arbitrary UTF-8 text (i.e. does not check that the byte
+    /// is within ASCII range)
+    static LexResult lexComment(Uint8List inp, int start, int walkLen) {
+        int i = start + 1;
+        int startContent = start + 1;
+        int endContent = -1;
+        while (i <= walkLen) {
+            if (inp[i] == ASCII.emptyLF.index) {
+                endContent = i - 1;
+                ++i;
+
+                break;
+            } else if ((inp[i] == ASCII.dot.index
+                        && i < walkLen
+                        && inp[i + 1] == ASCII.hashtag.index)) {
+                endContent = i - 1;
+                i += 2;
+
+                break;
+            }
+            ++i;
+        }
+        if (endContent == -1) endContent = walkLen;
+        if (startContent == endContent) return Right(Tuple2(CommentToken(""), i));
+        var subList = Uint8List.fromList(inp.sublist(startContent, endContent + 1).toList());
+        return Right(Tuple2(CommentToken(String.fromCharCodes(subList)), i));
+    }
+
+    /// Reads symbols from '"' until another '"', while skipping '\"' combination.
+    /// Accepts arbitrary UTF-8 text (i.e. does not check that the byte
+    /// is within ASCII range)
+    static LexResult lexStringLiteral(Uint8List inp, int start, int walkLen) {
+        int i = start + 1;
+        int startContent = start + 1;
+        int endContent = -1;
+        while (i <= walkLen) {
+            if (inp[i] == ASCII.quotationMarkDouble.index) {
+                endContent = i - 1;
+                ++i;
+
+                break;
+            } else if ((inp[i] == ASCII.slashBackward.index
+                        && i < walkLen
+                        && inp[i + 1] == ASCII.quotationMarkDouble.index)) {
+                i += 2;
+            }
+            ++i;
+        }
+        if (endContent == -1) return Left(EndOfInputError());
+        if (startContent == endContent) return Right(Tuple2(StringToken(""), i));
+        var subList = Uint8List.fromList(inp.sublist(startContent, endContent + 1).toList());
+        return Right(Tuple2(StringToken(String.fromCharCodes(subList)), i));
     }
 }
