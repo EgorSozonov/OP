@@ -6,7 +6,47 @@ import "package:tuple/tuple.dart";
 
 import "../utils/Stack.dart";
 
-class Expr {}
+typedef ListLoc = Tuple2<ListExpr, int>;
+class Expr {
+    static bool equal(Expr a, Expr b) {
+        if (a is ListExpr && b is ListExpr) return false;
+        ListExpr aa = a as ListExpr;
+        ListExpr bb = b as ListExpr;
+
+        var backtrackA = Stack<ListLoc>();
+        var backtrackB = Stack<ListExpr>();
+
+        backtrackA.push(Tuple2(aa, 0));
+        backtrackB.push(bb);
+        int i = 0;
+        while (backtrackA.peek() != null) {
+            if (backtrackB.peek() == null) return false;
+            var listA = backtrackA.pop();
+            var listB = backtrackB.pop();
+            i = listA.item2;
+            if (listA.item1.pType != listB.pType || listA.item1.val.length != listB.val.length) {
+                return false;
+            }
+            while (i < listA.item1.val.length) {
+                var itmA = listA.item1.val[i];
+                var itmB = listB.val[i];
+                if (itmA is ListExpr && itmB is ListExpr) {
+                    backtrackA.push(Tuple2(listA.item1, i + 1));
+                    backtrackB.push(listB);
+                    listA = Tuple2(itmA, 0);
+                    listB = itmB;
+                    i = 0;
+                } else if (itmA != itmB) {
+                    return false;
+                } else {
+                    ++i;
+                }
+
+            }
+        }
+        return true;
+    }
+}
 
 
 /// A list of tokens, which can be a statement, a list of statements,
@@ -39,9 +79,9 @@ class ListExpr extends Expr {
                         backtrack.push(Tuple2(curr, i));
                         curr = listElem;
                         i = 0;
-                        if (listElem.pType == ExprLexicalType.CurlyBraces) {
+                        if (listElem.pType == ExprLexicalType.curlyBraces) {
                             result.write("{ ");
-                        } else if (listElem.pType == ExprLexicalType.DataInitializer) {
+                        } else if (listElem.pType == ExprLexicalType.dataInitializer) {
                             result.write("[ ");
                         } else {
                             result.write("( ");
@@ -57,9 +97,9 @@ class ListExpr extends Expr {
                 }
             }
             if (backtrack.peek() != null) {
-                if (curr.pType == ExprLexicalType.CurlyBraces) {
+                if (curr.pType == ExprLexicalType.curlyBraces) {
                     result.write(" }, ");
-                } else if (curr.pType == ExprLexicalType.DataInitializer) {
+                } else if (curr.pType == ExprLexicalType.dataInitializer) {
                     result.write(" ], ");
                 } else {
                     result.write(" ), ");
@@ -110,6 +150,12 @@ class WordToken extends Expr {
     WordToken(this.val);
 
     @override
+    bool operator ==(Object o) => (o is WordToken) ? (val == o.val) : false;
+
+    @override
+    int get hashCode => val.hashCode;
+
+    @override
     String toString() {
         return "Word ${String.fromCharCodes(this.val)}";
     }
@@ -136,6 +182,12 @@ class BoolToken extends Expr {
 class OperatorToken extends Expr {
     List<OperatorSymb> val;
     OperatorToken(this.val);
+
+    @override
+    bool operator ==(Object o) => (o is WordToken) ? (val == o.val) : false;
+
+    @override
+    int get hashCode => val.hashCode;
 
     @override
     String toString() {

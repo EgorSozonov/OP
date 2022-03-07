@@ -1,5 +1,6 @@
 enum ExprLexicalType {
-    Statement,
-    DataInitializer,
-    CurlyBraces,
+    statement,
+    dataInitializer,
+    curlyBraces,
+    parens,
 }

@@ -1,5 +1,5 @@
 class Stack<T> {
-    List<T> _list = [];
+    final List<T> _list = [];
 
     void push(T newItem) {
         _list.add(newItem);

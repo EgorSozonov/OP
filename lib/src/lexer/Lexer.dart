@@ -15,11 +15,11 @@ class Lexer {
         if (inp.length < 2) return Tuple2([], err);
 
         int i = 0;
-        var curr = ListExpr([], ExprLexicalType.CurlyBraces);
+        var curr = ListExpr([], ExprLexicalType.curlyBraces);
         var result = [curr];
         Stack<ListExpr> backtrack = Stack();
         backtrack.push(curr);
-        var firstList = ListExpr([], ExprLexicalType.Statement);
+        var firstList = ListExpr([], ExprLexicalType.statement);
         curr.val.add(firstList);
         curr = firstList;
 
@@ -29,42 +29,45 @@ class Lexer {
             if (cChar > 127) return Tuple2(result, NonAsciiError());
             Either<LexError, Tuple2<Expr, int>> mbToken;
 
-            if (cChar == ASCII.SPACE.index || cChar == ASCII.EMPTY_CR.index) {
+            if (cChar == ASCII.space.index || cChar == ASCII.emptyCR.index) {
                 ++i;
-            } else if (cChar == ASCII.EMPTY_LF.index) {
-                if (backtrack.peek() != null && backtrack.peek()?.pType == ExprLexicalType.CurlyBraces) {
+            } else if (cChar == ASCII.emptyLF.index) {
+                if (backtrack.peek() != null && backtrack.peek()?.pType == ExprLexicalType.curlyBraces) {
                     // we are in a CurlyBraces context, so a newline means a new statement
                     var back = backtrack.peek();
-                    var newStatement = ListExpr([], ExprLexicalType.Statement);
+                    var newStatement = ListExpr([], ExprLexicalType.statement);
                     back?.val.add(newStatement);
                     curr = newStatement;
                 }
                 ++i;
 
-            } else if (cChar == ASCII.COLON_SEMI.index) {
-                // TODO check that we're neither in a statement nor in a datainit
+            } else if (cChar == ASCII.colonSemi.index) {
+                if (curr.pType == ExprLexicalType.parens) {
+                    return Tuple2(result, UnexpectedSymbolError(
+                        "Semi-colons are not allowed in inline expressions (i.e. directly inside parentheses)"));
+                }
                 var prevList = backtrack.peek();
 
                 if (prevList != null) {
-                    curr = ListExpr([], ExprLexicalType.Statement);
+                    curr = ListExpr([], ExprLexicalType.statement);
                     prevList.val.add(curr);
                 } else {
                     return Tuple2(result, EmptyStackError());
                 }
 
                 ++i;
-            } else if (cChar == ASCII.CURLY_OPEN.index) {
+            } else if (cChar == ASCII.curlyOpen.index) {
 
-                var newList = ListExpr([], ExprLexicalType.CurlyBraces);
-                var newCurr = ListExpr([], ExprLexicalType.Statement);
+                var newList = ListExpr([], ExprLexicalType.curlyBraces);
+                var newCurr = ListExpr([], ExprLexicalType.statement);
                 newList.val.add(newCurr);
                 curr.val.add(newList);
                 backtrack.push(curr);
                 backtrack.push(newList);
                 curr = newCurr;
                 ++i;
-            } else if (cChar == ASCII.CURLY_CLOSE.index) {
-                if (backtrack.peek() == null || backtrack.peek()?.pType != ExprLexicalType.CurlyBraces) {
+            } else if (cChar == ASCII.curlyClose.index) {
+                if (backtrack.peek() == null || backtrack.peek()?.pType != ExprLexicalType.curlyBraces) {
                     if (backtrack.peek() == null) {
                         print("backtrack is null") ;
                     } else {
@@ -73,46 +76,46 @@ class Lexer {
 
                     return Tuple2(result, ExtraClosingCurlyBraceError());
                 }
-                var backCurlyBrace = backtrack.pop();
+                var _ = backtrack.pop();
                 if (backtrack.peek() == null) {
                     return Tuple2(result, ExtraClosingCurlyBraceError());
                 }
                 curr = backtrack.pop();
                 ++i;
-            } else if (cChar == ASCII.PARENTHESES_OPEN.index) {
-                var newList = ListExpr([], ExprLexicalType.Statement);
+            } else if (cChar == ASCII.parenthesisOpen.index) {
+                var newList = ListExpr([], ExprLexicalType.parens);
                 curr.val.add(newList);
                 backtrack.push(curr);
                 curr = newList;
                 ++i;
-            } else if (cChar == ASCII.PARENTHESES_CLOSE.index) {
-                if (backtrack.peek() == null || curr.pType != ExprLexicalType.Statement) {
+            } else if (cChar == ASCII.parenthesisClose.index) {
+                if (backtrack.peek() == null || curr.pType != ExprLexicalType.parens) {
                     return Tuple2(result, ExtraClosingParenError());
                 }
                 var back = backtrack.pop();
                 curr = back;
                 ++i;
-            }  else if (cChar == ASCII.BRACKET_OPEN.index) {
-                var newList = ListExpr([], ExprLexicalType.DataInitializer);
+            }  else if (cChar == ASCII.bracketOpen.index) {
+                var newList = ListExpr([], ExprLexicalType.dataInitializer);
                 curr.val.add(newList);
                 backtrack.push(curr);
                 curr = newList;
                 ++i;
-            } else if (cChar == ASCII.BRACKET_CLOSE.index) {
-                if (backtrack.peek() == null || curr.pType != ExprLexicalType.DataInitializer) {
+            } else if (cChar == ASCII.bracketClose.index) {
+                if (backtrack.peek() == null || curr.pType != ExprLexicalType.dataInitializer) {
                     return Tuple2(result, ExtraClosingBracketError());
                 }
                 var back = backtrack.pop();
                 curr = back;
                 ++i;
             } else {
-                if ((cChar >= ASCII.DIGIT_0.index && cChar <= ASCII.DIGIT_9.index)
-                    || (i < walkLen && cChar == ASCII.UNDERSCORE.index
-                        && inp[i + 1] >= ASCII.DIGIT_0.index && inp[i + 1] <= ASCII.DIGIT_9.index)) {
+                if ((cChar >= ASCII.digit0.index && cChar <= ASCII.digit9.index)
+                    || (i < walkLen && cChar == ASCII.underscore.index
+                        && inp[i + 1] >= ASCII.digit0.index && inp[i + 1] <= ASCII.digit9.index)) {
                     mbToken = lexNumber(inp, i, walkLen);
-                } else if ((cChar >= ASCII.A_LOWER.index && cChar <= ASCII.Z_LOWER.index)
-                        || (cChar >= ASCII.A_UPPER.index && cChar <= ASCII.Z_UPPER.index)
-                        || cChar == ASCII.UNDERSCORE.index) {
+                } else if ((cChar >= ASCII.aLower.index && cChar <= ASCII.zLower.index)
+                        || (cChar >= ASCII.aUpper.index && cChar <= ASCII.zUpper.index)
+                        || cChar == ASCII.underscore.index) {
                     mbToken = lexWord(inp, i, walkLen);
                 } else if (isOperatorSymb(cChar) != OperatorSymb.notASymb) {
                     mbToken = lexOperator(inp, i, walkLen);
@@ -157,7 +160,7 @@ class Lexer {
         var ind = start;
         var currByte = inp[start];
 
-        bool isNegative = currByte == ASCII.UNDERSCORE.index;
+        bool isNegative = currByte == ASCII.underscore.index;
         if (isNegative) {
             ++ind;
             if (ind <= walkLen) currByte = inp[ind];
@@ -165,23 +168,23 @@ class Lexer {
         bool isFloating = false;
 
         while (ind <= walkLen &&
-            ((currByte >= ASCII.DIGIT_0.index && currByte <= ASCII.DIGIT_9.index)
-            || currByte == ASCII.UNDERSCORE.index)) {
+            ((currByte >= ASCII.digit0.index && currByte <= ASCII.digit9.index)
+            || currByte == ASCII.underscore.index)) {
             ++ind;
             if (ind <= walkLen) currByte = inp[ind];
         }
 
         // In case the next symbol is a dot, this will be a floating-point number
-        if (ind < walkLen && inp[ind] == ASCII.DOT.index) {
+        if (ind < walkLen && inp[ind] == ASCII.dot.index) {
             var nextBt = inp[ind + 1];
-            if (nextBt >= ASCII.DIGIT_0.index && nextBt <= ASCII.DIGIT_9.index) {
+            if (nextBt >= ASCII.digit0.index && nextBt <= ASCII.digit9.index) {
                 isFloating = true;
                 // Skipping the dot
                 ++ind;
                 currByte = nextBt;
                 while (ind <= walkLen &&
-                        ((currByte >= ASCII.DIGIT_0.index && currByte <= ASCII.DIGIT_9.index)
-                        || currByte == ASCII.UNDERSCORE.index)) {
+                        ((currByte >= ASCII.digit0.index && currByte <= ASCII.digit9.index)
+                        || currByte == ASCII.underscore.index)) {
                     ++ind;
                     if (ind <= walkLen) currByte = inp[ind];
                 }
@@ -211,7 +214,7 @@ class Lexer {
 
     static Either<LexError, Expr> lexInt(Uint8List inp, int start, int endInclusive, bool isNegative) {
         var digitList = Uint8List.fromList(inp.sublist(start, endInclusive + 1)
-                           .where((x) => x != ASCII.UNDERSCORE.index)
+                           .where((x) => x != ASCII.underscore.index)
                            .toList());
 
         if (checkIntRange(digitList, isNegative)) {
@@ -225,7 +228,7 @@ class Lexer {
 
     static Either<LexError, Expr> lexFloat(Uint8List inp, int start, int endInclusive, bool isNegative) {
         var digitList = Uint8List.fromList(inp.sublist(start, endInclusive + 1)
-                           .where((x) => x != ASCII.UNDERSCORE.index)
+                           .where((x) => x != ASCII.underscore.index)
                            .toList());
         var str = (isNegative ? "-" : "") + String.fromCharCodes(digitList);
         var mbFloat = double.tryParse(str);
@@ -259,7 +262,7 @@ class Lexer {
         int result = 0;
         int powerOfTen = 1;
         for (int ind = digits.length - 1; ind > -1; --ind) {
-            int digitValue = (digits[ind] - ASCII.DIGIT_0.index)*powerOfTen;
+            int digitValue = (digits[ind] - ASCII.digit0.index)*powerOfTen;
             result += digitValue;
             powerOfTen *= 10;
         }
@@ -270,21 +273,21 @@ class Lexer {
     static Either<LexError, Tuple2<Expr, int>> lexWord(Uint8List inp, int start, int walkLen) {
         int i = start;
         var currByte = inp[i];
-        while (i <= walkLen && (currByte == ASCII.UNDERSCORE.index)) {
+        while (i <= walkLen && (currByte == ASCII.underscore.index)) {
             ++i;
             if (i <= walkLen) currByte = inp[i];
         }
         int startOfLetters = i;
         while (i <= walkLen &&
-            (  (currByte >= ASCII.A_LOWER.index && currByte <= ASCII.Z_LOWER.index)
-            || (currByte >= ASCII.A_UPPER.index && currByte <= ASCII.Z_UPPER.index))) {
+            (  (currByte >= ASCII.aLower.index && currByte <= ASCII.zLower.index)
+            || (currByte >= ASCII.aUpper.index && currByte <= ASCII.zUpper.index))) {
             ++i;
             if (i <= walkLen) currByte = inp[i];
         }
         if (i == startOfLetters) {
             return Left(WordError("Word did not contain any letters"));
         }
-        if (i <= walkLen && inp[i] == ASCII.UNDERSCORE.index) {
+        if (i <= walkLen && inp[i] == ASCII.underscore.index) {
             return Left(WordError("Snake-case identifier ${String.fromCharCodes(Uint8List.fromList(inp.sublist(start, i).toList()))}_"));
         }
         var wrd = Uint8List.fromList(inp.sublist(start, i).toList());
@@ -315,49 +318,21 @@ class Lexer {
 
 
     static OperatorSymb isOperatorSymb(int symb) {
-        if (symb == ASCII.AMPERSAND.index) return OperatorSymb.ampersand;
-        if (symb == ASCII.PLUS.index) return OperatorSymb.plus;
-        if (symb == ASCII.MINUS.index) return OperatorSymb.minus;
-        if (symb == ASCII.SLASH_FORWARD.index) return OperatorSymb.slash;
-        if (symb == ASCII.ASTERISK.index) return OperatorSymb.asterisk;
-        if (symb == ASCII.EXCLAMATION_MARK.index) return OperatorSymb.exclamation;
-        if (symb == ASCII.TILDE.index) return OperatorSymb.tilde;
-        if (symb == ASCII.DOLLAR.index) return OperatorSymb.dollar;
-        if (symb == ASCII.PERCENT.index) return OperatorSymb.percent;
-        if (symb == ASCII.CARET.index) return OperatorSymb.caret;
-        if (symb == ASCII.VERTICAL_BAR.index) return OperatorSymb.pipe;
-        if (symb == ASCII.GREATER_THAN.index) return OperatorSymb.gt;
-        if (symb == ASCII.LESS_THAN.index) return OperatorSymb.lt;
-        if (symb == ASCII.QUESTION_MARK.index) return OperatorSymb.question;
-        if (symb == ASCII.EQUAL_TO.index) return OperatorSymb.equals;
+        if (symb == ASCII.ampersand.index) return OperatorSymb.ampersand;
+        if (symb == ASCII.plus.index) return OperatorSymb.plus;
+        if (symb == ASCII.minus.index) return OperatorSymb.minus;
+        if (symb == ASCII.slashForward.index) return OperatorSymb.slash;
+        if (symb == ASCII.asterisk.index) return OperatorSymb.asterisk;
+        if (symb == ASCII.exclamationMark.index) return OperatorSymb.exclamation;
+        if (symb == ASCII.tilde.index) return OperatorSymb.tilde;
+        if (symb == ASCII.dollar.index) return OperatorSymb.dollar;
+        if (symb == ASCII.percent.index) return OperatorSymb.percent;
+        if (symb == ASCII.caret.index) return OperatorSymb.caret;
+        if (symb == ASCII.verticalBar.index) return OperatorSymb.pipe;
+        if (symb == ASCII.greaterThan.index) return OperatorSymb.gt;
+        if (symb == ASCII.lessThan.index) return OperatorSymb.lt;
+        if (symb == ASCII.questionMark.index) return OperatorSymb.question;
+        if (symb == ASCII.equalTo.index) return OperatorSymb.equals;
         return OperatorSymb.notASymb;
-    }
-
-
-    @Deprecated("Use 'lexWord' instead")
-    static Either<LexError, Tuple2<Expr, int>> lexBool(Uint8List inp, int start, int walkLen) {
-        int remainingLength = walkLen + 1 - start;
-        final Either<LexError, Tuple2<Expr, int>> err = Left(BoolError("Boolean lexical error: expected either 'true' or 'false'"));
-        if (remainingLength >= 5 && inp[start] == ASCII.F_LOWER.index) {
-            var charList = Uint8List.fromList(inp.sublist(start + 1, start + 5)
-                           .toList());
-            if (charList[0] == ASCII.A_LOWER.index && charList[1] == ASCII.L_LOWER.index
-               && charList[2] == ASCII.S_LOWER.index && charList[3] == ASCII.E_LOWER.index) {
-                return Right(Tuple2(BoolToken(false), start + 5));
-            } else {
-                return err;
-            }
-        } else if (remainingLength >= 4 && inp[start] == ASCII.T_LOWER.index) {
-            var charList = Uint8List.fromList(inp.sublist(start + 1, start + 4)
-                           .toList());
-            if (charList[0] == ASCII.R_LOWER.index && charList[1] == ASCII.U_LOWER.index
-               && charList[2] == ASCII.E_LOWER.index) {
-                return Right(Tuple2(BoolToken(true), start + 4));
-            } else {
-                return err;
-            }
-        } else {
-            return err;
-        }
     }
 }

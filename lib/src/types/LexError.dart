@@ -22,6 +22,11 @@ class EmptyStackError extends LexError {
 class UnexpectedSymbolError extends LexError {
     String val = "";
     UnexpectedSymbolError(this.val);
+
+    @override
+    String toString() {
+        return "UnexpectedSymbolError: $val";
+    }
 }
 
 

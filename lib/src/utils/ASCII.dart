@@ -1,146 +1,146 @@
 enum ASCII {
-    EMPTY_NULL,                                            // NULL
-    EMPTY_SOH,                                             // Start of Heading
-    EMPTY_STX,                                             // Start of Text
-    EMPTY_ETX,                                             // End of Text
-    EMPTY_EOT,                                             // End of Transmission
-    EMPTY_ENQ,                                             // Enquiry
-    EMPTY_ACK,                                             // Acknowledgement
-    EMPTY_BEL,                                             // Bell
-    EMPTY_BS,                                              // Backspace
-    EMPTY_TAB,                                             // Horizontal Tab
-    EMPTY_LF,                                              // Line Feed
-    EMPTY_VT,                                              // Vertical Tab
-    EMPTY_FF,                                              // Form Feed
-    EMPTY_CR,                                              // Carriage Return
-    EMPTY_SO,                                              // Shift Out
-    EMPTY_SI,                                              // Shift In
-    EMPTY_DLE,                                             // Data Link Escape
-    EMPTY_DC1,                                             // Device Control 1
-    EMPTY_DC2,                                             // Device Control 2
-    EMPTY_DC3,                                             // Device Control 3
-    EMPTY_DC4,                                             // Device Control 4
-    EMPTY_NAK,                                             // Negative Acknowledgement
-    EMPTY_SYN,                                             // Synchronous Idle
-    EMPTY_ETB,                                             // End of Transmission Block
-    EMPTY_CANCEL,                                          // Cancel
-    EMPTY_ENDMEDIUM,                                       // End of Medium
-    EMPTY_SUB,                                             // Substitute
-    EMPTY_ESCAPE,                                          // Escape
-    EMPTY_SF,                                              // File Separator
-    EMPTY_GS,                                              // Group Separator
-    EMPTY_RS,                                              // Record Separator
-    EMPTY_US,                                              // Unit Separator
+    emptyNULL,                                            // NULL
+    emptySOH,                                             // Start of Heading
+    emptySTX,                                             // Start of Text
+    emptyETX,                                             // End of Text
+    emptyEOT,                                             // End of Transmission
+    emptyENQ,                                             // Enquiry
+    emptyACK,                                             // Acknowledgement
+    emptyBEL,                                             // Bell
+    emptyBS,                                              // Backspace
+    emptyTAB,                                             // Horizontal Tab
+    emptyLF,                                              // Line Feed
+    emptyVT,                                              // Vertical Tab
+    emptyFF,                                              // Form Feed
+    emptyCR,                                              // Carriage Return
+    emptySO,                                              // Shift Out
+    emptySI,                                              // Shift In
+    emptyDLE,                                             // Data Link Escape
+    emptyDC1,                                             // Device Control 1
+    emptyDC2,                                             // Device Control 2
+    emptyDC3,                                             // Device Control 3
+    emptyDC4,                                             // Device Control 4
+    emptyNAK,                                             // Negative Acknowledgement
+    emptySYN,                                             // Synchronous Idle
+    emptyETB,                                             // End of Transmission Block
+    emptyCANCEL,                                          // Cancel
+    emptyENDMEDIUM,                                       // End of Medium
+    emptySUB,                                             // Substitute
+    emptyESCAPE,                                          // Escape
+    emptySF,                                              // File Separator
+    emptyGS,                                              // Group Separator
+    emptyRS,                                              // Record Separator
+    emptyUS,                                              // Unit Separator
 
     //misc characters
 
-    SPACE,                                           // space
-    EXCLAMATION_MARK,                                 // !
-    QUOTATION_MARK_DOUBLE,                           // "
-    HASHTAG,                                         // #
-    DOLLAR,                                     // $
-    PERCENT,                                         // %
-    AMPERSAND,                                       // &
-    QUOTATION_MARK_SINGLE,                           // '
-    PARENTHESES_OPEN,                                // (
-    PARENTHESES_CLOSE,                               // )
-    ASTERISK,                                        // *
-    PLUS,                                            // +
-    COMMA,                                           // ,
-    MINUS,                                           // -
-    DOT,                                             // .
-    SLASH_FORWARD,                                    // /
-    DIGIT_0,                                         // 0
-    DIGIT_1,                                         // 1
-    DIGIT_2,                                         // 2
-    DIGIT_3,                                         // 3
-    DIGIT_4,                                         // 4
-    DIGIT_5,                                         // 5
-    DIGIT_6,                                         // 6
-    DIGIT_7,                                         // 7
-    DIGIT_8,                                         // 8
-    DIGIT_9,                                         // 9
-    COLON,                                           // :
-    COLON_SEMI,                                      // ;
-    LESS_THAN,                                       // <
-    EQUAL_TO,                                        // =
-    GREATER_THAN,                                    // >
-    QUESTION_MARK,                                   // ?
-    SING_AT,                                         // @
+    space,                                           // space
+    exclamationMark,                                 // !
+    quotationMarkDouble,                           // "
+    hashtag,                                         // #
+    dollar,                                     // $
+    percent,                                         // %
+    ampersand,                                       // &
+    quotationMarkSingle,                           // '
+    parenthesisOpen,                                // (
+    parenthesisClose,                               // )
+    asterisk,                                        // *
+    plus,                                            // +
+    comma,                                           // ,
+    minus,                                           // -
+    dot,                                             // .
+    slashForward,                                   // /
+    digit0,                                         // 0
+    digit1,                                         // 1
+    digit2,                                         // 2
+    digit3,                                         // 3
+    digit4,                                         // 4
+    digit5,                                         // 5
+    digit6,                                         // 6
+    digit7,                                         // 7
+    digit8,                                         // 8
+    digit9,                                         // 9
+    colon,                                           // :
+    colonSemi,                                      // ;
+    lessThan,                                       // <
+    equalTo,                                        // =
+    greaterThan,                                    // >
+    questionMark,                                   // ?
+    singAt,                                         // @
 
     //upper case alphabet
 
-    A_UPPER,                                         // A
-    B_UPPER,                                         // B
-    C_UPPER,                                         // C
-    D_UPPER,                                         // D
-    E_UPPER,                                         // E
-    F_UPPER,                                         // F
-    G_UPPER,                                         // G
-    H_UPPER,                                         // H
-    I_UPPER,                                         // I
-    J_UPPER,                                         // J
-    K_UPPER,                                         // K
-    L_UPPER,                                         // L
-    M_UPPER,                                         // M
-    N_UPPER,                                         // N
-    O_UPPER,                                         // O
-    P_UPPER,                                         // P
-    Q_UPPER,                                         // Q
-    R_UPPER,                                         // R
-    S_UPPER,                                         // S
-    T_UPPER,                                         // T
-    U_UPPER,                                         // U
-    V_UPPER,                                         // V
-    W_UPPER,                                         // W
-    X_UPPER,                                         // X
-    Y_UPPER,                                         // Y
-    Z_UPPER,                                         // Z
+    aUpper,                                         // A
+    bUpper,                                         // B
+    cUpper,                                         // C
+    dUpper,                                         // D
+    eUpper,                                         // E
+    fUpper,                                         // F
+    gUpper,                                         // G
+    hUpper,                                         // H
+    iUpper,                                         // I
+    jUpper,                                         // J
+    kUpper,                                         // K
+    lUpper,                                         // L
+    mUpper,                                         // M
+    nUpper,                                         // N
+    oUpper,                                         // O
+    pUpper,                                         // P
+    qUpper,                                         // Q
+    rUpper,                                         // R
+    sUpper,                                         // S
+    tUpper,                                         // T
+    uUpper,                                         // U
+    vUpper,                                         // V
+    wUpper,                                         // W
+    xUpper,                                         // X
+    yUpper,                                         // Y
+    zUpper,                                         // Z
 
     //misc characters
 
-    BRACKET_OPEN,                                    // [
-    SLASH_BACKWARD,                                  // \
-    BRACKET_CLOSE,                                   // ]
-    CARET,                                           // ^
-    UNDERSCORE,                                      // _
-    GRAVE_ACCENT,                                    // `
+    bracketOpen,                                    // [
+    slashBackward,                                  // \
+    bracketClose,                                   // ]
+    caret,                                           // ^
+    underscore,                                      // _
+    graveAccent,                                    // `
 
     //lower case alphabet
 
-    A_LOWER,                                         // a
-    B_LOWER,                                         // b
-    C_LOWER,                                         // c
-    D_LOWER,                                         // d
-    E_LOWER,                                         // e
-    F_LOWER,                                         // f
-    G_LOWER,                                         // g
-    H_LOWER,                                         // h
-    I_LOWER,                                         // i
-    J_LOWER,                                         // j
-    K_LOWER,                                         // k
-    L_LOWER,                                         // l
-    M_LOWER,                                         // m
-    N_LOWER,                                         // n
-    O_LOWER,                                         // o
-    P_LOWER,                                         // p
-    Q_LOWER,                                         // q
-    R_LOWER,                                         // r
-    S_LOWER,                                         // s
-    T_LOWER,                                         // t
-    U_LOWER,                                         // u
-    V_LOWER,                                         // v
-    W_LOWER,                                         // w
-    X_LOWER,                                         // x
-    Y_LOWER,                                         // y
-    Z_LOWER,                                         // z
+    aLower,                                         // a
+    bLower,                                         // b
+    cLower,                                         // c
+    dLower,                                         // d
+    eLower,                                         // e
+    fLower,                                         // f
+    gLower,                                         // g
+    hLower,                                         // h
+    iLower,                                         // i
+    jLower,                                         // j
+    kLower,                                         // k
+    lLower,                                         // l
+    mLower,                                         // m
+    nLower,                                         // n
+    oLower,                                         // o
+    pLower,                                         // p
+    qLower,                                         // q
+    rLower,                                         // r
+    sLower,                                         // s
+    tLower,                                         // t
+    uLower,                                         // u
+    vLower,                                         // v
+    wLower,                                         // w
+    xLower,                                         // x
+    yLower,                                         // y
+    zLower,                                         // z
 
     //misc characters
 
-    CURLY_OPEN,                                      // {
-    VERTICAL_BAR,                                    // |
-    CURLY_CLOSE,                                     // }
-    TILDE,                                           // ~
+    curlyOpen,                                      // {
+    verticalBar,                                    // |
+    curlyClose,                                     // }
+    tilde,                                           // ~
 
-    EMPTY_DEL,                                       // Delete
+    emptyDel,                                       // Delete
 }
