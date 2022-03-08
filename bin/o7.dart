@@ -19,17 +19,6 @@ void main(List<String> arguments) async {
 a = b + c
 """;
 
-    var inpTest = Uint8List.fromList(inpStr.codeUnits);
-    var resTest = Lexer.lexicallyAnalyze(inpTest);
-    print(resTest.item1.toString());
-    var expectedTest = ListExpr([ListExpr([WordToken(Uint8List.fromList([ASCII.aLower.index])), OperatorToken([OperatorSymb.equals]),
-                                           WordToken(Uint8List.fromList([ASCII.bLower.index])), OperatorToken([OperatorSymb.plus]),
-                                           WordToken(Uint8List.fromList([ASCII.cLower.index]))],
-                                            ExprLexicalType.statement)], ExprLexicalType.curlyBraces);
-    print(expectedTest.toString());
-    print(Expr.equal(resTest.item1, expectedTest));
-    return;
-
     var inp = Uint8List.fromList("a { b".codeUnits + [ASCII.emptyLF.index] + "c".codeUnits + [ASCII.emptyLF.index] + " (123 + 456 111); } d; ".codeUnits);
     //var inp = Uint8List.fromList("true { 1 2 [ false ] { true -1 false } } false true 3".codeUnits);
     var innp = """

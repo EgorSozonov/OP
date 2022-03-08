@@ -1,10 +1,12 @@
 import "dart:typed_data";
-import "package:o7/src/types/OperatorSymb.dart";
-import "package:o7/src/types/ParenType.dart";
 import "package:tuple/tuple.dart";
-import "../utils/Stack.dart";
+import "../../utils/Stack.dart";
+import "OperatorSymb.dart";
+import "ParenType.dart";
+
 
 typedef ListLoc = Tuple2<ListExpr, int>;
+
 class Expr {
     static bool equal(Expr a, Expr b) {
         if (a is! ListExpr || b is! ListExpr) return a == b;
@@ -17,8 +19,6 @@ class Expr {
         int i = 0;
 
         while (backtrackA.peek() != null) {
-
-
             if (backtrackB.peek() == null) return false;
 
             var listA = backtrackA.pop();
@@ -50,16 +50,11 @@ class Expr {
                     }
                     i = 0;
                 } else if (itmA != itmB) {
-                    print("pt3");
-                    print(itmA);
-                    print(itmB);
                     return false;
                 } else {
                     ++i;
                 }
-
             }
-
         }
         return true;
     }
