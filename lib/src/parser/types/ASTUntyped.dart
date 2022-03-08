@@ -1,3 +1,5 @@
+import 'package:o7/src/lexer/types/OperatorSymb.dart';
+import 'package:o7/src/parser/types/CoreOperator.dart';
 import "package:o7/src/parser/types/ReservedType.dart";
 
 
@@ -66,4 +68,14 @@ class While extends ASTUntyped {
     ASTUntyped testClause;
     List<ASTUntyped> body;
     While(this.testClause, this.body);
+}
+
+class CoreOperatorAST extends ASTUntyped {
+    CoreOperator val;
+    CoreOperatorAST(this.val);
+}
+
+class OperatorAST extends ASTUntyped {
+    List<OperatorSymb> val;
+    OperatorAST(this.val);
 }

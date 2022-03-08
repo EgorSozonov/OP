@@ -1,10 +1,10 @@
-import 'dart:typed_data';
-import 'package:o7/src/types/OperatorSymb.dart';
-import 'package:o7/src/types/ParenType.dart';
-import 'package:o7/src/utils/ASCII.dart';
-import 'package:o7/src/types/Token.dart';
+import "dart:typed_data";
+import "package:o7/src/lexer/types/Expr.dart";
+import "package:o7/src/lexer/types/OperatorSymb.dart";
+import "package:o7/src/lexer/types/ParenType.dart";
+import "package:o7/src/utils/ASCII.dart";
 import "package:test/test.dart";
-import 'package:o7/src/lexer/Lexer.dart';
+import "package:o7/src/lexer/Lexer.dart";
 
 
 void main() {

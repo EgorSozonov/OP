@@ -15,5 +15,6 @@ enum OperatorSymb {
     gt,
     question,
     equals,
+    colon,
     notASymb,
 }

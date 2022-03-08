@@ -1,12 +1,13 @@
 import "dart:typed_data";
 import "package:either_dart/either.dart";
-import "package:o7/src/types/ParenType.dart";
 import "package:o7/src/utils/ASCII.dart";
-import "package:o7/src/types/LexError.dart";
 import "package:tuple/tuple.dart";
-import "../types/OperatorSymb.dart";
-import "../types/Token.dart";
 import "../utils/Stack.dart";
+import "types/Expr.dart";
+import "types/LexError.dart";
+import "types/OperatorSymb.dart";
+import "types/ParenType.dart";
+
 
 typedef LexResult = Either<LexError, Tuple2<Expr, int>>;
 
@@ -362,6 +363,7 @@ class Lexer {
         if (symb == ASCII.lessThan.index) return OperatorSymb.lt;
         if (symb == ASCII.questionMark.index) return OperatorSymb.question;
         if (symb == ASCII.equalTo.index) return OperatorSymb.equals;
+        if (symb == ASCII.colon.index) return OperatorSymb.colon;
         return OperatorSymb.notASymb;
     }
 

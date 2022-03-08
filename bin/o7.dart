@@ -1,13 +1,7 @@
-import 'dart:math';
 import "dart:typed_data";
-import "package:o7/o7.dart" as o7;
-import "dart:io";
 import "package:o7/src/lexer/Lexer.dart";
-import "package:o7/src/types/OperatorSymb.dart";
-import "package:o7/src/types/ParenType.dart";
 import "package:o7/src/utils/ASCII.dart";
-import "package:o7/src/types/LexError.dart";
-import "package:o7/src/types/Token.dart";
+
 
 void main(List<String> arguments) async {
     // print("Hello world: ${o7.calculate()}!");
@@ -29,15 +23,6 @@ a = b + c
             x foo [12.34 fa]
         }
 """;
-
-    var expected = ListExpr([BoolToken(true), ListExpr([IntToken(1), IntToken(2),
-            ListExpr([WordToken(Uint8List.fromList("false".codeUnits))], ExprLexicalType.dataInitializer), ListExpr([BoolToken(true), IntToken(-1), BoolToken(true)], ExprLexicalType.curlyBraces)], ExprLexicalType.curlyBraces),
-            BoolToken(false), BoolToken(true), IntToken(3)], ExprLexicalType.curlyBraces);
-    var expected2 = ListExpr([BoolToken(true), ListExpr([IntToken(1), IntToken(2),
-            ListExpr([BoolToken(true), IntToken(-1), BoolToken(true)], ExprLexicalType.curlyBraces)], ExprLexicalType.curlyBraces),
-            BoolToken(false), BoolToken(true), IntToken(3)], ExprLexicalType.curlyBraces);
-
-
     var res = Lexer.lexicallyAnalyze(Uint8List.fromList(innp.codeUnits));
     // var eqRes = Expr.equal(expected, expected2);
     // print("eqRes = $eqRes");

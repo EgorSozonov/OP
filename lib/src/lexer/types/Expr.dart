@@ -179,23 +179,6 @@ class WordToken extends Expr {
 }
 
 
-class BoolToken extends Expr {
-    bool val = false;
-    BoolToken(this.val);
-
-    @override
-    bool operator ==(Object o) => (o is BoolToken) ? (val == o.val) : false;
-
-    @override
-    int get hashCode => val.hashCode;
-
-    @override
-    String toString() {
-        return "Bool $val";
-    }
-}
-
-
 class OperatorToken extends Expr {
     List<OperatorSymb> val;
     OperatorToken(this.val);
