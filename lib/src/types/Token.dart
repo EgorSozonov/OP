@@ -15,29 +15,44 @@ class Expr {
         backtrackA.push(Tuple2(a, 0));
         backtrackB.push(b);
         int i = 0;
+
         while (backtrackA.peek() != null) {
+
+
             if (backtrackB.peek() == null) return false;
 
             var listA = backtrackA.pop();
             var listB = backtrackB.pop();
             i = listA.item2;
             if (listA.item1.pType != listB.pType || listA.item1.val.length != listB.val.length) {
+                print(listA.item1.val.length);
+                print(listB.val.length);
+                if (listA.item1.val.length == 2) {
+                    print(listA.item1.val[0]);
+                    print(listA.item1.val[1]);
+                }
+
                 return false;
             }
 
             while (i < listA.item1.val.length) {
                 var itmA = listA.item1.val[i];
                 var itmB = listB.val[i];
+
                 if (itmA is ListExpr && itmB is ListExpr) {
                     backtrackA.push(Tuple2(listA.item1, i + 1));
                     backtrackB.push(listB);
                     listA = Tuple2(itmA, 0);
                     listB = itmB;
+
                     if (listA.item1.pType != listB.pType || listA.item1.val.length != listB.val.length) {
                         return false;
                     }
                     i = 0;
                 } else if (itmA != itmB) {
+                    print("pt3");
+                    print(itmA);
+                    print(itmB);
                     return false;
                 } else {
                     ++i;
@@ -85,11 +100,14 @@ class ListExpr extends Expr {
                             result.write("{ ");
                         } else if (listElem.pType == ExprLexicalType.dataInitializer) {
                             result.write("[ ");
-                        } else {
+                        } else if (listElem.pType == ExprLexicalType.parens){
                             result.write("( ");
+                        } else {
+                            result.write("| ");
                         }
 
                     } else {
+                        result.write("!!empty!!");
                         ++i;
                     }
                 } else {
@@ -103,8 +121,10 @@ class ListExpr extends Expr {
                     result.write(" }, ");
                 } else if (curr.pType == ExprLexicalType.dataInitializer) {
                     result.write(" ], ");
-                } else {
+                } else if (curr.pType == ExprLexicalType.parens) {
                     result.write(" ), ");
+                } else {
+                    result.write(" |, ");
                 }
                 var back = backtrack.pop();
                 curr = back.item1;
@@ -186,7 +206,14 @@ class OperatorToken extends Expr {
     OperatorToken(this.val);
 
     @override
-    bool operator ==(Object o) => (o is WordToken) ? (val == o.val) : false;
+    bool operator ==(Object o) {
+        if (o is! OperatorToken) return false;
+        if (this.val.length != o.val.length) return false;
+        for (int i = 0; i < this.val.length; ++i) {
+            if (this.val[i] != o.val[i]) return false;
+        }
+        return true;
+    }
 
     @override
     int get hashCode => val.hashCode;

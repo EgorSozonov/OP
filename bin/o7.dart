@@ -1,7 +1,9 @@
+import 'dart:math';
 import "dart:typed_data";
 import "package:o7/o7.dart" as o7;
 import "dart:io";
 import "package:o7/src/lexer/Lexer.dart";
+import "package:o7/src/types/OperatorSymb.dart";
 import "package:o7/src/types/ParenType.dart";
 import "package:o7/src/utils/ASCII.dart";
 import "package:o7/src/types/LexError.dart";
@@ -13,11 +15,26 @@ void main(List<String> arguments) async {
     // var bytes = await file.readAsBytes();
     // var resLex = Lexer.lexicallyAnalyze(bytes);
 
+    var inpStr = """
+a = b + c
+""";
+
+    var inpTest = Uint8List.fromList(inpStr.codeUnits);
+    var resTest = Lexer.lexicallyAnalyze(inpTest);
+    print(resTest.item1.toString());
+    var expectedTest = ListExpr([ListExpr([WordToken(Uint8List.fromList([ASCII.aLower.index])), OperatorToken([OperatorSymb.equals]),
+                                           WordToken(Uint8List.fromList([ASCII.bLower.index])), OperatorToken([OperatorSymb.plus]),
+                                           WordToken(Uint8List.fromList([ASCII.cLower.index]))],
+                                            ExprLexicalType.statement)], ExprLexicalType.curlyBraces);
+    print(expectedTest.toString());
+    print(Expr.equal(resTest.item1, expectedTest));
+    return;
+
     var inp = Uint8List.fromList("a { b".codeUnits + [ASCII.emptyLF.index] + "c".codeUnits + [ASCII.emptyLF.index] + " (123 + 456 111); } d; ".codeUnits);
     //var inp = Uint8List.fromList("true { 1 2 [ false ] { true -1 false } } false true 3".codeUnits);
     var innp = """
         a b
-        # c d"
+        #cd.# he  he  he
         {
             12 + y
             x foo [12.34 fa]
@@ -42,7 +59,7 @@ void main(List<String> arguments) async {
         print(res.item2.toString());
         print(res.item1);
     } else {
-        print("Lexer successful with ${res.item1.length} expressions");
+        print("Lexer successful");
         print(res.item1);
         // print("Expected:");
         // print(expected);

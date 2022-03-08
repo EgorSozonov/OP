@@ -11,13 +11,13 @@ import "../utils/Stack.dart";
 typedef LexResult = Either<LexError, Tuple2<Expr, int>>;
 
 class Lexer {
-    static Tuple2<List<Expr>, LexError?> lexicallyAnalyze(Uint8List inp) {
+    static Tuple2<Expr, LexError?> lexicallyAnalyze(Uint8List inp) {
         LexError? err;
-        if (inp.length < 2) return Tuple2([], err);
+        if (inp.length < 2) return Tuple2(ListExpr([], ExprLexicalType.curlyBraces), err);
 
         int i = 0;
         var curr = ListExpr([], ExprLexicalType.curlyBraces);
-        var result = [curr];
+        var result = curr;
         Stack<ListExpr> backtrack = Stack();
         backtrack.push(curr);
         var firstList = ListExpr([], ExprLexicalType.statement);
@@ -81,7 +81,15 @@ class Lexer {
                 if (backtrack.peek() == null) {
                     return Tuple2(result, ExtraClosingCurlyBraceError());
                 }
-                curr = backtrack.pop();
+                // TODO
+                var back = backtrack.pop();
+                var last = back.val.last;
+                if (last is ListExpr) {
+                    if (last.val.isEmpty) {
+                        back.val.removeLast();
+                    }
+                }
+                curr = back;
                 ++i;
             } else if (cChar == ASCII.parenthesisOpen.index) {
                 var newList = ListExpr([], ExprLexicalType.parens);
@@ -94,6 +102,15 @@ class Lexer {
                     return Tuple2(result, ExtraClosingParenError());
                 }
                 var back = backtrack.pop();
+
+                // TODO
+                var last = back.val.last;
+                if (last is ListExpr) {
+                    if (last.val.isEmpty) {
+                        back.val.removeLast();
+                    }
+                }
+
                 curr = back;
                 ++i;
             }  else if (cChar == ASCII.bracketOpen.index) {
@@ -107,6 +124,15 @@ class Lexer {
                     return Tuple2(result, ExtraClosingBracketError());
                 }
                 var back = backtrack.pop();
+
+                // TODO
+                var last = back.val.last;
+                if (last is ListExpr) {
+                    if (last.val.isEmpty) {
+                        back.val.removeLast();
+                    }
+                }
+
                 curr = back;
                 ++i;
             } else {
@@ -132,6 +158,15 @@ class Lexer {
                     i = mbToken.right.item2;
                 } else {
                     return Tuple2(result, mbToken.left);
+                }
+            }
+        }
+        if (backtrack.peek() != null) {
+            var back = backtrack.pop();
+            var last = back.val.last;
+            if (last is ListExpr) {
+                if (last.val.isEmpty) {
+                    back.val.removeLast();
                 }
             }
         }
@@ -203,17 +238,6 @@ class Lexer {
         } else {
             return Right(Tuple2(mbNumber.right, ind));
         }
-        // var digitList = Uint8List.fromList(inp.sublist(isNegative ? start + 1 : start, ind)
-        //                    .where((x) => x != ASCII.UNDERSCORE.index)
-        //                    .toList());
-
-        // if (checkIntRange(digitList, isNegative)) {
-        //     var actualInt = intOfDigits(digitList);
-        //     return Right(Tuple2(IntToken(isNegative ? (-1)*actualInt : actualInt), ind));
-        // } else {
-        //     return Left(
-        //         IntError("Int lexical error: number outside range [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807]"));
-        // }
     }
 
 
@@ -353,14 +377,12 @@ class Lexer {
             if (inp[i] == ASCII.emptyLF.index) {
                 endContent = i - 1;
                 ++i;
-
                 break;
             } else if ((inp[i] == ASCII.dot.index
                         && i < walkLen
                         && inp[i + 1] == ASCII.hashtag.index)) {
                 endContent = i - 1;
                 i += 2;
-
                 break;
             }
             ++i;
