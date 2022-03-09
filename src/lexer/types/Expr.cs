@@ -1,17 +1,20 @@
+namespace O7;
+
+
 using System;
 using System.Collections.Generic;
-
-namespace O7;
+using System.Linq;
+using System.Text;
 
 class Expr {
     static bool equal(Expr a, Expr b) {
-        if (a is! ListExpr || b is! ListExpr) return a == b;
+        if (a is not ListExpr || b is not ListExpr) return a == b;
 
-        var backtrackA = Stack<ListLoc>();
-        var backtrackB = Stack<ListExpr>();
+        var backtrackA = new Stack<Tuple<ListExpr, int>>();
+        var backtrackB = new Stack<ListExpr>();
 
-        backtrackA.push(Tuple2(a, 0));
-        backtrackB.push(b);
+        backtrackA.push(new Tuple<ListExpr, int>((ListExpr)a, 0));
+        backtrackB.push((ListExpr)b);
         int i = 0;
 
         while (backtrackA.peek() != null) {
@@ -19,29 +22,22 @@ class Expr {
 
             var listA = backtrackA.pop();
             var listB = backtrackB.pop();
-            i = listA.item2;
-            if (listA.item1.pType != listB.pType || listA.item1.val.length != listB.val.length) {
-                print(listA.item1.val.length);
-                print(listB.val.length);
-                if (listA.item1.val.length == 2) {
-                    print(listA.item1.val[0]);
-                    print(listA.item1.val[1]);
-                }
-
+            i = listA.Item2;
+            if (listA.Item1.pType != listB.pType || listA.Item1.val.Count != listB.val.Count) {
                 return false;
             }
 
-            while (i < listA.item1.val.length) {
-                var itmA = listA.item1.val[i];
+            while (i < listA.Item1.val.Count) {
+                var itmA = listA.Item1.val[i];
                 var itmB = listB.val[i];
 
                 if (itmA is ListExpr && itmB is ListExpr) {
-                    backtrackA.push(Tuple2(listA.item1, i + 1));
+                    backtrackA.push(new Tuple<ListExpr, int>(listA.Item1, i + 1));
                     backtrackB.push(listB);
-                    listA = Tuple2(itmA, 0);
-                    listB = itmB;
+                    listA = new Tuple<ListExpr, int>((ListExpr)itmA, 0);
+                    listB = (ListExpr)itmB;
 
-                    if (listA.item1.pType != listB.pType || listA.item1.val.length != listB.val.length) {
+                    if (listA.Item1.pType != listB.pType || listA.Item1.val.Count != listB.val.Count) {
                         return false;
                     }
                     i = 0;
@@ -59,24 +55,22 @@ class Expr {
 /// A list of tokens, which can be a statement, a list of statements,
 /// or a data initializer
 class ListExpr : Expr {
-    List<Expr> val = new List<Expr>();
-    ExprLexicalType pType;
+    public List<Expr> val = new List<Expr>();
+    public ExprLexicalType pType;
     public ListExpr(List<Expr> val, ExprLexicalType pType) {
         this.val = val;
         this.pType = pType;
     }
 
-    @override
-    bool operator ==(object o) => (o is ListExpr) ? (val == o.val) : false;
+    public override bool Equals(object o) => (o is ListExpr) ? (val == ((ListExpr)o).val) : false;
+    public override int GetHashCode() => this.val.Count;
 
-
-    int get hashCode => val.hashCode;
 
     public override string ToString() {
         if (!this.val.Any()) return "Empty ListExpr";
 
         var result = new StringBuilder();
-        var backtrack = Stack<Tuple<ListExpr, int>>();
+        var backtrack = new Stack<Tuple<ListExpr, int>>();
         var curr = this;
         var i = 0;
 
@@ -84,46 +78,46 @@ class ListExpr : Expr {
             while (i < curr.val.Count) {
                 if (curr.val[i] is ListExpr) {
                     var listElem = (curr.val[i] as ListExpr);
-                    if (listElem.val.isNotEmpty) {
-                        backtrack.push((curr, i));
+                    if (listElem.val.Any()) {
+                        backtrack.push(new Tuple<ListExpr, int>(curr, i));
                         curr = listElem;
                         i = 0;
                         if (listElem.pType == ExprLexicalType.curlyBraces) {
-                            result.write("{ ");
+                            result.Append("{ ");
                         } else if (listElem.pType == ExprLexicalType.dataInitializer) {
-                            result.write("[ ");
+                            result.Append("[ ");
                         } else if (listElem.pType == ExprLexicalType.parens){
-                            result.write("( ");
+                            result.Append("( ");
                         } else {
-                            result.write("| ");
+                            result.Append("| ");
                         }
 
                     } else {
-                        result.write("!!empty!!");
+                        result.Append("!!empty!!");
                         ++i;
                     }
                 } else {
-                    result.write(curr.val[i].ToString());
-                    result.write(", ");
+                    result.Append(curr.val[i].ToString());
+                    result.Append(", ");
                     ++i;
                 }
             }
             if (backtrack.peek() != null) {
                 if (curr.pType == ExprLexicalType.curlyBraces) {
-                    result.write(" }, ");
+                    result.Append(" }, ");
                 } else if (curr.pType == ExprLexicalType.dataInitializer) {
-                    result.write(" ], ");
+                    result.Append(" ], ");
                 } else if (curr.pType == ExprLexicalType.parens) {
-                    result.write(" ), ");
+                    result.Append(" ), ");
                 } else {
-                    result.write(" |, ");
+                    result.Append(" |, ");
                 }
                 var back = backtrack.pop();
-                curr = back.item1;
-                i = back.item2 + 1;
+                curr = back.Item1;
+                i = back.Item2 + 1;
             }
         } while (backtrack.peek() != null || i < curr.val.Count);
 
-        return result.toString();
+        return result.ToString();
     }
 }
