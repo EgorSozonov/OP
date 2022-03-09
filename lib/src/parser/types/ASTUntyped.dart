@@ -1,9 +1,19 @@
-import 'package:o7/src/lexer/types/OperatorSymb.dart';
-import 'package:o7/src/parser/types/CoreOperator.dart';
+import "package:o7/src/lexer/types/OperatorSymb.dart";
+import "package:o7/src/parser/types/CoreOperator.dart";
 import "package:o7/src/parser/types/ReservedType.dart";
 
 
 class ASTUntyped {}
+
+class ListStatements extends ASTUntyped {
+    List<Statement> val;
+    ListStatements(this.val);
+}
+
+class Statement extends ASTUntyped {
+    List<ASTUntyped> val;
+    Statement(this.val);
+}
 
 class Ident extends ASTUntyped {
     String name;

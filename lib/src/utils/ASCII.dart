@@ -1,54 +1,54 @@
 enum ASCII {
-    emptyNULL,                                            // NULL
-    emptySOH,                                             // Start of Heading
-    emptySTX,                                             // Start of Text
-    emptyETX,                                             // End of Text
-    emptyEOT,                                             // End of Transmission
-    emptyENQ,                                             // Enquiry
-    emptyACK,                                             // Acknowledgement
-    emptyBEL,                                             // Bell
-    emptyBS,                                              // Backspace
-    emptyTAB,                                             // Horizontal Tab
-    emptyLF,                                              // Line Feed
-    emptyVT,                                              // Vertical Tab
-    emptyFF,                                              // Form Feed
-    emptyCR,                                              // Carriage Return
-    emptySO,                                              // Shift Out
-    emptySI,                                              // Shift In
-    emptyDLE,                                             // Data Link Escape
-    emptyDC1,                                             // Device Control 1
-    emptyDC2,                                             // Device Control 2
-    emptyDC3,                                             // Device Control 3
-    emptyDC4,                                             // Device Control 4
-    emptyNAK,                                             // Negative Acknowledgement
-    emptySYN,                                             // Synchronous Idle
-    emptyETB,                                             // End of Transmission Block
-    emptyCANCEL,                                          // Cancel
-    emptyENDMEDIUM,                                       // End of Medium
-    emptySUB,                                             // Substitute
-    emptyESCAPE,                                          // Escape
-    emptySF,                                              // File Separator
-    emptyGS,                                              // Group Separator
-    emptyRS,                                              // Record Separator
-    emptyUS,                                              // Unit Separator
+    emptyNULL,                                      // NULL
+    emptySOH,                                       // Start of Heading
+    emptySTX,                                       // Start of Text
+    emptyETX,                                       // End of Text
+    emptyEOT,                                       // End of Transmission
+    emptyENQ,                                       // Enquiry
+    emptyACK,                                       // Acknowledgement
+    emptyBEL,                                       // Bell
+    emptyBS,                                        // Backspace
+    emptyTAB,                                       // Horizontal Tab
+    emptyLF,                                        // Line Feed
+    emptyVT,                                        // Vertical Tab
+    emptyFF,                                        // Form Feed
+    emptyCR,                                        // Carriage Return
+    emptySO,                                        // Shift Out
+    emptySI,                                        // Shift In
+    emptyDLE,                                       // Data Link Escape
+    emptyDC1,                                       // Device Control 1
+    emptyDC2,                                       // Device Control 2
+    emptyDC3,                                       // Device Control 3
+    emptyDC4,                                       // Device Control 4
+    emptyNAK,                                       // Negative Acknowledgement
+    emptySYN,                                       // Synchronous Idle
+    emptyETB,                                       // End of Transmission Block
+    emptyCANCEL,                                    // Cancel
+    emptyENDMEDIUM,                                 // End of Medium
+    emptySUB,                                       // Substitute
+    emptyESCAPE,                                    // Escape
+    emptySF,                                        // File Separator
+    emptyGS,                                        // Group Separator
+    emptyRS,                                        // Record Separator
+    emptyUS,                                        // Unit Separator
 
     //misc characters
 
-    space,                                           // space
-    exclamationMark,                                 // !
-    quotationMarkDouble,                           // "
-    hashtag,                                         // #
-    dollar,                                     // $
-    percent,                                         // %
-    ampersand,                                       // &
-    quotationMarkSingle,                           // '
+    space,                                          // space
+    exclamationMark,                                // !
+    quotationMarkDouble,                            // "
+    hashtag,                                        // #
+    dollar,                                         // $
+    percent,                                        // %
+    ampersand,                                      // &
+    quotationMarkSingle,                            // '
     parenthesisOpen,                                // (
     parenthesisClose,                               // )
-    asterisk,                                        // *
-    plus,                                            // +
-    comma,                                           // ,
-    minus,                                           // -
-    dot,                                             // .
+    asterisk,                                       // *
+    plus,                                           // +
+    comma,                                          // ,
+    minus,                                          // -
+    dot,                                            // .
     slashForward,                                   // /
     digit0,                                         // 0
     digit1,                                         // 1
@@ -60,7 +60,7 @@ enum ASCII {
     digit7,                                         // 7
     digit8,                                         // 8
     digit9,                                         // 9
-    colon,                                           // :
+    colon,                                          // :
     colonSemi,                                      // ;
     lessThan,                                       // <
     equalTo,                                        // =
@@ -102,8 +102,8 @@ enum ASCII {
     bracketOpen,                                    // [
     slashBackward,                                  // \
     bracketClose,                                   // ]
-    caret,                                           // ^
-    underscore,                                      // _
+    caret,                                          // ^
+    underscore,                                     // _
     graveAccent,                                    // `
 
     //lower case alphabet
@@ -140,7 +140,7 @@ enum ASCII {
     curlyOpen,                                      // {
     verticalBar,                                    // |
     curlyClose,                                     // }
-    tilde,                                           // ~
+    tilde,                                          // ~
 
     emptyDel,                                       // Delete
 }

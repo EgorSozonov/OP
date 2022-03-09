@@ -1,25 +1,44 @@
-import 'dart:collection';
-
-import 'package:o7/src/lexer/types/OperatorSymb.dart';
+import "dart:collection";
+import "package:o7/src/lexer/types/OperatorSymb.dart";
 import "package:o7/src/parser/types/ASTUntyped.dart";
-import 'package:o7/src/parser/types/CoreOperator.dart';
+import "package:o7/src/parser/types/CoreOperator.dart";
 import "package:o7/src/parser/types/ParseError.dart";
 import "package:tuple/tuple.dart";
 import "../lexer/types/Expr.dart";
-import 'types/ReservedType.dart';
+import "../utils/Stack.dart";
+import "types/ReservedType.dart";
 
 
 typedef ParseResult = Tuple2<ASTUntyped, ParseError?>;
 
-class Parser {
+class PreParser {
     static ParseResult parse(Expr inp) {
+        var newStatement = Statement([]);
+        var result = ListStatements([newStatement]);
         var reservedWords = getReservedMap();
         var coreOperators = getOperatorList();
+        var backtrack = Stack<Tuple2<ListExpr, int>>();
+
         if (inp is ListExpr) {
-            return Tuple2(IntLiteral(-1), null);
+            int i = 0;
+            backtrack.push(Tuple2(inp, i));
+            var curr = inp;
+            while (backtrack.peek() != null) {
+                var back = backtrack.pop();
+                curr = back.item1;
+                i = back.item2;
+                while (i < curr.val.length) {
+                    if (curr.val[i] is ListExpr) {
+
+                    } else {
+                        newStatement.val.add(parseAtom(curr.val[i], reservedWords, coreOperators));
+                    }
+                }
+            }
         } else {
             return Tuple2(parseAtom(inp, reservedWords, coreOperators), null);
         }
+        return Tuple2(result, null);
 
     }
 

@@ -32,7 +32,7 @@ a = b + c
         var expected = ListExpr([ListExpr([WordToken(Uint8List.fromList([ASCII.aLower.index])), OperatorToken([OperatorSymb.equals]),
                                            WordToken(Uint8List.fromList([ASCII.bLower.index])), OperatorToken([OperatorSymb.plus]),
                                            WordToken(Uint8List.fromList([ASCII.cLower.index]))],
-                                            ExprLexicalType.statement)], ExprLexicalType.curlyBraces);
+                                           ExprLexicalType.statement)], ExprLexicalType.curlyBraces);
         expect(res.item2, null);
         expect(Expr.equal(res.item1, expected), true);
     });
