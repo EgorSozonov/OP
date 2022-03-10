@@ -1,6 +1,4 @@
 namespace O7;
-
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -172,64 +170,63 @@ class WordToken : Expr {
     public override int GetHashCode() => val.Length;
 
     public override String ToString() {
-        return $"Word {System.Text.Encoding.ASCII.GetString(this.val)}";
+        return $"Word {Encoding.ASCII.GetString(this.val)}";
     }
 }
 
 
 class OperatorToken : Expr {
-    List<OperatorSymb> val;
-    OperatorToken(this.val);
+    public List<OperatorSymb> val;
+    public OperatorToken(List<OperatorSymb> val) {
+        this.val = val;
+    }
 
-    @override
-    bool operator ==(Object o) {
-        if (o is! OperatorToken) return false;
-        if (this.val.length != o.val.length) return false;
-        for (int i = 0; i < this.val.length; ++i) {
-            if (this.val[i] != o.val[i]) return false;
+    public override bool Equals(Object o) {
+        if (o is not OperatorToken) return false;
+        var oth = (OperatorToken)o;
+        if (this.val.Count != oth.val.Count) return false;
+        for (int i = 0; i < this.val.Count; ++i) {
+            if (this.val[i] != oth.val[i]) return false;
         }
         return true;
     }
 
-    @override
-    int get hashCode => val.hashCode;
+    public override int GetHashCode() => val.Count;
 
-    @override
-    String toString() {
-        return "Operator $val";
+    public override string ToString() {
+        return $"Operator {val}";
     }
 }
 
 
 class StringToken : Expr {
-    String val;
-    StringToken(this.val);
+    public String val;
+    public StringToken(String val) {
+        this.val = val;
+    }
 
-    @override
-    bool operator ==(Object o) => (o is StringToken) ? (val == o.val) : false;
+    public override bool Equals(Object o) => (o is StringToken oth) ? (val == oth.val) : false;
 
-    @override
-    int get hashCode => val.hashCode;
+    public override int GetHashCode() => val.GetHashCode();
 
-    @override
-    String toString() {
-        return "String $val";
+    public string ToString() {
+        return $"String {val}";
     }
 }
 
 
 class CommentToken : Expr {
-    String val;
-    CommentToken(this.val);
+    public String val;
 
-    @override
-    bool operator ==(Object o) => (o is CommentToken) ? (val == o.val) : false;
+    public CommentToken(String val) {
+        this.val = val;
+    }
 
-    @override
-    int get hashCode => val.hashCode;
+    public override bool Equals(Object o) => (o is CommentToken oth) ? (val == oth.val) : false;
 
-    @override
-    String toString() {
-        return "Comment $val";
+    public override int GetHashCode() => val.GetHashCode();
+
+    public override String ToString() {
+        return $"Comment {val}";
     }
 }

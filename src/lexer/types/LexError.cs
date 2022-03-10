@@ -23,13 +23,18 @@ class EmptyStackError : LexError {
 
 
 class UnexpectedSymbolError : LexError {
-    public string val = "";
+    public string val;
+
     public UnexpectedSymbolError(string val) {
         this.val = val;
     }
 
+    public UnexpectedSymbolError(byte val) {
+        this.val = val.ToString();
+    }
+
     public override string ToString() {
-        return "UnexpectedSymbolError: $val";
+        return $"UnexpectedSymbolError: {val}";
     }
 }
 
