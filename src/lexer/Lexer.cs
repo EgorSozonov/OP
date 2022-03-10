@@ -1,26 +1,31 @@
+
+
 namespace O7;
 
+using System;
 using System.Collections.Generic;
-using LexResult = Either<LexError, Tuple2<Expr, int>>;
+using System.Linq;
+using LanguageExt;
+using LexResult = Either<LexError, Tuple<Expr, int>>;
 
 class Lexer {
     static Tuple<Expr, LexError> lexicallyAnalyze(byte[] inp) {
-        LexError? err;
-        if (inp.Length < 2) return new Tuple(ListExpr([], ExprLexicalType.curlyBraces), err);
+        LexError err = null;
+        if (inp.Length < 2) return new Tuple<Expr, LexError>(new ListExpr(ExprLexicalType.curlyBraces), err);
 
         int i = 0;
-        var curr = new ListExpr([], ExprLexicalType.curlyBraces);
+        var curr = new ListExpr(ExprLexicalType.curlyBraces);
         var result = curr;
         var backtrack = new Stack<ListExpr>();
         backtrack.push(curr);
-        var firstList = new ListExpr([], ExprLexicalType.statement);
-        curr.val.add(firstList);
+        var firstList = new ListExpr(ExprLexicalType.statement);
+        curr.val.Add(firstList);
         curr = firstList;
 
         int walkLen = inp.Length - 1;
         while (i <= walkLen) {
             int cChar = inp[i];
-            if (cChar > 127) return new Tuple(result, NonAsciiError());
+            if (cChar > 127) return new Tuple<Expr, LexError>(result, new NonAsciiError());
             LexResult mbToken;
 
             if (cChar == (byte)ASCII.space || cChar == (byte)ASCII.emptyCR) {
@@ -29,7 +34,7 @@ class Lexer {
                 if (backtrack.peek() != null && backtrack.peek()?.pType == ExprLexicalType.curlyBraces) {
                     // we are in a CurlyBraces context, so a newline means a new statement
                     var back = backtrack.peek();
-                    var newStatement = new ListExpr([], ExprLexicalType.statement);
+                    var newStatement = new ListExpr(ExprLexicalType.statement);
                     back?.val.Add(newStatement);
                     curr = newStatement;
                 }
@@ -37,63 +42,63 @@ class Lexer {
 
             } else if (cChar == (byte)ASCII.colonSemi) {
                 if (curr.pType == ExprLexicalType.parens) {
-                    return new Tuple(result, UnexpectedSymbolError(
+                    return new Tuple<Expr, LexError>(result, new UnexpectedSymbolError(
                         "Semi-colons are not allowed in inline expressions (i.e. directly inside parentheses)"));
                 }
                 var prevList = backtrack.peek();
 
                 if (prevList != null) {
-                    curr = new ListExpr([], ExprLexicalType.statement);
+                    curr = new ListExpr(ExprLexicalType.statement);
                     prevList.val.Add(curr);
                 } else {
-                    return new Tuple(result, EmptyStackError());
+                    return new Tuple<Expr, LexError>(result, new EmptyStackError());
                 }
 
                 ++i;
             } else if (cChar == (byte)ASCII.curlyOpen) {
 
-                var newList = new ListExpr([], ExprLexicalType.curlyBraces);
-                var newCurr = new ListExpr([], ExprLexicalType.statement);
-                newList.val.add(newCurr);
-                curr.val.add(newList);
+                var newList = new ListExpr(ExprLexicalType.curlyBraces);
+                var newCurr = new ListExpr(ExprLexicalType.statement);
+                newList.val.Add(newCurr);
+                curr.val.Add(newList);
                 backtrack.push(curr);
                 backtrack.push(newList);
                 curr = newCurr;
                 ++i;
             } else if (cChar == (byte)ASCII.curlyClose) {
                 if (backtrack.peek() == null || backtrack.peek()?.pType != ExprLexicalType.curlyBraces) {
-                    return new Tuple(result, ExtraClosingCurlyBraceError());
+                    return new Tuple<Expr, LexError>(result, new ExtraClosingCurlyBraceError());
                 }
                 var _ = backtrack.pop();
                 if (backtrack.peek() == null) {
-                    return new Tuple(result, ExtraClosingCurlyBraceError());
+                    return new Tuple<Expr, LexError>(result, new ExtraClosingCurlyBraceError());
                 }
                 // TODO
                 var back = backtrack.pop();
-                var last = back.val.last;
-                if (last is ListExpr) {
-                    if (last.val.isEmpty) {
+                var last = back.val.Last();
+                if (last is ListExpr le) {
+                    if (!le.val.Any()) {
                         back.val.removeLast();
                     }
                 }
                 curr = back;
                 ++i;
             } else if (cChar == (byte)ASCII.parenthesisOpen) {
-                var newList = new ListExpr([], ExprLexicalType.parens);
-                curr.val.add(newList);
+                var newList = new ListExpr(ExprLexicalType.parens);
+                curr.val.Add(newList);
                 backtrack.push(curr);
                 curr = newList;
                 ++i;
             } else if (cChar == (byte)ASCII.parenthesisClose) {
                 if (backtrack.peek() == null || curr.pType != ExprLexicalType.parens) {
-                    return new Tuple(result, ExtraClosingParenError());
+                    return new Tuple<Expr, LexError>(result, new ExtraClosingParenError());
                 }
                 var back = backtrack.pop();
 
                 // TODO
-                var last = back.val.last;
+                var last = back.val.Last();
                 if (last is ListExpr) {
-                    if (last.val.isEmpty) {
+                    if (!((ListExpr)last).val.Any()) {
                         back.val.removeLast();
                     }
                 }
@@ -101,21 +106,21 @@ class Lexer {
                 curr = back;
                 ++i;
             }  else if (cChar == (byte)ASCII.bracketOpen) {
-                var newList = new ListExpr([], ExprLexicalType.dataInitializer);
-                curr.val.add(newList);
+                var newList = new ListExpr(ExprLexicalType.dataInitializer);
+                curr.val.Add(newList);
                 backtrack.push(curr);
                 curr = newList;
                 ++i;
             } else if (cChar == (byte)ASCII.bracketClose) {
                 if (backtrack.peek() == null || curr.pType != ExprLexicalType.dataInitializer) {
-                    return new Tuple(result, ExtraClosingBracketError());
+                    return new Tuple<Expr, LexError>(result, new ExtraClosingBracketError());
                 }
                 var back = backtrack.pop();
 
                 // TODO
-                var last = back.val.last;
-                if (last is ListExpr) {
-                    if (last.val.isEmpty) {
+                var last = back.val.Last();
+                if (last is ListExpr le) {
+                    if (!le.val.Any()) {
                         back.val.removeLast();
                     }
                 }
@@ -138,26 +143,26 @@ class Lexer {
                 } else if (isOperatorSymb(cChar) != OperatorSymb.notASymb) {
                     mbToken = lexOperator(inp, i, walkLen);
                 } else {
-                    mbToken = Left(UnexpectedSymbolError(String.fromCharCode(inp[i])));
+                    mbToken = new Left(new UnexpectedSymbolError(String.(inp[i])));
                 }
                 if (mbToken.isRight) {
-                    curr.val.add(mbToken.right.item1);
+                    curr.val.Add(mbToken.right.item1);
                     i = mbToken.right.item2;
                 } else {
-                    return new Tuple(result, mbToken.left);
+                    return new Tuple<Expr, LexError>(result, mbToken.left);
                 }
             }
         }
         if (backtrack.peek() != null) {
             var back = backtrack.pop();
-            var last = back.val.last;
-            if (last is ListExpr) {
-                if (last.val.isEmpty) {
+            var last = back.val.Last();
+            if (last is ListExpr le) {
+                if (!le.val.Any()) {
                     back.val.removeLast();
                 }
             }
         }
-        return new Tuple(result, err);
+        return new Tuple<Expr, LexError>(result, err);
     }
 
     // "int" range from -9,223,372,036,854,775,808
@@ -182,7 +187,7 @@ class Lexer {
         };
 
     static LexResult lexNumber(byte[] inp, int start, int walkLen) {
-        if (start > walkLen) return Left(EndOfInputError());
+        if (start > walkLen) return new Left(new EndOfInputError());
 
         var ind = start;
         var currByte = inp[start];
@@ -223,24 +228,24 @@ class Lexer {
         if (mbNumber.isLeft) {
             return new Left(mbNumber.left);
         } else {
-            return new Right(Tuple2(mbNumber.right, ind));
+            return new Right(new Tuple<Expr, int>(mbNumber.right, ind));
         }
     }
 
 
     static Either<LexError, Expr> lexInt(byte[] inp, int start, int endInclusive, bool isNegative) {
-        var digitList = byte[].fromList(inp.sublist(start, endInclusive + 1)
-                           .where((x) => x != (byte)ASCII.underscore)
-                           .toList());
+        var digitList = filterBytes(inp, start, endInclusive, (x) => x != (byte)ASCII.underscore);
 
         if (checkIntRange(digitList, isNegative)) {
             var actualInt = intOfDigits(digitList);
-            return new Right(IntToken(isNegative ? (-1)*actualInt : actualInt));
+            return new IntToken(isNegative ? (-1)*actualInt : actualInt);
         } else {
-            return new Left(
-                IntError("Int lexical error: number outside range [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807]"));
+            return
+                new IntError("Int lexical error: number outside range [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807]");
         }
     }
+
+
 
     static Either<LexError, Expr> lexFloat(byte[] inp, int start, int endInclusive, bool isNegative) {
         var digitList = byte[].fromList(inp.sublist(start, endInclusive + 1)
@@ -248,10 +253,10 @@ class Lexer {
                            .toList());
         var str = (isNegative ? "-" : "") + String.fromCharCodes(digitList);
         if (double.TryParse(str, out double fl)) {
-            return new Right(FloatToken(mbFloat));
+            return new Right(new FloatToken(mbFloat));
         } else {
             return new Left(
-                IntError("Float lexical error: '$str' not parsing as a floating-point number"));
+                new IntError("Float lexical error: '$str' not parsing as a floating-point number"));
         }
     }
 
@@ -272,10 +277,10 @@ class Lexer {
     }
 
 
-    static int intOfDigits(byte[] digits) {
+    static int intOfDigits(List<byte> digits) {
         int result = 0;
         int powerOfTen = 1;
-        for (int ind = digits.Length - 1; ind > -1; --ind) {
+        for (int ind = digits.Count - 1; ind > -1; --ind) {
             int digitValue = (digits[ind] - (byte)ASCII.digit0)*powerOfTen;
             result += digitValue;
             powerOfTen *= 10;
@@ -299,13 +304,13 @@ class Lexer {
             if (i <= walkLen) currByte = inp[i];
         }
         if (i == startOfLetters) {
-            return Left(WordError("Word did not contain any letters"));
+            return new WordError("Word did not contain any letters");
         }
         if (i <= walkLen && inp[i] == (byte)ASCII.underscore) {
-            return Left(WordError("Snake-case identifier ${String.fromCharCodes(byte[].fromList(inp.sublist(start, i).toList()))}_"));
+            return new Left(new WordError("Snake-case identifier ${String.fromCharCodes(byte[].fromList(inp.sublist(start, i).toList()))}_"));
         }
         var wrd = byte[].fromList(inp.sublist(start, i).toList());
-        return Right(Tuple2(WordToken(wrd), i));
+        return Right(new Tuple<Expr, int>(new WordToken(wrd), i));
     }
 
 
@@ -327,7 +332,7 @@ class Lexer {
         if (i <= walkLen && isOperatorSymb(inp[i]) != OperatorSymb.notASymb) {
             return new Left(OperatorError("Operators longer than 3 symbols are not allowed"));
         }
-        return new Right(Tuple2(OperatorToken(result), i));
+        return new Right(new Tuple<Expr, LexError>(new OperatorToken(result), i));
     }
 
 
@@ -364,7 +369,7 @@ class Lexer {
                 endContent = i - 1;
                 ++i;
                 break;
-            } else if ((inp[i] == (byte)ASCII.dot.index
+            } else if ((inp[i] == (byte)ASCII.dot
                         && i < walkLen
                         && inp[i + 1] == (byte)ASCII.hashtag)) {
                 endContent = i - 1;
@@ -374,9 +379,9 @@ class Lexer {
             ++i;
         }
         if (endContent == -1) endContent = walkLen;
-        if (startContent == endContent) return new Right(Tuple2(CommentToken(""), i));
+        if (startContent == endContent) return new Right(new Tuple<Expr, LexError>(new CommentToken(""), i));
         var subList = byte[].fromList(inp.sublist(startContent, endContent + 1).toList());
-        return new Right(Tuple2(CommentToken(String.fromCharCodes(subList)), i));
+        return new Tuple<Expr, LexError>(new CommentToken(String.fromCharCodes(subList)), i);
     }
 
     /// Reads symbols from '"' until another '"', while skipping '\"' combination.
@@ -392,16 +397,26 @@ class Lexer {
                 ++i;
 
                 break;
-            } else if ((inp[i] == (byte)ASCII.slashBackward.index
+            } else if ((inp[i] == (byte)ASCII.slashBackward
                         && i < walkLen
                         && inp[i + 1] == (byte)ASCII.quotationMarkDouble)) {
                 i += 2;
             }
             ++i;
         }
-        if (endContent == -1) return Left(EndOfInputError());
-        if (startContent == endContent) return Right(Tuple2(StringToken(""), i));
+        if (endContent == -1) return Left(new EndOfInputError());
+        if (startContent == endContent) return Right(new Tuple<Expr, LexError>(new StringToken(""), i));
         var subList = byte[].fromList(inp.sublist(startContent, endContent + 1).toList());
-        return new Right(Tuple2(StringToken(String.fromCharCodes(subList)), i));
+        return new Right(new Tuple<Expr, LexError>(new StringToken(String.fromCharCodes(subList)), i));
+    }
+
+    private static List<byte> filterBytes(byte[] inp, int start, int end, Func<byte, bool> predicate) {
+        var result = new List<byte>(end - start + 1);
+        for (int i = start; i <= end; ++i) {
+            if (predicate(inp[i])) {
+                result.Add(inp[i]);
+            }
+        }
+        return result;
     }
 }

@@ -55,10 +55,12 @@ class Expr {
 /// A list of tokens, which can be a statement, a list of statements,
 /// or a data initializer
 class ListExpr : Expr {
-    public List<Expr> val = new List<Expr>();
+    public List<Expr> val;
     public ExprLexicalType pType;
-    public ListExpr(List<Expr> val, ExprLexicalType pType) {
-        this.val = val;
+
+
+    public ListExpr(ExprLexicalType pType) {
+        this.val = new List<Expr>();
         this.pType = pType;
     }
 
@@ -119,5 +121,115 @@ class ListExpr : Expr {
         } while (backtrack.peek() != null || i < curr.val.Count);
 
         return result.ToString();
+    }
+}
+
+
+/// A valid int64 token
+class IntToken : Expr {
+    int val = 0;
+    public IntToken(int val) {
+        this.val = val;
+    }
+
+
+    public override bool Equals(Object o) => (o is IntToken) ? (val == ((IntToken)o).val) : false;
+
+
+    public override int GetHashCode() => this.val;
+
+
+    public override string ToString() {
+        return $"Int {val}";
+    }
+}
+
+
+/// A floating-point number token
+class FloatToken : Expr {
+    public double val = 0;
+
+    public FloatToken(double val) {
+        this.val = val;
+    }
+
+
+    public override String ToString() {
+        return $"Float {val}";
+    }
+}
+
+
+/// Identifier or reserved word
+class WordToken : Expr {
+    public byte[] val;
+    public WordToken(byte[] val) {
+        this.val = val;
+    }
+    // TODO array equality
+    public override bool Equals(Object o) => (o is WordToken wt) ? (String.fromCharCodes(this.val) == String.fromCharCodes(wt.val)) : false;
+
+    public override int GetHashCode() => val.Length;
+
+    public override String ToString() {
+        return $"Word {System.Text.Encoding.ASCII.GetString(this.val)}";
+    }
+}
+
+
+class OperatorToken : Expr {
+    List<OperatorSymb> val;
+    OperatorToken(this.val);
+
+    @override
+    bool operator ==(Object o) {
+        if (o is! OperatorToken) return false;
+        if (this.val.length != o.val.length) return false;
+        for (int i = 0; i < this.val.length; ++i) {
+            if (this.val[i] != o.val[i]) return false;
+        }
+        return true;
+    }
+
+    @override
+    int get hashCode => val.hashCode;
+
+    @override
+    String toString() {
+        return "Operator $val";
+    }
+}
+
+
+class StringToken : Expr {
+    String val;
+    StringToken(this.val);
+
+    @override
+    bool operator ==(Object o) => (o is StringToken) ? (val == o.val) : false;
+
+    @override
+    int get hashCode => val.hashCode;
+
+    @override
+    String toString() {
+        return "String $val";
+    }
+}
+
+
+class CommentToken : Expr {
+    String val;
+    CommentToken(this.val);
+
+    @override
+    bool operator ==(Object o) => (o is CommentToken) ? (val == o.val) : false;
+
+    @override
+    int get hashCode => val.hashCode;
+
+    @override
+    String toString() {
+        return "Comment $val";
     }
 }

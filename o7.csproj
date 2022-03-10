@@ -9,5 +9,6 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.2" />
+        <PackageReference Include="LanguageExt.Core" Version="4.0.4" />
     </ItemGroup>
 </Project>
