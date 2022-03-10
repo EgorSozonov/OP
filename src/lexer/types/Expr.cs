@@ -165,7 +165,7 @@ class WordToken : Expr {
         this.val = val;
     }
     // TODO array equality
-    public override bool Equals(Object o) => (o is WordToken wt) ? (String.fromCharCodes(this.val) == String.fromCharCodes(wt.val)) : false;
+    public override bool Equals(Object o) => (o is WordToken wt) ? ByteArrayUtils.areEqual(this.val, wt.val) : false;
 
     public override int GetHashCode() => val.Length;
 

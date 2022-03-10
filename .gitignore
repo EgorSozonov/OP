@@ -17,3 +17,4 @@ Src/.DS_Store?
 *.dgspec.json
 *assets.json
 o7.csproj.AssemblyReference.cache
+obj/*
