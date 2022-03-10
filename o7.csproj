@@ -10,5 +10,7 @@
     <ItemGroup>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.2" />
         <PackageReference Include="LanguageExt.Core" Version="4.0.4" />
+        <PackageReference Include="Nunit" Version="3.13.2" />
+        <PackageReference Include="Nunit3TestAdapter" Version="4.2.1" />
     </ItemGroup>
 </Project>

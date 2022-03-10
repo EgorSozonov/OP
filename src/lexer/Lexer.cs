@@ -152,8 +152,6 @@ class Lexer {
                     curr.val.Add(x.Item1);
                     i = x.Item2;
                 });
-
-
             }
         }
         if (backtrack.peek() != null) {
