@@ -15,6 +15,10 @@ class Statement : ASTUntyped {
     public Statement(List<ASTUntyped> val) {
         this.val = val;
     }
+
+    public Statement() {
+        this.val = new List<ASTUntyped>();
+    }
 }
 
 class Ident : ASTUntyped {

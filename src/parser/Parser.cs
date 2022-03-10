@@ -2,74 +2,75 @@ namespace O7;
 
 using System;
 using System.Collections.Generic;
-using ParseResult = Tuple<ASTUntyped, ParseError>;
+using System.Text;
+using ParseResult = System.Tuple<ASTUntyped, ParseError>;
 
 class PreParser {
     static ParseResult parse(Expr inp) {
-        var newStatement = new Statement([]);
-        var result = new ListStatements([newStatement]);
+        var newStatement = new Statement();
+        var result = new ListStatements(new List<Statement>() {newStatement });
         var reservedWords = getReservedMap();
         var coreOperators = getOperatorList();
         var backtrack = new Stack<Tuple<ListExpr, int>>();
 
-        if (inp is ListExpr) {
+        if (inp is ListExpr le) {
             int i = 0;
-            backtrack.push(Tuple2(inp, i));
-            var curr = inp;
+            backtrack.push(new Tuple<ListExpr, int>(le, i));
+            var curr = le;
             while (backtrack.peek() != null) {
                 var back = backtrack.pop();
-                curr = back.item1;
-                i = back.item2;
-                while (i < curr.val.length) {
+                curr = back.Item1;
+                i = back.Item2;
+                while (i < curr.val.Count) {
                     if (curr.val[i] is ListExpr) {
 
                     } else {
-                        newStatement.val.add(parseAtom(curr.val[i], reservedWords, coreOperators));
+                        newStatement.val.Add(parseAtom(curr.val[i], reservedWords, coreOperators));
                     }
                 }
             }
         } else {
-            return new Tuple(parseAtom(inp, reservedWords, coreOperators), null);
+            return new Tuple<ASTUntyped, ParseError>(parseAtom(inp, reservedWords, coreOperators), null);
         }
-        return new Tuple(result, null);
+        return new Tuple<ASTUntyped, ParseError>(result, null);
 
     }
 
-    static HashMap<String, ReservedType> getReservedMap() {
-        var result = new HashMap<String, ReservedType>();
-        for (var enumValue in ReservedType.values) {
-            result[enumValue.name] = enumValue;
+    static Dictionary<String, ReservedType> getReservedMap() {
+        var result = new Dictionary<String, ReservedType>();
+        foreach (ReservedType enumValue in Enum.GetValues(typeof(ReservedType))) {
+            result[enumValue.ToString()] = enumValue;
         }
         return result;
     }
 
     static List<Tuple<List<OperatorSymb>, CoreOperator>> getOperatorList() {
         var result = new List<Tuple<List<OperatorSymb>, CoreOperator>>();
-        result.add(new Tuple([OperatorSymb.plus],                              CoreOperator.plus));
-        result.add(new Tuple([OperatorSymb.minus],                             CoreOperator.minus));
-        result.add(new Tuple([OperatorSymb.asterisk],                          CoreOperator.times));
-        result.add(new Tuple([OperatorSymb.slash],                             CoreOperator.divideBy));
-        result.add(new Tuple([OperatorSymb.ampersand, OperatorSymb.ampersand], CoreOperator.and));
-        result.add(new Tuple([OperatorSymb.pipe, OperatorSymb.pipe],           CoreOperator.or));
-        result.add(new Tuple([OperatorSymb.exclamation],                       CoreOperator.not));
-        result.add(new Tuple([OperatorSymb.ampersand],                         CoreOperator.bitwiseAnd));
-        result.add(new Tuple([OperatorSymb.pipe],                              CoreOperator.bitwiseOr));
-        result.add(new Tuple([OperatorSymb.tilde, OperatorSymb.ampersand],     CoreOperator.bitwiseNot));
-        result.add(new Tuple([OperatorSymb.caret],                             CoreOperator.bitwiseXor));
-        result.add(new Tuple([OperatorSymb.equals],                            CoreOperator.defineImm));
-        result.add(new Tuple([OperatorSymb.colon, OperatorSymb.equals],        CoreOperator.defineMut));
-        result.add(new Tuple([OperatorSymb.lt, OperatorSymb.minus],            CoreOperator.assignmentMut));
-        result.add(new Tuple([OperatorSymb.plus, OperatorSymb.equals],         CoreOperator.plusMut));
-        result.add(new Tuple([OperatorSymb.minus, OperatorSymb.equals],        CoreOperator.minusMut));
-        result.add(new Tuple([OperatorSymb.asterisk, OperatorSymb.equals],     CoreOperator.timesMut));
-        result.add(new Tuple([OperatorSymb.slash, OperatorSymb.equals],        CoreOperator.divideMut));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.plus },                             CoreOperator.plus));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.minus},                             CoreOperator.minus));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.asterisk},                          CoreOperator.times));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.slash},                             CoreOperator.divideBy));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.ampersand, OperatorSymb.ampersand}, CoreOperator.and));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.pipe, OperatorSymb.pipe},           CoreOperator.or));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.exclamation},                       CoreOperator.not));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.ampersand},                         CoreOperator.bitwiseAnd));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.pipe},                              CoreOperator.bitwiseOr));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.tilde, OperatorSymb.ampersand},     CoreOperator.bitwiseNot));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.caret},                             CoreOperator.bitwiseXor));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.equals},                            CoreOperator.defineImm));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.colon, OperatorSymb.equals},        CoreOperator.defineMut));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.lt, OperatorSymb.minus},            CoreOperator.assignmentMut));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.plus, OperatorSymb.equals},         CoreOperator.plusMut));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.minus, OperatorSymb.equals},        CoreOperator.minusMut));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.asterisk, OperatorSymb.equals},     CoreOperator.timesMut));
+        result.Add(new Tuple<List<OperatorSymb>, CoreOperator>(new List<OperatorSymb>() { OperatorSymb.slash, OperatorSymb.equals},        CoreOperator.divideMut));
         return result;
     }
 
 
     static bool arraysEqual(List<OperatorSymb> a, List<OperatorSymb> b) {
-        if (a.isEmpty && a.length != b.length) return false;
-        for (int i = 0; i < a.length; ++i) {
+        if (a.isEmpty() && a.Count != b.Count) return false;
+        for (int i = 0; i < a.Count; ++i) {
             if (a[i] != b[i]) return false;
         }
         return true;
@@ -77,30 +78,30 @@ class PreParser {
 
 
     static ASTUntyped parseAtom(Expr inp,
-                                HashMap<String, ReservedType> reservedWords,
-                                List<Tuple2<List<OperatorSymb>, CoreOperator>> coreOperators) {
-        if (inp is IntToken) {
-            return new IntLiteral(inp.val);
-        } else if (inp is FloatToken) {
-            return new FloatLiteral(inp.val);
-        } else if (inp is StringToken) {
-            return new StringLiteral(inp.val);
-        } else if (inp is WordToken) {
-            var str = String.fromCharCodes(inp.val);
-            if (str == "true") return BoolLiteral(true);
-            if (str == "false") return BoolLiteral(false);
-            if (reservedWords.containsKey(str)) {
-                return new Reserved(reservedWords[str]!);
+                                Dictionary<String, ReservedType> reservedWords,
+                                List<Tuple<List<OperatorSymb>, CoreOperator>> coreOperators) {
+        if (inp is IntToken it) {
+            return new IntLiteral(it.val);
+        } else if (inp is FloatToken ft) {
+            return new FloatLiteral(ft.val);
+        } else if (inp is StringToken st) {
+            return new StringLiteral(st.val);
+        } else if (inp is WordToken wt) {
+            var str = Encoding.ASCII.GetString(wt.val);
+            if (str == "true") return new BoolLiteral(true);
+            if (str == "false") return new BoolLiteral(false);
+            if (reservedWords.TryGetValue(str, out ReservedType resWord)) {
+                return new Reserved(resWord);
             } else {
                 return new Ident(str);
             }
-        } else if (inp is OperatorToken) {
-            for (var oper in coreOperators) {
-                if (arraysEqual(inp.val, oper.item1)) {
-                    return new CoreOperatorAST(oper.item2);
+        } else if (inp is OperatorToken ot) {
+            foreach (var oper in coreOperators) {
+                if (arraysEqual(ot.val, oper.Item1)) {
+                    return new CoreOperatorAST(oper.Item2);
                 }
             }
-            return new OperatorAST(inp.val);
+            return new OperatorAST(ot.val);
         } else {
             // should never happen
             return new IntLiteral(-1);

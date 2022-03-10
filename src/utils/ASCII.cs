@@ -1,6 +1,5 @@
 namespace O7;
 
-
 enum ASCII : byte {
     emptyNULL,                                      // NULL
     emptySOH,                                       // Start of Heading

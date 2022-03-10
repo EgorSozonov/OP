@@ -56,7 +56,6 @@ class ListExpr : Expr {
     public List<Expr> val;
     public ExprLexicalType pType;
 
-
     public ListExpr(ExprLexicalType pType) {
         this.val = new List<Expr>();
         this.pType = pType;
@@ -64,7 +63,6 @@ class ListExpr : Expr {
 
     public override bool Equals(object o) => (o is ListExpr) ? (val == ((ListExpr)o).val) : false;
     public override int GetHashCode() => this.val.Count;
-
 
     public override string ToString() {
         if (!this.val.Any()) return "Empty ListExpr";
@@ -125,7 +123,7 @@ class ListExpr : Expr {
 
 /// A valid int64 token
 class IntToken : Expr {
-    int val = 0;
+    public int val = 0;
     public IntToken(int val) {
         this.val = val;
     }

@@ -1,6 +1,5 @@
 namespace O7;
 
-
 /// & + - / * ! ~ $ % ^ | > < ? =
 enum OperatorSymb {
     ampersand,

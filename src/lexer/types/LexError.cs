@@ -1,6 +1,5 @@
 namespace O7;
 
-
 class LexError {}
 
 class EndOfInputError : LexError {
