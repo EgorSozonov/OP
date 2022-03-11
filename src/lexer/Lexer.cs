@@ -9,7 +9,7 @@ using LanguageExt;
 using LexResult = LanguageExt.Either<LexError, System.Tuple<Expr, int>>;
 
 class Lexer {
-    static Tuple<Expr, LexError> lexicallyAnalyze(byte[] inp) {
+    public static Tuple<Expr, LexError> lexicallyAnalyze(byte[] inp) {
         LexError err = null;
         if (inp.Length < 2) return new Tuple<Expr, LexError>(new ListExpr(ExprLexicalType.curlyBraces), err);
 
@@ -27,7 +27,7 @@ class Lexer {
             int cChar = inp[i];
             if (cChar > 127) return new Tuple<Expr, LexError>(result, new NonAsciiError());
             LexResult mbToken;
-
+            Console.WriteLine(i);
             if (cChar == (byte)ASCII.space || cChar == (byte)ASCII.emptyCR) {
                 ++i;
             } else if (cChar == (byte)ASCII.emptyLF) {
@@ -147,11 +147,11 @@ class Lexer {
                 }
                 if (mbToken.IsLeft) {
                     return new Tuple<Expr, LexError>(result, (LexError)mbToken);
+                } else {
+                    var rt = (Tuple<Expr, int>)mbToken;
+                    curr.val.Add(rt.Item1);
+                    i = rt.Item2;
                 }
-                mbToken.Right(x => {
-                    curr.val.Add(x.Item1);
-                    i = x.Item2;
-                });
             }
         }
         if (backtrack.peek() != null) {
