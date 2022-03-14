@@ -7,6 +7,10 @@ public static class ListUtils {
     }
 
     public static bool isEmpty<T>(this List<T> lst) {
+        return lst.Count == 0;
+    }
+
+    public static bool isNotEmpty<T>(this List<T> lst) {
         return lst.Count > 0;
     }
 }

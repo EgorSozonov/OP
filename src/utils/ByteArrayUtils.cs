@@ -1,4 +1,5 @@
 namespace O7;
+using System;
 
 public static class ByteArrayUtils {
     public static bool areEqual(byte[] a, byte[] b) {
@@ -7,5 +8,9 @@ public static class ByteArrayUtils {
             if (a[i] != b[i]) return false;
         }
         return true;
+    }
+
+    public static async void l(string a) {
+        Console.WriteLine(a);
     }
 }

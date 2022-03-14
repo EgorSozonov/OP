@@ -91,7 +91,7 @@ class ListExpr : Expr {
                         }
 
                     } else {
-                        result.Append("!!empty!!");
+                        result.Append($"!!empty {listElem.pType}!! ");
                         ++i;
                     }
                 } else {
@@ -192,7 +192,7 @@ class OperatorToken : Expr {
     public override int GetHashCode() => val.Count;
 
     public override string ToString() {
-        return $"Operator {val}";
+        return $"Operator [{String.Join(" ", val)}]";
     }
 }
 
@@ -207,7 +207,7 @@ class StringToken : Expr {
 
     public override int GetHashCode() => val.GetHashCode();
 
-    public string ToString() {
+    public override string ToString() {
         return $"String {val}";
     }
 }

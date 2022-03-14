@@ -27,7 +27,7 @@ class Lexer {
             int cChar = inp[i];
             if (cChar > 127) return new Tuple<Expr, LexError>(result, new NonAsciiError());
             LexResult mbToken;
-            Console.WriteLine(i);
+
             if (cChar == (byte)ASCII.space || cChar == (byte)ASCII.emptyCR) {
                 ++i;
             } else if (cChar == (byte)ASCII.emptyLF) {
@@ -73,13 +73,17 @@ class Lexer {
                 if (backtrack.peek() == null) {
                     return new Tuple<Expr, LexError>(result, new ExtraClosingCurlyBraceError());
                 }
+                Console.WriteLine("here");
                 // TODO
                 var back = backtrack.pop();
                 var last = back.val.Last();
-                if (last is ListExpr le) {
-                    if (!le.val.Any()) {
-                        back.val.removeLast();
-                    }
+                Console.WriteLine("last");
+                Console.WriteLine(last);
+                if (last is ListExpr le0) {
+                    Console.WriteLine(le0.pType);
+                }
+                if (last is ListExpr le && le.val.isEmpty()) {
+                    back.val.removeLast();
                 }
                 curr = back;
                 ++i;
@@ -97,10 +101,8 @@ class Lexer {
 
                 // TODO
                 var last = back.val.Last();
-                if (last is ListExpr) {
-                    if (!((ListExpr)last).val.Any()) {
-                        back.val.removeLast();
-                    }
+                if (last is ListExpr le && le.val.isEmpty()) {
+                    back.val.removeLast();
                 }
 
                 curr = back;
@@ -112,6 +114,7 @@ class Lexer {
                 curr = newList;
                 ++i;
             } else if (cChar == (byte)ASCII.bracketClose) {
+
                 if (backtrack.peek() == null || curr.pType != ExprLexicalType.dataInitializer) {
                     return new Tuple<Expr, LexError>(result, new ExtraClosingBracketError());
                 }
@@ -119,10 +122,8 @@ class Lexer {
 
                 // TODO
                 var last = back.val.Last();
-                if (last is ListExpr le) {
-                    if (!le.val.Any()) {
-                        back.val.removeLast();
-                    }
+                if (last is ListExpr le && le.val.isEmpty()) {
+                    back.val.removeLast();
                 }
 
                 curr = back;

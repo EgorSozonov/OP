@@ -7,6 +7,10 @@
         <OutputPath>target</OutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
+    <PropertyGroup>
+        <WarningLevel>0</WarningLevel>
+        <AnalysisLevel>0</AnalysisLevel>
+    </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.2" />
         <PackageReference Include="LanguageExt.Core" Version="4.0.4" />

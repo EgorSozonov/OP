@@ -8,7 +8,7 @@ using ParseResult = System.Tuple<ASTUntyped, ParseError>;
 class PreParser {
     static ParseResult parse(Expr inp) {
         var newStatement = new Statement();
-        var result = new ListStatements(new List<Statement>() {newStatement });
+        var result = new ListStatements(new List<Statement>() {newStatement }, SubexprType.parens);
         var reservedWords = getReservedMap();
         var coreOperators = getOperatorList();
         var backtrack = new Stack<Tuple<ListExpr, int>>();

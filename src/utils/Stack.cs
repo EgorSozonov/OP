@@ -15,11 +15,11 @@ public sealed class Stack<T> where T : class {
 
     public T pop() {
         var result = list[list.Count - 1];
-        list.RemoveAt(list.Count - 1);
+        list.removeLast();
         return result;
     }
 
     public T peek() {
-        return list.Any() ? null : list[list.Count - 1];
+        return list.Any() ? list[list.Count - 1] : null;
     }
 }

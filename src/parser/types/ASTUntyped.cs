@@ -5,8 +5,10 @@ class ASTUntyped {}
 
 class ListStatements : ASTUntyped {
     public List<Statement> val;
-    public ListStatements(List<Statement> val) {
+    public SubexprType sType;
+    public ListStatements(List<Statement> val, SubexprType sType) {
         this.val = val;
+        this.sType = sType;
     }
 }
 

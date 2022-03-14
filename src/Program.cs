@@ -1,15 +1,21 @@
 namespace O7;
 using System;
 using System.Text;
+using static ByteArrayUtils;
 
 class Program {
     static void Main(string[] args) {
-        Console.WriteLine("Hw");
+
         var inpStr = @"
 a = b + c
 ";
 
-        var inp = Encoding.ASCII.GetBytes("a { b\nc\n (123 + 456 111); } d; ");
+        var inp = @"a {
+    b
+    c
+    (123 + 456 111)
+}
+d; ";
 
         var innp = @"
             a b
@@ -20,20 +26,20 @@ a = b + c
             }
         ";
 
-        var res = Lexer.lexicallyAnalyze(Encoding.ASCII.GetBytes(innp));
+        var res = Lexer.lexicallyAnalyze(Encoding.ASCII.GetBytes(inp));
         // var eqRes = Expr.equal(expected, expected2);
         // print("eqRes = $eqRes");
         // return;
 
 
-
+        l("");
         if (res.Item2 != null) {
-            Console.WriteLine("Lexer error");
-            Console.WriteLine(res.Item2.ToString());
-            Console.WriteLine(res.Item1);
+            l("Lexer error");
+            l(res.Item2.ToString());
+            l(res.Item1.ToString());
         } else {
-            Console.WriteLine("Lexer successful");
-            Console.WriteLine(res.Item1);
+            l("Lexer successful");
+            l(res.Item1.ToString());
             // print("Expected:");
             // print(expected);
         }
