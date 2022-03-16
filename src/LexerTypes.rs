@@ -1,3 +1,6 @@
+use std::fmt;
+
+
 pub enum Expr<'a> {
     intToken(i64),
     floatToken(f64),
@@ -8,12 +11,13 @@ pub enum Expr<'a> {
     listExpr(ListExpr<'a>),
 }
 
-struct ListExpr<'a> {
-    val: Box<Vec<Expr<'a>>>,
-    pType: ExprLexicalType,
+pub struct ListExpr<'a> {
+    pub val: Box<Vec<Expr<'a>>>,
+    pub pType: ExprLexicalType,
 }
 
 use Expr::*;
+use ExprLexicalType::*;
 
 impl<'a, 'b> PartialEq for Expr<'b> {
     fn eq(&self, other: &Self) -> bool {
@@ -79,10 +83,108 @@ impl<'a, 'b> PartialEq for Expr<'b> {
 
 impl<'a> Eq for Expr<'a> {}
 
+impl<'a> fmt::Display for Expr<'a> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            listExpr(le) => {
+                println!("listExpr");
+                if le.val.last().is_none() {
+                    fmt.write_str("Empty ListExpr");
+                    return Ok(());
+                }
+                let mut backtrack: Vec<(&ListExpr, usize)> = Vec::new();
+                let mut curr = le;
+                let mut i: usize;
+                loop {
+                    while i < curr.val.len() {
+                        match curr.val[i] {
+                            listExpr(x) => {
 
-#[derive(PartialEq, Clone, Copy)]
+                            },
+                            _ => {
+
+                            },
+                        }
+                    }
+                    if backtrack.last().is_some() {
+                        fmt.write_str(match curr.pType {
+                            curlyBraces => " }, ",
+                            statement => " |, ",
+                            dataInitializer => " ], ",
+                            parens => " ), ",
+                        });
+                        let back = backtrack.pop().unwrap();
+                        curr = back.0;
+                        i = back.1 + 1;
+                    }
+                    if backtrack.last().is_none() && i >= curr.val.len() { break; }
+                }
+            },
+
+
+
+                    if (curr.val[i] is ListExpr) {
+                        var listElem = (curr.val[i] as ListExpr);
+                        if (listElem.val.Any()) {
+                            backtrack.push(new Tuple<ListExpr, int>(curr, i));
+                            curr = listElem;
+                            i = 0;
+                            if (listElem.pType == ExprLexicalType.curlyBraces) {
+                                result.Append("{ ");
+                            } else if (listElem.pType == ExprLexicalType.dataInitializer) {
+                                result.Append("[ ");
+                            } else if (listElem.pType == ExprLexicalType.parens){
+                                result.Append("( ");
+                            } else {
+                                result.Append("| ");
+                            }
+
+                        } else {
+                            result.Append($"!!empty {listElem.pType}!! ");
+                            ++i;
+                        }
+                    } else {
+                        result.Append(curr.val[i].ToString());
+                        result.Append(", ");
+                        ++i;
+                    }
+                }
+
+
+            intToken(x) => {
+                println!("intToken");
+                fmt.write_str(&format!("Int {}", x));
+            },
+            floatToken(x) => {
+                println!("floatToken");
+                fmt.write_str(&format!("Float {}", x));
+            },
+            operatorToken(x) => {
+                println!("operatorToken");
+                fmt.write_str(&"Operator [");
+                for v in x {
+                    match v {
+                        Some(op) => {
+                            fmt.write_str(&format!("{} ", op));
+                        },
+                        None => break,
+                    }
+                }
+                fmt.write_str("]");
+            },
+            wordToken(x) => { println!("wordToken"); fmt.write_str(&std::str::from_utf8(x).unwrap()); },
+            stringToken(x) => { println!("stringToken"); fmt.write_str(&std::str::from_utf8(x).unwrap()); },
+            commentToken(x) => { println!("commentToken"); fmt.write_str(&std::str::from_utf8(x).unwrap()); },
+        }
+        Ok(())
+    }
+}
+
+
+
+#[derive(PartialEq, Clone, Copy, Debug)]
 /// & + - / * ! ~ $ % ^ | > < ? =
-enum OperatorSymb {
+pub enum OperatorSymb {
     ampersand,
     plus,
     minus,
@@ -103,8 +205,17 @@ enum OperatorSymb {
 }
 
 
+impl fmt::Display for OperatorSymb {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let name = format!("{:?}", self);
+        fmt.write_str(&name);
+        Ok(())
+    }
+}
+
+
 #[derive(PartialEq, Eq, Clone, Copy)]
-enum ExprLexicalType {
+pub enum ExprLexicalType {
     statement,
     dataInitializer,
     curlyBraces,
@@ -112,7 +223,7 @@ enum ExprLexicalType {
 }
 
 
-enum LexError {
+pub enum LexError {
     endOfInput,
     extraClosingCurlyBrace,
     extraClosingParen,

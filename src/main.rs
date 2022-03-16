@@ -5,6 +5,7 @@ mod Lexer;
 mod LexerTypes;
 mod Parser;
 
+use LexerTypes::*;
 
 fn main() {
     println!("hello world");
@@ -13,5 +14,12 @@ fn main() {
     let s: [u8; 3] = [1, 2, 3];
     let b = LexerTypes::Expr::wordToken(&s);
     let c = LexerTypes::Expr::wordToken(&s);
-    println!("{}", c == b);
+
+    let testExpr = Expr::listExpr(ListExpr {
+        pType: ExprLexicalType::statement, val: Box::new(vec![Expr::intToken(6), Expr::wordToken(&[1, 2, 3, 4])])
+    });
+
+    println!("start");
+    println!("{}", testExpr);
+    println!("end");
 }
