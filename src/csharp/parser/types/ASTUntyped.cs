@@ -4,10 +4,16 @@ using System.Collections.Generic;
 class ASTUntyped {}
 
 class ListStatements : ASTUntyped {
-    public List<Statement> val;
+    public List<ASTUntyped> val;
     public SubexprType sType;
-    public ListStatements(List<Statement> val, SubexprType sType) {
-        this.val = val;
+
+    public ListStatements() {
+        this.val = new List<ASTUntyped>();
+        this.sType = SubexprType.list;
+    }
+
+    public ListStatements(SubexprType sType) {
+        this.val = new List<ASTUntyped>();
         this.sType = sType;
     }
 }
@@ -36,6 +42,13 @@ class Reserved : ASTUntyped {
 
     public Reserved(ReservedType val) {
         this.val = val;
+    }
+}
+
+class DataInitializer : ListStatements {
+    public DataInitializer() {
+        this.val = new List<ASTUntyped>();
+        this.sType = SubexprType.dataInitializer;
     }
 }
 

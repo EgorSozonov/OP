@@ -58,7 +58,6 @@ class Lexer {
 
                 ++i;
             } else if (cChar == (byte)ASCII.curlyOpen) {
-
                 var newList = new ListExpr(ExprLexicalType.curlyBraces);
                 var newCurr = new ListExpr(ExprLexicalType.statement);
                 newList.val.Add(newCurr);
@@ -79,11 +78,6 @@ class Lexer {
                 // TODO
                 var back = backtrack.pop();
                 var last = back.val.Last();
-
-                if (last is ListExpr le0) {
-                    Console.WriteLine(le0.pType);
-                    Console.WriteLine(le0.val[2]);
-                }
 
                 if (last is ListExpr le &&  !le.val.isEmpty() && le.val.Last() is ListExpr le2 && le2.val.isEmpty()) {
                     le.val.removeLast();

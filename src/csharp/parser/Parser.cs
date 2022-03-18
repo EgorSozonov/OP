@@ -7,8 +7,9 @@ using ParseResult = System.Tuple<ASTUntyped, ParseError>;
 
 class PreParser {
     static ParseResult parse(Expr inp) {
-        var newStatement = new Statement();
-        var result = new ListStatements(new List<Statement>() {newStatement }, SubexprType.parens);
+        var resultCurr = new ListStatements();
+        var result = resultCurr;
+        var resultBacktrack = new Stack<Tuple<ListStatements, int>>();
         var reservedWords = getReservedMap();
         var coreOperators = getOperatorList();
         var backtrack = new Stack<Tuple<ListExpr, int>>();
@@ -22,12 +23,31 @@ class PreParser {
                 curr = back.Item1;
                 i = back.Item2;
                 while (i < curr.val.Count) {
-                    if (curr.val[i] is ListExpr) {
+                    if (curr.val[i] is ListExpr le2) {
+                        resultBacktrack.push(new Tuple<ListStatements, int>(resultCurr, i + 1));
 
+                        if (le2.pType == ExprLexicalType.curlyBraces) {
+                            ListStatements newList = new ListStatements(SubexprType.list);
+                            resultCurr.val.Add(newList);
+                            newList.sType = SubexprType.list;
+
+                            resultCurr = newList;
+                        } else if (le2.pType == ExprLexicalType.dataInitializer) {
+                            var newElem = new DataInitializer();
+                            resultCurr.val.Add(newElem);
+
+                            resultCurr = newElem;
+                        } else { // if (le2.pType == ExprLexicalType.parens || le2.pType == ExprLexicalType.statement) {
+                            ListStatements newStatement = new ListStatements(SubexprType.parens);
+                            resultCurr.val.Add(newStatement);
+                            result = newStatement;
+                        }
+                        i = 0;
                     } else {
-                        newStatement.val.Add(parseAtom(curr.val[i], reservedWords, coreOperators));
+                        resultCurr.val.Add(parseAtom(curr.val[i], reservedWords, coreOperators));
                     }
                 }
+
             }
         } else {
             return new Tuple<ASTUntyped, ParseError>(parseAtom(inp, reservedWords, coreOperators), null);
