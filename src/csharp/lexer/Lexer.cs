@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using LanguageExt;
+using static ByteArrayUtils;
 using LexResult = LanguageExt.Either<LexError, System.Tuple<Expr, int>>;
 
 class Lexer {
@@ -31,7 +32,8 @@ class Lexer {
             if (cChar == (byte)ASCII.space || cChar == (byte)ASCII.emptyCR) {
                 ++i;
             } else if (cChar == (byte)ASCII.emptyLF) {
-                if (backtrack.peek() != null && backtrack.peek()?.pType == ExprLexicalType.curlyBraces) {
+                if (backtrack.peek() != null && backtrack.peek()?.pType == ExprLexicalType.curlyBraces
+                    && curr.val.Count > 0) {
                     // we are in a CurlyBraces context, so a newline means a new statement
                     var back = backtrack.peek();
                     var newStatement = new ListExpr(ExprLexicalType.statement);
@@ -66,6 +68,7 @@ class Lexer {
                 curr = newCurr;
                 ++i;
             } else if (cChar == (byte)ASCII.curlyClose) {
+
                 if (backtrack.peek() == null || backtrack.peek()?.pType != ExprLexicalType.curlyBraces) {
                     return new Tuple<Expr, LexError>(result, new ExtraClosingCurlyBraceError());
                 }
@@ -73,17 +76,17 @@ class Lexer {
                 if (backtrack.peek() == null) {
                     return new Tuple<Expr, LexError>(result, new ExtraClosingCurlyBraceError());
                 }
-                Console.WriteLine("here");
                 // TODO
                 var back = backtrack.pop();
                 var last = back.val.Last();
-                Console.WriteLine("last");
-                Console.WriteLine(last);
+
                 if (last is ListExpr le0) {
                     Console.WriteLine(le0.pType);
+                    Console.WriteLine(le0.val[2]);
                 }
-                if (last is ListExpr le && le.val.isEmpty()) {
-                    back.val.removeLast();
+
+                if (last is ListExpr le &&  !le.val.isEmpty() && le.val.Last() is ListExpr le2 && le2.val.isEmpty()) {
+                    le.val.removeLast();
                 }
                 curr = back;
                 ++i;

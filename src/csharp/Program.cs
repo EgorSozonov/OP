@@ -10,10 +10,14 @@ class Program {
 a = b + c
 ";
 
-        var inp = @"a {
+        var inp = @"
+a {
     b
+
     c
-    (123 + 456 111)
+
+
+    ([123 _321] + [456 111])
 }
 d; ";
 
