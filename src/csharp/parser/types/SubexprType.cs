@@ -2,7 +2,7 @@ namespace O7;
 
 public enum SubexprType {
     curlyBraces,
-    list,
+    statement,
     parens,
     dataInitializer,
 }

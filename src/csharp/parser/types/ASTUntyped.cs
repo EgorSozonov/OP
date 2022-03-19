@@ -2,11 +2,13 @@ namespace O7;
 using System;
 using System.Collections.Generic;
 using System.Text;
-
+using static ByteArrayUtils;
 
 public class ASTUntyped {
     public sealed override string ToString() {
+
         if (this is ListStatements lsOuter) {
+
             var result = new StringBuilder();
             var backtrack = new Stack<Tuple<ListStatements, int>>();
             var curr = lsOuter;
@@ -20,7 +22,7 @@ public class ASTUntyped {
                             curr = listElem;
                             i = 0;
                             if (curr.sType == SubexprType.curlyBraces) {
-                                result.Append("{ ");
+                                result.Append("{\n ");
                             } else if (curr.sType == SubexprType.dataInitializer) {
                                 result.Append("[ ");
                             } else if (curr.sType == SubexprType.parens){
@@ -51,15 +53,21 @@ public class ASTUntyped {
 
             return result.ToString();
         } else if (this is Ident x) {
-            return x.name;
+            return $"id {x.name}";
         } else if (this is If x2) {
             return $"If {x2.val.Count}";
         } else if (this is VarDefinition x3) {
             return $"{x3.identifier} = {x3.rightSide}";
         } else if (this is IntLiteral x4) {
             return x4.val.ToString();
-        } else if (this is Reserved x5) {
+        } else if (this is FloatLiteral x5) {
             return x5.val.ToString();
+        } else if (this is Reserved x6) {
+            return x6.val.ToString();
+        } else if (this is CoreOperatorAST x7) {
+            return x7.val.ToString();
+        } else if (this is BoolLiteral x8) {
+            return $"Bool {x8.val.ToString()}";
         } else {
             return "Something else";
         }
@@ -72,7 +80,7 @@ public class ListStatements : ASTUntyped {
 
     public ListStatements() {
         this.val = new List<ASTUntyped>();
-        this.sType = SubexprType.list;
+        this.sType = SubexprType.statement;
     }
 
     public ListStatements(SubexprType sType) {

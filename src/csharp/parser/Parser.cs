@@ -10,16 +10,19 @@ public class PreParser {
     public static ParseResult parse(Expr inp) {
         var resultCurr = new ListStatements();
         var result = resultCurr;
+
+        var backtrack = new Stack<Tuple<ListExpr, int>>();
         var resultBacktrack = new Stack<Tuple<ListStatements, int>>();
+
         var reservedWords = getReservedMap();
         var coreOperators = getOperatorList();
-        var backtrack = new Stack<Tuple<ListExpr, int>>();
 
         if (inp is ListExpr le) {
             int i = 0;
             int j = 0;
             backtrack.push(new Tuple<ListExpr, int>(le, i));
             resultBacktrack.push(new Tuple<ListStatements, int>(resultCurr, i));
+
             var curr = le;
             while (backtrack.peek() != null) {
                 var back = backtrack.pop();
@@ -31,15 +34,14 @@ public class PreParser {
                 j = backResult.Item2;
 
                 while (i < curr.val.Count) {
-                    l(i.ToString());
                     if (curr.val[i] is ListExpr le2) {
                         backtrack.push(new Tuple<ListExpr, int>(curr, i + 1));
                         resultBacktrack.push(new Tuple<ListStatements, int>(resultCurr, j + 1));
 
                         if (le2.pType == ExprLexicalType.curlyBraces) {
-                            ListStatements newList = new ListStatements(SubexprType.list);
+                            ListStatements newList = new ListStatements(SubexprType.curlyBraces);
                             resultCurr.val.Add(newList);
-                            newList.sType = SubexprType.list;
+                            newList.sType = SubexprType.curlyBraces;
 
                             resultCurr = newList;
                         } else if (le2.pType == ExprLexicalType.dataInitializer) {
@@ -47,11 +49,20 @@ public class PreParser {
                             resultCurr.val.Add(newElem);
 
                             resultCurr = newElem;
-                        } else { // if (le2.pType == ExprLexicalType.parens || le2.pType == ExprLexicalType.statement) {
+                        } else if (le2.pType == ExprLexicalType.parens) {
                             ListStatements newStatement = new ListStatements(SubexprType.parens);
+
                             resultCurr.val.Add(newStatement);
-                            result = newStatement;
+
+                            resultCurr = newStatement;
+                        } else if (le2.pType == ExprLexicalType.statement) {
+                            ListStatements newStatement = new ListStatements(SubexprType.statement);
+
+                            resultCurr.val.Add(newStatement);
+
+                            resultCurr = newStatement;
                         }
+
                         curr = le2;
                         i = 0;
                         j = 0;
@@ -61,7 +72,6 @@ public class PreParser {
                         ++j;
                     }
                 }
-
             }
         } else {
             return new Tuple<ASTUntyped, ParseError>(parseAtom(inp, reservedWords, coreOperators), null);
@@ -73,7 +83,8 @@ public class PreParser {
     static Dictionary<String, ReservedType> getReservedMap() {
         var result = new Dictionary<String, ReservedType>();
         foreach (ReservedType enumValue in Enum.GetValues(typeof(ReservedType))) {
-            result[enumValue.ToString()] = enumValue;
+            var nm = enumValue.ToString();
+            result[nm.Substring(0, nm.Length - 1)] = enumValue;
         }
         return result;
     }
