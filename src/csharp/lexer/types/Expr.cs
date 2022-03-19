@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-class Expr {
+public class Expr {
     static bool equal(Expr a, Expr b) {
         if (a is not ListExpr || b is not ListExpr) return a == b;
 
@@ -52,7 +52,7 @@ class Expr {
 
 /// A list of tokens, which can be a statement, a list of statements,
 /// or a data initializer
-class ListExpr : Expr {
+public sealed class ListExpr : Expr {
     public List<Expr> val;
     public ExprLexicalType pType;
 
@@ -122,7 +122,7 @@ class ListExpr : Expr {
 
 
 /// A valid int64 token
-class IntToken : Expr {
+public sealed class IntToken : Expr {
     public int val = 0;
     public IntToken(int val) {
         this.val = val;
@@ -142,7 +142,7 @@ class IntToken : Expr {
 
 
 /// A floating-point number token
-class FloatToken : Expr {
+public sealed class FloatToken : Expr {
     public double val = 0;
 
     public FloatToken(double val) {
@@ -157,7 +157,7 @@ class FloatToken : Expr {
 
 
 /// Identifier or reserved word
-class WordToken : Expr {
+public sealed class WordToken : Expr {
     public byte[] val;
     public WordToken(byte[] val) {
         this.val = val;
@@ -173,7 +173,7 @@ class WordToken : Expr {
 }
 
 
-class OperatorToken : Expr {
+public sealed class OperatorToken : Expr {
     public List<OperatorSymb> val;
     public OperatorToken(List<OperatorSymb> val) {
         this.val = val;
@@ -197,7 +197,7 @@ class OperatorToken : Expr {
 }
 
 
-class StringToken : Expr {
+public sealed class StringToken : Expr {
     public String val;
     public StringToken(String val) {
         this.val = val;
@@ -213,7 +213,7 @@ class StringToken : Expr {
 }
 
 
-class CommentToken : Expr {
+public sealed class CommentToken : Expr {
     public String val;
 
     public CommentToken(String val) {

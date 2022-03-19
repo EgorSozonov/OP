@@ -43,7 +43,18 @@ d; ";
             l(res.Item1.ToString());
         } else {
             l("Lexer successful");
-            l(res.Item1.ToString());
+            var lexed = res.Item1;
+            l(lexed.ToString());
+            l("");
+            var parseRes = PreParser.parse(lexed);
+            if (parseRes.Item2 != null) {
+                l("Parser error");
+                l(parseRes.Item2.ToString());
+                l(parseRes.Item1.ToString());
+            } else {
+                l("Parser successful");
+                l(parseRes.Item1.ToString());
+            }
             // print("Expected:");
             // print(expected);
         }

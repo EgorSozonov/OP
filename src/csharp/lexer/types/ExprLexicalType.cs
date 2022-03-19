@@ -1,6 +1,6 @@
 namespace O7;
 
-enum ExprLexicalType {
+public enum ExprLexicalType {
     statement,
     dataInitializer,
     curlyBraces,

@@ -1,6 +1,6 @@
 namespace O7;
 
-enum CoreOperator {
+public enum CoreOperator {
     plus,
     minus,
     times,

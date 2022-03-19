@@ -1,6 +1,6 @@
 namespace O7;
 
-enum ReservedType {
+public enum ReservedType {
     iff,
     elsee,
     whilee,

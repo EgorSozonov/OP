@@ -1,8 +1,8 @@
 namespace O7;
 
-class ParseError {}
+public class ParseError {}
 
-class UnexpectedTokenError : ParseError {
+public class UnexpectedTokenError : ParseError {
     public string val;
 
     public UnexpectedTokenError(string val) {

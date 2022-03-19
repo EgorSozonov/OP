@@ -3,10 +3,11 @@ namespace O7;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using static ByteArrayUtils;
 using ParseResult = System.Tuple<ASTUntyped, ParseError>;
 
-class PreParser {
-    static ParseResult parse(Expr inp) {
+public class PreParser {
+    public static ParseResult parse(Expr inp) {
         var resultCurr = new ListStatements();
         var result = resultCurr;
         var resultBacktrack = new Stack<Tuple<ListStatements, int>>();
@@ -16,15 +17,24 @@ class PreParser {
 
         if (inp is ListExpr le) {
             int i = 0;
+            int j = 0;
             backtrack.push(new Tuple<ListExpr, int>(le, i));
+            resultBacktrack.push(new Tuple<ListStatements, int>(resultCurr, i));
             var curr = le;
             while (backtrack.peek() != null) {
                 var back = backtrack.pop();
                 curr = back.Item1;
                 i = back.Item2;
+
+                var backResult = resultBacktrack.pop();
+                resultCurr = backResult.Item1;
+                j = backResult.Item2;
+
                 while (i < curr.val.Count) {
+                    l(i.ToString());
                     if (curr.val[i] is ListExpr le2) {
-                        resultBacktrack.push(new Tuple<ListStatements, int>(resultCurr, i + 1));
+                        backtrack.push(new Tuple<ListExpr, int>(curr, i + 1));
+                        resultBacktrack.push(new Tuple<ListStatements, int>(resultCurr, j + 1));
 
                         if (le2.pType == ExprLexicalType.curlyBraces) {
                             ListStatements newList = new ListStatements(SubexprType.list);
@@ -42,9 +52,13 @@ class PreParser {
                             resultCurr.val.Add(newStatement);
                             result = newStatement;
                         }
+                        curr = le2;
                         i = 0;
+                        j = 0;
                     } else {
                         resultCurr.val.Add(parseAtom(curr.val[i], reservedWords, coreOperators));
+                        ++i;
+                        ++j;
                     }
                 }
 

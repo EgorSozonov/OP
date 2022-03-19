@@ -1,7 +1,7 @@
 namespace O7;
 
 /// & + - / * ! ~ $ % ^ | > < ? =
-enum OperatorSymb {
+public enum OperatorSymb {
     ampersand,
     plus,
     minus,
