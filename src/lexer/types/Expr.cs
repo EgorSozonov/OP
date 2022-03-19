@@ -162,7 +162,7 @@ public sealed class WordToken : Expr {
     public WordToken(byte[] val) {
         this.val = val;
     }
-    // TODO array equality
+
     public override bool Equals(Object o) => (o is WordToken wt) ? ByteArrayUtils.areEqual(this.val, wt.val) : false;
 
     public override int GetHashCode() => val.Length;
@@ -187,6 +187,17 @@ public sealed class OperatorToken : Expr {
             if (this.val[i] != oth.val[i]) return false;
         }
         return true;
+    }
+
+    public bool isAssignment() {
+        if (this.val.Count == 1 && this.val[0] == OperatorSymb.equals) return true;
+        if (this.val.Count == 2 && this.val[1] == OperatorSymb.equals) {
+            var f = this.val[0];
+            if (f == OperatorSymb.colon
+                || f == OperatorSymb.plus || f == OperatorSymb.minus
+                || f == OperatorSymb.asterisk || f == OperatorSymb.slash) return true;
+        }
+        return false;
     }
 
     public override int GetHashCode() => val.Count;

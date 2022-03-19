@@ -24,9 +24,9 @@ public class ASTUntyped {
                             if (curr.sType == SubexprType.curlyBraces) {
                                 result.Append("{\n ");
                             } else if (curr.sType == SubexprType.dataInitializer) {
-                                result.Append("[ ");
+                                result.Append("[");
                             } else if (curr.sType == SubexprType.parens){
-                                result.Append("( ");
+                                result.Append("(");
                             }
                         }
                     } else {
@@ -37,11 +37,11 @@ public class ASTUntyped {
                 }
                 if (backtrack.peek() != null) {
                     if (curr.sType == SubexprType.curlyBraces) {
-                        result.Append(" }\n ");
+                        result.Append("}\n ");
                     } else if (curr.sType == SubexprType.dataInitializer) {
-                        result.Append(" ], ");
+                        result.Append("], ");
                     } else if (curr.sType == SubexprType.parens) {
-                        result.Append(" ) ");
+                        result.Append(") ");
                     } else {
                         result.Append(";\n ");
                     }
@@ -53,7 +53,7 @@ public class ASTUntyped {
 
             return result.ToString();
         } else if (this is Ident x) {
-            return $"id {x.name}";
+            return $"id.{x.name}";
         } else if (this is If x2) {
             return $"If {x2.val.Count}";
         } else if (this is VarDefinition x3) {
@@ -139,29 +139,13 @@ public sealed class IfClause : ASTUntyped {
     }
 }
 
-public sealed class VarDefinition : ASTUntyped {
+public sealed class Assignment : ASTUntyped {
     public Ident identifier;
+    public AssignmentType aType;
     public ASTUntyped rightSide;
-    public VarDefinition(Ident identifier, ASTUntyped rightSide) {
+    public Assignment(Ident identifier, AssignmentType aType, ASTUntyped rightSide) {
         this.identifier = identifier;
-        this.rightSide = rightSide;
-    }
-}
-
-public sealed class MutableDefinition : ASTUntyped {
-    public Ident identifier;
-    public Statement rightSide;
-    public MutableDefinition(Ident identifier, Statement rightSide) {
-        this.identifier = identifier;
-        this.rightSide = rightSide;
-    }
-}
-
-public sealed class MutableAssignment : ASTUntyped {
-    public Ident identifier;
-    public Statement rightSide;
-    public MutableAssignment(Ident identifier, Statement rightSide) {
-        this.identifier = identifier;
+        this.aType = aType;
         this.rightSide = rightSide;
     }
 }

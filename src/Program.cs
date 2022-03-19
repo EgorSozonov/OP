@@ -5,17 +5,13 @@ using static ByteArrayUtils;
 
 class Program {
     static void Main(string[] args) {
-
-        var inpStr = @"
-a = b + c
-";
-
         var inp = @"
 a {
     if
 
     true
 
+    afterComment #cd comment here.#  += 1
 
     ([123 _321] + [456 111])
 }

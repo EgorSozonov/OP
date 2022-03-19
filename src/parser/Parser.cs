@@ -51,17 +51,27 @@ public class PreParser {
                             resultCurr = newElem;
                         } else if (le2.pType == ExprLexicalType.parens) {
                             ListStatements newStatement = new ListStatements(SubexprType.parens);
-
                             resultCurr.val.Add(newStatement);
-
                             resultCurr = newStatement;
                         } else if (le2.pType == ExprLexicalType.statement) {
-                            ListStatements newStatement = new ListStatements(SubexprType.statement);
+                            if (le2.val.Count >=3 && le2.val[1] is OperatorToken ot && ot.isAssignment()) {
+                                if (le2.val[0] is WordToken wrd && !isReservedWord(wrd, reservedWords)) {
 
-                            resultCurr.val.Add(newStatement);
+                                    ListStatements newStatement = new ListStatements(SubexprType.statement);
+                                    resultCurr.val.Add(newStatement);
+                                    resultCurr = newStatement;
+                                } else {
+                                    return new Tuple<ASTUntyped, ParseError>(result,
+                                        new AssignmentError("Erroneous assignment expression, must be: identifier assignmentOper anyExpression, where assignmentOper is one of: = := += -= *= /="));
+                                }
+                            } else {
+                                ListStatements newStatement = new ListStatements(SubexprType.statement);
+                                resultCurr.val.Add(newStatement);
+                                resultCurr = newStatement;
+                            }
 
-                            resultCurr = newStatement;
                         }
+
 
                         curr = le2;
                         i = 0;
@@ -114,13 +124,18 @@ public class PreParser {
 
 
     static bool arraysEqual(List<OperatorSymb> a, List<OperatorSymb> b) {
-        if (a.isEmpty() && a.Count != b.Count) return false;
+        if (a.isEmpty() || a.Count != b.Count) return false;
         for (int i = 0; i < a.Count; ++i) {
             if (a[i] != b[i]) return false;
         }
         return true;
     }
 
+    static bool isReservedWord(WordToken wt, Dictionary<String, ReservedType> reservedWords) {
+        var str = Encoding.ASCII.GetString(wt.val);
+        if (str == "true" || str == "false") return true;
+        return (reservedWords.ContainsKey(str));
+    }
 
     static ASTUntyped parseAtom(Expr inp,
                                 Dictionary<String, ReservedType> reservedWords,

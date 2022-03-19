@@ -20,3 +20,13 @@ public enum CoreOperator {
     timesMut,
     divideMut,
 }
+
+public enum AssignmentType {
+    immutableDef,
+    mutableDef,
+    mutableAssignment,
+    mutablePlus,
+    mutableMinus,
+    mutableTimes,
+    mutableDiv,
+}
