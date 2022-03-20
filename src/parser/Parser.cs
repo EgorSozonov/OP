@@ -54,12 +54,16 @@ public class PreParser {
                             resultCurr.val.Add(newStatement);
                             resultCurr = newStatement;
                         } else if (le2.pType == ExprLexicalType.statement) {
-                            if (le2.val.Count >=3 && le2.val[1] is OperatorToken ot && ot.isAssignment()) {
-                                if (le2.val[0] is WordToken wrd && !isReservedWord(wrd, reservedWords)) {
-
-                                    ListStatements newStatement = new ListStatements(SubexprType.statement);
-                                    resultCurr.val.Add(newStatement);
-                                    resultCurr = newStatement;
+                            if (le2.val.Count >=3 && le2.val[1] is OperatorToken ot) {
+                                var mbAssType = getAssignmentType(ot);
+                                var identParse = parseAtom(le2.val[0], reservedWords, coreOperators);
+                                if (identParse is Ident ident && mbAssType != null) {
+                                    ListStatements rightSide = new ListStatements(SubexprType.statement);
+                                    var assignment = new Assignment(ident, (AssignmentType)mbAssType, rightSide);
+                                    resultCurr.val.Add(assignment);
+                                    resultBacktrack.push(new Tuple<ListStatements, int>(resultCurr, i + 1));
+                                    resultCurr = rightSide;
+                                    i = 2;
                                 } else {
                                     return new Tuple<ASTUntyped, ParseError>(result,
                                         new AssignmentError("Erroneous assignment expression, must be: identifier assignmentOper anyExpression, where assignmentOper is one of: = := += -= *= /="));
@@ -88,6 +92,19 @@ public class PreParser {
         }
         return new Tuple<ASTUntyped, ParseError>(result, null);
 
+    }
+
+    static AssignmentType? getAssignmentType(OperatorToken ot) {
+        if (ot.val.Count == 1 && ot.val[0] == OperatorSymb.equals) return AssignmentType.immutableDef;
+        if (ot.val.Count == 2 && ot.val[1] == OperatorSymb.equals) {
+            var f = ot.val[0];
+            if (f == OperatorSymb.colon) return AssignmentType.mutableAssignment;
+            if (f == OperatorSymb.plus) return AssignmentType.mutablePlus;
+            if (f == OperatorSymb.minus) return AssignmentType.mutablePlus;
+            if (f == OperatorSymb.asterisk) return AssignmentType.mutablePlus;
+            if (f == OperatorSymb.slash) return AssignmentType.mutablePlus;
+        }
+        return null;
     }
 
     static Dictionary<String, ReservedType> getReservedMap() {

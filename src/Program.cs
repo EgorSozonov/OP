@@ -6,16 +6,8 @@ using static ByteArrayUtils;
 class Program {
     static void Main(string[] args) {
         var inp = @"
-a {
-    if
-
-    true
-
-    afterComment #cd comment here.#  += 1
-
-    ([123 _321] + [456 111])
-}
-d; ";
+    x = 5 + 2
+";
 
         var innp = @"
             a b

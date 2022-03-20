@@ -189,17 +189,6 @@ public sealed class OperatorToken : Expr {
         return true;
     }
 
-    public bool isAssignment() {
-        if (this.val.Count == 1 && this.val[0] == OperatorSymb.equals) return true;
-        if (this.val.Count == 2 && this.val[1] == OperatorSymb.equals) {
-            var f = this.val[0];
-            if (f == OperatorSymb.colon
-                || f == OperatorSymb.plus || f == OperatorSymb.minus
-                || f == OperatorSymb.asterisk || f == OperatorSymb.slash) return true;
-        }
-        return false;
-    }
-
     public override int GetHashCode() => val.Count;
 
     public override string ToString() {

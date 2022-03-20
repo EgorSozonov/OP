@@ -23,7 +23,6 @@ public enum CoreOperator {
 
 public enum AssignmentType {
     immutableDef,
-    mutableDef,
     mutableAssignment,
     mutablePlus,
     mutableMinus,

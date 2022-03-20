@@ -56,7 +56,7 @@ public class ASTUntyped {
             return $"id.{x.name}";
         } else if (this is If x2) {
             return $"If {x2.val.Count}";
-        } else if (this is VarDefinition x3) {
+        } else if (this is Assignment x3) {
             return $"{x3.identifier} = {x3.rightSide}";
         } else if (this is IntLiteral x4) {
             return x4.val.ToString();
