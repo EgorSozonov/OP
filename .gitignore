@@ -18,3 +18,10 @@ Src/.DS_Store?
 *assets.json
 o7.csproj.AssemblyReference.cache
 obj/*
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+gradle/wrapper/*
