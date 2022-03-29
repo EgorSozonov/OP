@@ -56,43 +56,46 @@ static class IntError extends LexErrorBase {
 
 class FloatError extends LexErrorBase {
     String val = "";
-    public FloatError(string val) {
+    public FloatError(String val) {
         this.val = val;
     }
 
-    public override string ToString() {
+    @Override
+    public String toString() {
         return "FloatErrorextends $val";
     }
 }
 
 
 class WordError extends LexErrorBase {
-    string val = "";
-    public WordError(string val) {
+    String val = "";
+    public WordError(String val) {
         this.val = val;
     }
 
-    public override string ToString() {
+    @Override
+    public String toString() {
         return "WordErrorextends $val";
     }
 }
 
 
 class OperatorError extends LexErrorBase {
-    string val = "";
-    public OperatorError(string val) {
+    String val = "";
+    public OperatorError(String val) {
         this.val = val;
     }
 
-    public override string ToString() {
-        return "OperatorErrorextends $val";
+    @Override
+    public String toString() {
+        return "OperatorErrorextends " + val;
     }
 }
 
 
 class BoolError extends LexErrorBase {
-    public string val = "";
-    public BoolError(string val) {
+    public String val = "";
+    public BoolError(String val) {
         this.val = val;
     }
 }
