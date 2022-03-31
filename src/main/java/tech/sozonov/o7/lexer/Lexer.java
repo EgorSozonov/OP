@@ -6,7 +6,7 @@ import main.java.tech.sozonov.o7.lexer.types.OperatorSymb;
 import main.java.tech.sozonov.o7.utils.ASCII;
 import main.java.tech.sozonov.o7.utils.Tuple;
 import main.java.tech.sozonov.o7.utils.Stack;
-import static main.java.tech.sozonov.o7.utils.ListUtils;
+import static main.java.tech.sozonov.o7.utils.ListUtils.*;
 
 public class Lexer {
     public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
@@ -76,10 +76,10 @@ public class Lexer {
                 }
                 // TODO
                 var back = backtrack.pop();
-                var last = back.val.Last();
+                var theLast = last(back.val);
 
-                if (last instanceof ListExpr le &&  !le.val.isEmpty() && le.val.Last() instanceof ListExpr le2 && le2.val.isEmpty()) {
-                    le.val.removeLast();
+                if (theLast instanceof ListExpr le &&  !le.val.isEmpty() && last(le.val) instanceof ListExpr le2 && le2.val.isEmpty()) {
+                    removeLast(le.val);
                 }
                 curr = back;
                 ++i;
@@ -117,9 +117,9 @@ public class Lexer {
                 var back = backtrack.pop();
 
                 // TODO
-                var last = back.val.Last();
-                if (last instanceof ListExpr le && le.val.isEmpty()) {
-                    back.val.removeLast();
+                var theLast = last(back.val);
+                if (theLast instanceof ListExpr le && le.val.isEmpty()) {
+                    removeLast(back.val);
                 }
 
                 curr = back;
@@ -156,7 +156,7 @@ public class Lexer {
             var theLast = last(back.val);
             if (theLast instanceof ListExpr le) {
                 if (hasValues(le.val)) {
-                    ListUtils.removeLast(back.val);
+                    removeLast(back.val);
                 }
             }
         }
@@ -223,7 +223,7 @@ public class Lexer {
         int startingDigit = isNegative ? start + 1 : start;
         var mbNumber = isFloating ? lexFloat(inp, startingDigit, ind - 1, isNegative)
                                   : lexInt(inp, startingDigit, ind - 1, isNegative);
-        return mbNumber.BiMap(x => new Tuple<ExprBase, Integer>(x, ind), x => x);
+        return mbNumber.BiMap(x => new Tuple<ExprBase, Integer>(x, ind), x -> x);
     }
 
 
@@ -240,9 +240,9 @@ public class Lexer {
     }
 
 
-    static Either<LexErrorBase, Expr> lexFloat(byte[] inp, int start, int endInclusive, boolean isNegative) {
+    static Either<LexErrorBase, ExprBase> lexFloat(byte[] inp, int start, int endInclusive, boolean isNegative) {
         var digitList = filterBytes(inp, start, endInclusive, (x) => x != ASCII.underscore);
-        var str = (isNegative ? "-" : "") + Encoding.ASCII.GetString(digitList.ToArray());
+        var str = (isNegative ? "-" : "") + (new String(digitList.toArray(), StandardCharsets.US_ASCII));
         if (double.TryParse(str, out double fl)) {
             return new FloatToken(fl);
         } else {
@@ -251,14 +251,14 @@ public class Lexer {
     }
 
 
-    static boolean checkIntRange(List<byte> digits, boolean isNegative) {
-        if (digits.size() != 19) return digits.size() < 19;
+    static boolean checkIntRange(byte[] digits, boolean isNegative) {
+        if (digits.size() != 19) return digits.length < 19;
         return isNegative ? _isLexicographicallyLE(digits, minInt) : _isLexicographicallyLE(digits, maxInt);
     }
 
 
-    static boolean _isLexicographicallyLE(List<byte> a, byte[] b) {
-        for (int i = 0; i < a.size(); ++i) {
+    static boolean _isLexicographicallyLE(byte[] a, byte[] b) {
+        for (int i = 0; i < a.length; ++i) {
             if (a[i] < b[i]) return true;
             if (a[i] > b[i]) return false;
         }
@@ -266,10 +266,10 @@ public class Lexer {
     }
 
 
-    static int intOfDigits(List<byte> digits) {
+    static int intOfDigits(byte[] digits) {
         int result = 0;
         int powerOfTen = 1;
-        for (int ind = digits.size() - 1; ind > -1; --ind) {
+        for (int ind = digits.length - 1; ind > -1; --ind) {
             int digitValue = (digits[ind] - ASCII.digit0)*powerOfTen;
             result += digitValue;
             powerOfTen *= 10;
@@ -310,7 +310,7 @@ public class Lexer {
     /// & + - / * ! ~ $ % ^ | > < ? =
     static LexResult lexOperator(byte[] inp, int start, int walkLen) {
         int i = start;
-        var result = new List<OperatorSymb>();
+        var result = new ArrayList<OperatorSymb>();
         var currByte = inp[i];
         while (i <= walkLen && i < start + 3) {
             var smb = isOperatorSymb(currByte);
@@ -323,7 +323,7 @@ public class Lexer {
         if (i <= walkLen && isOperatorSymb(inp[i]) != OperatorSymb.notASymb) {
             return new OperatorError("Operators longer than 3 symbols are not allowed");
         }
-        return new Tuple<ExprBase, int>(new OperatorToken(result), i);
+        return new Tuple<ExprBase, Integer>(new OperatorToken(result), i);
     }
 
 
@@ -370,10 +370,10 @@ public class Lexer {
             ++i;
         }
         if (endContent == -1) endContent = walkLen;
-        if (startContent == endContent) return new Tuple<ExprBase, int>(new CommentToken(""), i);
+        if (startContent == endContent) return new Tuple<ExprBase, Integer>(new CommentToken(""), i);
         var subList = new byte[endContent - startContent + 1];
         Array.Copy(inp, startContent, subList, 0, endContent - startContent + 1);
-        return new Tuple<ExprBase, int>(new CommentToken(Encoding.ASCII.GetString(subList)), i);
+        return new Tuple<ExprBase, Integer>(new CommentToken(Encoding.ASCII.GetString(subList)), i);
     }
 
     /// Reads symbols from '"' until another '"', while skipping '\"' combination.
@@ -397,10 +397,10 @@ public class Lexer {
             ++i;
         }
         if (endContent == -1) return new EndOfInputError();
-        if (startContent == endContent) return new Tuple<ExprBase, int>(new StringToken(""), i);
+        if (startContent == endContent) return new Tuple<ExprBase, Integer>(new StringToken(""), i);
         var subList = new byte[endContent - startContent + 1];
         Array.Copy(inp, startContent, subList, 0, endContent - startContent + 1);
-        return new Tuple<ExprBase, int>(new StringToken(new String(subList, StandardCharsets.US_ASCII)), i);
+        return new Tuple<ExprBase, Integer>(new StringToken(new String(subList, StandardCharsets.US_ASCII)), i);
     }
 
     private static List<byte> filterBytes(byte[] inp, int start, int end, Func<byte, bool> predicate) {
