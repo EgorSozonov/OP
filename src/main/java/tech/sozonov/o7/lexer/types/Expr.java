@@ -1,14 +1,18 @@
 package main.java.tech.sozonov.o7.lexer.types;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import main.java.tech.sozonov.o7.utils.Stack;
 import java.nio.charset.StandardCharsets;
+import main.java.tech.sozonov.o7.utils.ByteArrayUtils;
+import main.java.tech.sozonov.o7.utils.Tuple;
 
 public class Expr {
 
-static class ExprBase {}
-/// A list of tokens, which can be a statement, a list of statements,
-/// or a data initializer
+public static class ExprBase {}
+/** A list of tokens, which can be a statement, a list of statements,
+ * or a data initializer
+*/
 public final class ListExpr extends ExprBase {
     public List<ExprBase> val;
     public ExprLexicalType pType;
@@ -75,8 +79,8 @@ public final class ListExpr extends ExprBase {
                     result.append(" |, ");
                 }
                 var back = backtrack.pop();
-                curr = back.Item1;
-                i = back.Item2 + 1;
+                curr = back.item0;
+                i = back.item1 + 1;
             }
         } while (backtrack.peek() != null || i < curr.val.size());
 

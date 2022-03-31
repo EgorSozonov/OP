@@ -1,29 +1,30 @@
 package main.java.tech.sozonov.o7.lexer.types;
+import java.nio.charset.StandardCharsets;
 
-class LexError {
+public class LexError {
 
-static class LexErrorBase {}
+public static class LexErrorBase {}
 
-static class EndOfInputError extends LexErrorBase {
+public static class EndOfInputError extends LexErrorBase {
 }
 
-static class ExtraClosingCurlyBraceError extends LexErrorBase {
+public static class ExtraClosingCurlyBraceError extends LexErrorBase {
 }
 
-static class ExtraClosingParenError extends LexErrorBase {
+public static class ExtraClosingParenError extends LexErrorBase {
 }
 
-static class ExtraClosingBracketError extends LexErrorBase {
+public static class ExtraClosingBracketError extends LexErrorBase {
 }
 
-static class NonAsciiError extends LexErrorBase {
+public static class NonAsciiError extends LexErrorBase {
 }
 
-static class EmptyStackError extends LexErrorBase {
+public static class EmptyStackError extends LexErrorBase {
 }
 
 
-static class UnexpectedSymbolError extends LexErrorBase {
+public static class UnexpectedSymbolError extends LexErrorBase {
     public String val;
 
     public UnexpectedSymbolError(String val) {
@@ -31,7 +32,7 @@ static class UnexpectedSymbolError extends LexErrorBase {
     }
 
     public UnexpectedSymbolError(byte val) {
-        this.val = val.toString();
+        this.val = new String(new byte[] {val}, StandardCharsets.US_ASCII);
     }
 
     @Override
@@ -41,7 +42,7 @@ static class UnexpectedSymbolError extends LexErrorBase {
 }
 
 
-static class IntError extends LexErrorBase {
+public static class IntError extends LexErrorBase {
     public String val = "";
     public IntError(String val) {
         this.val = val;
@@ -54,7 +55,7 @@ static class IntError extends LexErrorBase {
 }
 
 
-class FloatError extends LexErrorBase {
+public static class FloatError extends LexErrorBase {
     String val = "";
     public FloatError(String val) {
         this.val = val;
@@ -67,7 +68,7 @@ class FloatError extends LexErrorBase {
 }
 
 
-class WordError extends LexErrorBase {
+public static class WordError extends LexErrorBase {
     String val = "";
     public WordError(String val) {
         this.val = val;
@@ -80,7 +81,7 @@ class WordError extends LexErrorBase {
 }
 
 
-class OperatorError extends LexErrorBase {
+public static class OperatorError extends LexErrorBase {
     String val = "";
     public OperatorError(String val) {
         this.val = val;
@@ -93,7 +94,7 @@ class OperatorError extends LexErrorBase {
 }
 
 
-class BoolError extends LexErrorBase {
+public static class BoolError extends LexErrorBase {
     public String val = "";
     public BoolError(String val) {
         this.val = val;
