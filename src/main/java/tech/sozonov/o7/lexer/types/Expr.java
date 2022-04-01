@@ -2,7 +2,6 @@ package tech.sozonov.o7.lexer.types;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
-import java.util.Arrays;
 import tech.sozonov.o7.utils.Stack;
 import java.nio.charset.StandardCharsets;
 import tech.sozonov.o7.utils.ByteArrayUtils;

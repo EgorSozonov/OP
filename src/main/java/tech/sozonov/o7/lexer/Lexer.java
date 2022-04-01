@@ -85,7 +85,7 @@ public class Lexer {
                     return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingCurlyBraceError());
                 }
                 // TODO
-                backtrack.pop();
+                val back = backtrack.pop();
                 val theLast = last(back.val);
 
                 if (theLast instanceof ListExpr le && !le.val.isEmpty() && last(le.val) instanceof ListExpr le2 && le2.val.isEmpty()) {

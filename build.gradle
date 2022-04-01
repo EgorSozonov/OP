@@ -39,5 +39,5 @@ tasks.withType(JavaCompile) {
 }
 
 application {
-    mainClass = 'o7.Program'
+    mainClass = 'tech.sozonov.o7.Program'
 }
