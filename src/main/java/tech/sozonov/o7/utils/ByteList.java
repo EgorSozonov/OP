@@ -49,4 +49,9 @@ public class ByteList {
     public byte last() {
         return data[length - 1];
     }
+
+    public String toAsciiString() {
+        if (length == 0) return "";
+
+    }
 }

@@ -1,4 +1,4 @@
-package tech.sozonov.o7.utils;
+package tech.sozonov.o7.parser.types;
 
 public enum SubexprType {
     curlyBraces,
