@@ -24,7 +24,7 @@ public class Lexer {
         if (inp.length < 2) return new Tuple<ExprBase, LexErrorBase>(new ListExpr(ExprLexicalType.curlyBraces), err);
 
         int i = 0;
-        val curr = new ListExpr(ExprLexicalType.curlyBraces);
+        ListExpr curr = new ListExpr(ExprLexicalType.curlyBraces);
         val result = curr;
         val backtrack = new Stack<ListExpr>();
         backtrack.push(curr);
@@ -41,8 +41,9 @@ public class Lexer {
             if (cChar == ASCII.space || cChar == ASCII.emptyCR) {
                 ++i;
             } else if (cChar == ASCII.emptyLF) {
-                if (backtrack.peek() != null && backtrack.peek().pType == ExprLexicalType.curlyBraces
-                    && curr.val.size() > 0) {
+                if (backtrack.peek() != null
+                  && backtrack.peek().pType == ExprLexicalType.curlyBraces
+                  && curr.val.size() > 0) {
                     // we are in a CurlyBraces context, so a newline means a new statement
                     val back = backtrack.peek();
                     val newStatement = new ListExpr(ExprLexicalType.statement);
@@ -76,16 +77,15 @@ public class Lexer {
                 curr = newCurr;
                 ++i;
             } else if (cChar == ASCII.curlyClose) {
-
                 if (backtrack.peek() == null || backtrack.peek().pType != ExprLexicalType.curlyBraces) {
                     return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingCurlyBraceError());
                 }
-                val unused = backtrack.pop();
+                backtrack.pop();
                 if (backtrack.peek() == null) {
                     return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingCurlyBraceError());
                 }
                 // TODO
-                val back = backtrack.pop();
+                backtrack.pop();
                 val theLast = last(back.val);
 
                 if (theLast instanceof ListExpr le && !le.val.isEmpty() && last(le.val) instanceof ListExpr le2 && le2.val.isEmpty()) {
@@ -197,8 +197,8 @@ public class Lexer {
     static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexNumber(byte[] inp, int start, int walkLen) {
         if (start > walkLen) return Either.left(new EndOfInputError());
 
-        val ind = start;
-        val currByte = inp[start];
+        int ind = start;
+        byte currByte = inp[start];
 
         boolean isNegative = currByte == ASCII.underscore;
         if (isNegative) {
@@ -233,7 +233,8 @@ public class Lexer {
         int startingDigit = isNegative ? start + 1 : start;
         val mbNumber = isFloating ? lexFloat(inp, startingDigit, ind - 1, isNegative)
                                   : lexInt(inp, startingDigit, ind - 1, isNegative);
-        return mbNumber.bimap(x -> new Tuple<ExprBase, Integer>(x, ind), x -> x);
+        final int finalInd = ind;
+        return mbNumber.bimap(x -> x, x -> new Tuple<ExprBase, Integer>(x, finalInd));
     }
 
 
@@ -252,7 +253,7 @@ public class Lexer {
 
     static Either<LexErrorBase, ExprBase> lexFloat(byte[] inp, int start, int endInclusive, boolean isNegative) {
         ByteList digitList = filterBytes(inp, start, endInclusive, (x) -> x != ASCII.underscore);
-        val str = (isNegative ? "-" : "") + (new String(digitList, StandardCharsets.US_ASCII));
+        val str = (isNegative ? "-" : "") + (digitList.toAsciiString());
         double result = tryParseDouble(str);
         return Double.isNaN(result)
             ? Either.left(new IntError("Float lexical error: '$str' not parsing as a floating-point number"))
@@ -289,7 +290,7 @@ public class Lexer {
 
     static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int start, int walkLen) {
         int i = start;
-        val currByte = inp[i];
+        byte currByte = inp[i];
         while (i <= walkLen && (currByte == ASCII.underscore)) {
             ++i;
             if (i <= walkLen) currByte = inp[i];
@@ -308,8 +309,9 @@ public class Lexer {
             return Either.left(new WordError("Snake-case identifier ${String.fromCharCodes(byte[].fromList(inp.sublist(start, i).toList()))}_"));
         }
         val subList = new byte[i - start];
-        Array.Copy(inp, start, subList, 0, i - start);
-
+        for (int j = start; j <= i; ++j) {
+            subList[j - start] = inp[j];
+        }
         return Either.right(new Tuple<ExprBase, Integer>(new WordToken(subList), i));
     }
 
@@ -320,7 +322,7 @@ public class Lexer {
     static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexOperator(byte[] inp, int start, int walkLen) {
         int i = start;
         val result = new ArrayList<OperatorSymb>();
-        val currByte = inp[i];
+        byte currByte = inp[i];
         while (i <= walkLen && i < start + 3) {
             val smb = isOperatorSymb(currByte);
             if (smb == OperatorSymb.notASymb) break;
@@ -410,7 +412,9 @@ public class Lexer {
         if (endContent == -1) return Either.left(new EndOfInputError());
         if (startContent == endContent) return Either.right(new Tuple<ExprBase, Integer>(new StringToken(""), i));
         val subList = new byte[endContent - startContent + 1];
-        Array.Copy(inp, startContent, subList, 0, endContent - startContent + 1);
+        for (int j = startContent; j <= endContent; ++j) {
+            subList[j - startContent] = inp[j];
+        }
         return Either.right(new Tuple<ExprBase, Integer>(new StringToken(new String(subList, StandardCharsets.US_ASCII)), i));
     }
 

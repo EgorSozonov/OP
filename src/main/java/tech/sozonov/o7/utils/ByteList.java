@@ -1,4 +1,6 @@
 package tech.sozonov.o7.utils;
+import java.nio.charset.StandardCharsets;
+
 import lombok.val;
 
 
@@ -35,10 +37,7 @@ public class ByteList {
     public void removeLast(int ind) {
     }
 
-    public byte get(int ind) throws Exception {
-        if (ind < 0 || ind >= length) {
-            throw new Exception("Out of bounds exception, length = " + length + ", ind = " + ind);
-        }
+    public byte get(int ind) {
         return data[ind];
     }
 
@@ -52,6 +51,10 @@ public class ByteList {
 
     public String toAsciiString() {
         if (length == 0) return "";
-
+        val tmp = new byte[length];
+        for (int i = 0; i < length; i++) {
+            tmp[i] = data[i] < 128 ? data[i] : 0;
+        }
+        return new String(tmp, StandardCharsets.US_ASCII);
     }
 }

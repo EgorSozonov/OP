@@ -123,7 +123,6 @@ public abstract class Either<L, R>{
         }
     }
 
-    @Override
     public abstract R get();
 
     @SuppressWarnings("unchecked")
@@ -149,15 +148,6 @@ public abstract class Either<L, R>{
             rightAction.accept(get());
         }
 
-        return this;
-    }
-
-    @Override
-    public final Either<L, R> peekRight(Consumer<? super R> action) {
-        Objects.requireNonNull(action, "action is null");
-        if (isRight()) {
-            action.accept(get());
-        }
         return this;
     }
 
@@ -245,11 +235,6 @@ public abstract class Either<L, R>{
         @Override
         public int hashCode() {
             return Objects.hashCode(value);
-        }
-
-        @Override
-        public String toString() {
-            return stringPrefix() + "(" + value + ")";
         }
     }
 }

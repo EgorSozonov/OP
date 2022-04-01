@@ -9,12 +9,12 @@ import tech.sozonov.o7.parser.types.CoreOperatorPackage.AssignmentType;
 import tech.sozonov.o7.parser.types.CoreOperatorPackage.CoreOperator;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Tuple;
-import static tech.sozonov.o7.utils.ListUtils.*;
+import tech.sozonov.o7.utils.ListUtils;
 import static tech.sozonov.o7.utils.ByteArrayUtils.*;
 
 public class ASTUntyped {
 
-static class ASTUntypedBase {
+public static class ASTUntypedBase {
     @Override
     public final String toString() {
         if (this instanceof ListStatements lsOuter) {
@@ -27,7 +27,7 @@ static class ASTUntypedBase {
             do {
                 while (i < curr.val.size()) {
                     if (curr.val.get(i) instanceof ListStatements listElem) {
-                        if (isNotEmpty(listElem.val)) {
+                        if (ListUtils.hasValues(listElem.val)) {
                             backtrack.push(new Tuple<ListStatements, Integer>(curr, i));
                             curr = listElem;
                             i = 0;
@@ -65,26 +65,26 @@ static class ASTUntypedBase {
         } else if (this instanceof Ident x) {
             return "id " + x.name;
         } else if (this instanceof If x2) {
-            return $"If {x2.val.size()}";
+            return "If " + x2.val.size();
         } else if (this instanceof Assignment x3) {
-            return $"{x3.identifier} = {x3.rightSide}";
+            return x3.identifier + " = " + x3.rightSide;
         } else if (this instanceof IntLiteral x4) {
-            return x4.val.toString();
+            return Integer.toString(x4.val);
         } else if (this instanceof FloatLiteral x5) {
-            return x5.val.toString();
+            return Double.toString(x5.val);
         } else if (this instanceof Reserved x6) {
             return x6.val.toString();
         } else if (this instanceof CoreOperatorAST x7) {
             return x7.val.toString();
         } else if (this instanceof BoolLiteral x8) {
-            return "boolean " + x8.val.toString();
+            return "boolean " + Boolean.toString(x8.val);
         } else {
             return "Something else";
         }
     }
 }
 
-public class ListStatements extends ASTUntypedBase {
+public final static class ListStatements extends ASTUntypedBase {
     public List<ASTUntypedBase> val;
     public SubexprType sType;
 
@@ -99,7 +99,7 @@ public class ListStatements extends ASTUntypedBase {
     }
 }
 
-public final class Statement extends ASTUntypedBase {
+public final static class Statement extends ASTUntypedBase {
     public List<ASTUntypedBase> val;
     public Statement(List<ASTUntypedBase> val) {
         this.val = val;
@@ -110,7 +110,7 @@ public final class Statement extends ASTUntypedBase {
     }
 }
 
-public final class Ident extends ASTUntypedBase {
+public final static class Ident extends ASTUntypedBase {
     public String name;
 
     public Ident(String name) {
@@ -118,7 +118,7 @@ public final class Ident extends ASTUntypedBase {
     }
 }
 
-public final class Reserved extends ASTUntypedBase {
+public final static class Reserved extends ASTUntypedBase {
     public ReservedType val;
 
     public Reserved(ReservedType val) {
@@ -126,21 +126,14 @@ public final class Reserved extends ASTUntypedBase {
     }
 }
 
-public final class DataInitializer extends ListStatements {
-    public DataInitializer() {
-        this.val = new ArrayList<ASTUntypedBase>();
-        this.sType = SubexprType.dataInitializer;
-    }
-}
-
-public final class If extends ASTUntypedBase {
+public final static class If extends ASTUntypedBase {
     public List<IfClause> val;
     public If(List<IfClause> val) {
         this.val = val;
     }
 }
 
-public final class IfClause extends ASTUntypedBase {
+public final static class IfClause extends ASTUntypedBase {
     public ASTUntypedBase testClause;
     public ASTUntypedBase resultClause;
     public IfClause(ASTUntypedBase testClause, ASTUntypedBase resultClause) {
@@ -149,7 +142,7 @@ public final class IfClause extends ASTUntypedBase {
     }
 }
 
-public final class Assignment extends ASTUntypedBase {
+public final static class Assignment extends ASTUntypedBase {
     public Ident identifier;
     public AssignmentType aType;
     public ASTUntypedBase rightSide;
@@ -160,35 +153,35 @@ public final class Assignment extends ASTUntypedBase {
     }
 }
 
-public final class IntLiteral extends ASTUntypedBase {
+public final static class IntLiteral extends ASTUntypedBase {
     public int val;
     public IntLiteral(int val) {
         this.val = val;
     }
 }
 
-public final class FloatLiteral extends ASTUntypedBase {
+public final static class FloatLiteral extends ASTUntypedBase {
     public double val;
     public FloatLiteral(double val) {
         this.val = val;
     }
 }
 
-public final class BoolLiteral extends ASTUntypedBase {
+public final static class BoolLiteral extends ASTUntypedBase {
     public boolean val;
     public BoolLiteral(boolean val) {
         this.val = val;
     }
 }
 
-public final class StringLiteral extends ASTUntypedBase {
+public final static class StringLiteral extends ASTUntypedBase {
     public String val;
     public StringLiteral(String val) {
         this.val = val;
     }
 }
 
-public final class While extends ASTUntypedBase {
+public final static class While extends ASTUntypedBase {
     public Statement testClause;
     public List<Statement> body;
     public While(Statement testClause, List<Statement> body) {
@@ -197,14 +190,14 @@ public final class While extends ASTUntypedBase {
     }
 }
 
-public final class CoreOperatorAST extends ASTUntypedBase {
+public final static class CoreOperatorAST extends ASTUntypedBase {
     public CoreOperator val;
     public CoreOperatorAST(CoreOperator val) {
         this.val = val;
     }
 }
 
-public final class OperatorAST extends ASTUntypedBase {
+public final static class OperatorAST extends ASTUntypedBase {
     public List<OperatorSymb> val;
     public OperatorAST(List<OperatorSymb> val) {
         this.val = val;

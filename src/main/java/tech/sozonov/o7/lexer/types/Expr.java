@@ -14,7 +14,7 @@ public static class ExprBase {}
 /** A list of tokens, which can be a statement, a list of statements,
  * or a data initializer
 */
-public final class ListExpr extends ExprBase {
+public final static class ListExpr extends ExprBase {
     public List<ExprBase> val;
     public ExprLexicalType pType;
 
@@ -91,7 +91,7 @@ public final class ListExpr extends ExprBase {
 
 
 /// A valid int64 token
-public final class IntToken extends ExprBase {
+public final static class IntToken extends ExprBase {
     public int val = 0;
     public IntToken(int val) {
         this.val = val;
@@ -116,7 +116,7 @@ public final class IntToken extends ExprBase {
 
 
 /// A floating-point number token
-public final class FloatToken extends ExprBase {
+public final static class FloatToken extends ExprBase {
     public double val = 0;
 
     public FloatToken(double val) {
@@ -131,7 +131,7 @@ public final class FloatToken extends ExprBase {
 
 
 /// Identifier or reserved word
-public final class WordToken extends ExprBase {
+public final static class WordToken extends ExprBase {
     public byte[] val;
     public WordToken(byte[] val) {
         this.val = val;
@@ -154,7 +154,7 @@ public final class WordToken extends ExprBase {
 }
 
 
-public final class OperatorToken extends ExprBase {
+public final static class OperatorToken extends ExprBase {
     public List<OperatorSymb> val;
     public OperatorToken(List<OperatorSymb> val) {
         this.val = val;
@@ -182,7 +182,7 @@ public final class OperatorToken extends ExprBase {
 }
 
 
-public final class StringToken extends ExprBase {
+public final static class StringToken extends ExprBase {
     public String val;
     public StringToken(String val) {
         this.val = val;
@@ -205,7 +205,7 @@ public final class StringToken extends ExprBase {
 }
 
 
-public final class CommentToken extends ExprBase {
+public final static class CommentToken extends ExprBase {
     public String val;
 
     public CommentToken(String val) {
