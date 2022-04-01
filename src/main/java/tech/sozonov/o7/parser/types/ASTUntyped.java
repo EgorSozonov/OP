@@ -1,6 +1,6 @@
-package main.java.tech.sozonov.o7.types;
+package tech.sozonov.o7.types;
 
-import static main.java.tech.sozonov.o7.utils.ByteArrayUtils.*;
+import static tech.sozonov.o7.utils.ByteArrayUtils.*;
 import java.util.List;
 
 public class ASTUntyped {

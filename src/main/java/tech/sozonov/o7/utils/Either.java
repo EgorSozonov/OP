@@ -1,4 +1,4 @@
-package main.java.tech.sozonov.o7.utils;
+package tech.sozonov.o7.utils;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -171,7 +171,6 @@ public abstract class Either<L, R>{
 
 
     public static final class Left<L, R> extends Either<L, R>  {
-        private static final long serialVersionUID = 1L;
         private final L value;
 
         private Left(L value) {

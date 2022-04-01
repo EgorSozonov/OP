@@ -1,4 +1,4 @@
-package main.java.tech.sozonov.o7.utils;
+package tech.sozonov.o7.utils;
 import java.util.List;
 
 public class ListUtils {

@@ -1,11 +1,12 @@
-package main.java.tech.sozonov.o7.lexer.types;
+package tech.sozonov.o7.lexer.types;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.Arrays;
-import main.java.tech.sozonov.o7.utils.Stack;
+import tech.sozonov.o7.utils.Stack;
 import java.nio.charset.StandardCharsets;
-import main.java.tech.sozonov.o7.utils.ByteArrayUtils;
-import main.java.tech.sozonov.o7.utils.Tuple;
+import tech.sozonov.o7.utils.ByteArrayUtils;
+import tech.sozonov.o7.utils.Tuple;
 
 public class Expr {
 
@@ -176,7 +177,7 @@ public final class OperatorToken extends ExprBase {
 
     @Override
     public String toString() {
-        return "Operator [" + String.join(" ", val) + "]";
+        return "Operator [" + String.join(" ", val.stream().map(OperatorSymb::toString).collect(Collectors.toList())) + "]";
     }
 }
 

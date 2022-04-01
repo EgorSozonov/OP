@@ -1,4 +1,4 @@
-package main.java.tech.sozonov.o7.lexer.types;
+package tech.sozonov.o7.lexer.types;
 import java.nio.charset.StandardCharsets;
 
 public class LexError {

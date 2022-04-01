@@ -1,4 +1,4 @@
-package main.java.tech.sozonov.o7.utils;
+package tech.sozonov.o7.utils;
 
 public class ByteArrayUtils {
     public static boolean areEqual(byte[] a, byte[] b) {
@@ -11,5 +11,13 @@ public class ByteArrayUtils {
 
     public static void l(String a) {
         System.out.println(a);
+    }
+
+    public static double tryParseDouble(String inp) {
+        try {
+            return Double.parseDouble(inp);
+        } catch (Exception e) {
+            return Double.NaN;
+        }
     }
 }

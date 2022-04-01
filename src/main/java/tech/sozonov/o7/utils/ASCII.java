@@ -1,4 +1,4 @@
-package main.java.tech.sozonov.o7.utils;
+package tech.sozonov.o7.utils;
 
 public class ASCII {
     public static final byte emptyNULL = 0;                                      // NULL
