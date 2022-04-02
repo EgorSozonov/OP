@@ -1,5 +1,7 @@
 package tech.sozonov.o7;
 import tech.sozonov.o7.lexer.Lexer;
+import tech.sozonov.o7.parser.Parser;
+
 import static tech.sozonov.o7.utils.ListUtils.*;
 
 import java.nio.charset.StandardCharsets;
@@ -39,15 +41,15 @@ class Program {
             l(lexed.toString());
             l("");
 
-            // var parseRes = PreParser.parse(lexed);
-            // if (parseRes.item1 != null) {
-            //     l("Parser error");
-            //     l(parseRes.item1.ToString());
-            //     l(parseRes.item0.ToString());
-            // } else {
-            //     l("Parser successful");
-            //     l(parseRes.item0.ToString());
-            // }
+            var parseRes = Parser.parse(lexed);
+            if (parseRes.item1 != null) {
+                l("Parser error");
+                l(parseRes.item1.toString());
+                l(parseRes.item0.toString());
+            } else {
+                l("Parser successful");
+                l(parseRes.item0.toString());
+            }
 
             // print("Expected:");
             // print(expected);

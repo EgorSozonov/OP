@@ -1,5 +1,4 @@
 package tech.sozonov.o7.parser;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,7 +9,6 @@ import java.util.Map;
 import tech.sozonov.o7.lexer.types.ExprLexicalType;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.lexer.types.Expr.*;
-import tech.sozonov.o7.parser.types.ParseError;
 import tech.sozonov.o7.parser.types.ReservedType;
 import tech.sozonov.o7.parser.types.SubexprType;
 import tech.sozonov.o7.parser.types.ASTUntyped.*;
@@ -21,6 +19,7 @@ import tech.sozonov.o7.utils.Tuple;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Either;
 import lombok.val;
+
 
 public class Parser {
     public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {

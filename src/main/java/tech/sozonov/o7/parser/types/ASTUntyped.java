@@ -1,5 +1,4 @@
 package tech.sozonov.o7.parser.types;
-import static tech.sozonov.o7.utils.ByteArrayUtils.*;
 import java.util.ArrayList;
 import java.util.List;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
@@ -7,7 +6,8 @@ import tech.sozonov.o7.parser.types.CoreOperatorPackage.AssignmentType;
 import tech.sozonov.o7.parser.types.CoreOperatorPackage.CoreOperator;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Tuple;
-import tech.sozonov.o7.utils.ListUtils;
+import static tech.sozonov.o7.utils.ListUtils.*;
+
 
 public class ASTUntyped {
 
@@ -19,12 +19,12 @@ public static class ASTUntypedBase {
             var result = new StringBuilder();
             var backtrack = new Stack<Tuple<ListStatements, Integer>>();
             ListStatements curr = lsOuter;
-            var i = 0;
+            int i = 0;
 
             do {
                 while (i < curr.val.size()) {
                     if (curr.val.get(i) instanceof ListStatements listElem) {
-                        if (ListUtils.hasValues(listElem.val)) {
+                        if (hasValues(listElem.val)) {
                             backtrack.push(new Tuple<ListStatements, Integer>(curr, i));
                             curr = listElem;
                             i = 0;
@@ -35,6 +35,8 @@ public static class ASTUntypedBase {
                             } else if (curr.sType == SubexprType.parens){
                                 result.append("(");
                             }
+                        } else {
+                            ++i;
                         }
                     } else {
                         result.append(curr.val.get(i).toString());
