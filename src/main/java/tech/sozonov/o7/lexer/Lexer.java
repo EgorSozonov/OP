@@ -309,7 +309,7 @@ public class Lexer {
             return Either.left(new WordError("Snake-case identifier ${String.fromCharCodes(byte[].fromList(inp.sublist(start, i).toList()))}_"));
         }
         val subList = new byte[i - start];
-        for (int j = start; j <= i; ++j) {
+        for (int j = start; j < i; ++j) {
             subList[j - start] = inp[j];
         }
         return Either.right(new Tuple<ExprBase, Integer>(new WordToken(subList), i));
