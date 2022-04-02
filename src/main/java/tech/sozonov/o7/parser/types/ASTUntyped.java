@@ -1,16 +1,13 @@
 package tech.sozonov.o7.parser.types;
 import static tech.sozonov.o7.utils.ByteArrayUtils.*;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.parser.types.CoreOperatorPackage.AssignmentType;
 import tech.sozonov.o7.parser.types.CoreOperatorPackage.CoreOperator;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Tuple;
 import tech.sozonov.o7.utils.ListUtils;
-import static tech.sozonov.o7.utils.ByteArrayUtils.*;
 
 public class ASTUntyped {
 
