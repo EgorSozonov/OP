@@ -41,3 +41,29 @@ tasks.withType(JavaCompile) {
 application {
     mainClass = 'tech.sozonov.o7.Program'
 }
+
+def numTests = 0
+
+test {
+
+    testLogging {
+		events "PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR"
+	}
+
+    // beforeTest { descriptor ->
+    //     println "\nStart "
+    //     logger.lifecycle("Running test: " + descriptor)
+    //     numTests++
+    // }
+
+    useJUnitPlatform()
+    maxHeapSize = '1G'
+    failFast = true
+    //include "src/test/java/tech/sozonov/o7/*"
+    testLogging.showStandardStreams = true
+
+    // doLast {
+    //     println "\nnumTests executed: ${numTests}"
+    // }
+
+}

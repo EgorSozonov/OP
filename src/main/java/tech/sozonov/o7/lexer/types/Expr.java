@@ -6,6 +6,8 @@ import tech.sozonov.o7.utils.Stack;
 import java.nio.charset.StandardCharsets;
 import tech.sozonov.o7.utils.ByteArrayUtils;
 import tech.sozonov.o7.utils.Tuple;
+import lombok.val;
+
 
 public class Expr {
 
@@ -20,6 +22,50 @@ public final static class ListExpr extends ExprBase {
     public ListExpr(ExprLexicalType pType) {
         this.val = new ArrayList<ExprBase>();
         this.pType = pType;
+    }
+
+    public static boolean equal(ExprBase a, ExprBase b) {
+        if (!(a instanceof ListExpr) || !(b instanceof ListExpr)) return a == b;
+
+        var backtrackA = new Stack<Tuple<ListExpr, Integer>>();
+        var backtrackB = new Stack<ListExpr>();
+
+        backtrackA.push(new Tuple<ListExpr, Integer>((ListExpr)a, 0));
+        backtrackB.push((ListExpr)b);
+        int i = 0;
+
+        while (backtrackA.peek() != null) {
+            if (backtrackB.peek() == null) return false;
+
+            var listA = backtrackA.pop();
+            var listB = backtrackB.pop();
+            i = listA.item1;
+            if (listA.item0.pType != listB.pType || listA.item0.val.size() != listB.val.size()) {
+                return false;
+            }
+
+            while (i < listA.item0.val.size()) {
+                var itmA = listA.item0.val.get(i);
+                var itmB = listB.val.get(i);
+
+                if (itmA instanceof ListExpr && itmB instanceof ListExpr) {
+                    backtrackA.push(new Tuple<ListExpr, Integer>(listA.item0, i + 1));
+                    backtrackB.push(listB);
+                    listA = new Tuple<ListExpr, Integer>((ListExpr)itmA, 0);
+                    listB = (ListExpr)itmB;
+
+                    if (listA.item0.pType != listB.pType || listA.item0.val.size() != listB.val.size()) {
+                        return false;
+                    }
+                    i = 0;
+                } else if (itmA != itmB) {
+                    return false;
+                } else {
+                    ++i;
+                }
+            }
+        }
+        return true;
     }
 
     @Override
@@ -78,7 +124,7 @@ public final static class ListExpr extends ExprBase {
                 } else {
                     result.append(" |, ");
                 }
-                var back = backtrack.pop();
+                val back = backtrack.pop();
                 curr = back.item0;
                 i = back.item1 + 1;
             }
