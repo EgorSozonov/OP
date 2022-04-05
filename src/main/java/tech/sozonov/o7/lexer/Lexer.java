@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Function;
-
 import lombok.val;
 
 public class Lexer {
@@ -164,7 +163,7 @@ public class Lexer {
             val back = backtrack.pop();
             val theLast = last(back.val);
             if (theLast instanceof ListExpr le) {
-                if (hasValues(le.val)) {
+                if (le.val.isEmpty()) {
                     removeLast(back.val);
                 }
             }

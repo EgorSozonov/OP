@@ -42,23 +42,21 @@ application {
     mainClass = 'tech.sozonov.o7.Program'
 }
 
-def numTests = 0
-
 test {
 
-    testLogging {
-		events "PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR"
-	}
+    // testLogging {
+	// 	events "PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR"
+	// }
 
     // beforeTest { descriptor ->
     //     println "\nStart "
     //     logger.lifecycle("Running test: " + descriptor)
     //     numTests++
     // }
-
+    failFast = true
     useJUnitPlatform()
     maxHeapSize = '1G'
-    failFast = true
+
     //include "src/test/java/tech/sozonov/o7/*"
     testLogging.showStandardStreams = true
 

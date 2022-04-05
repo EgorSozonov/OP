@@ -58,7 +58,7 @@ public final static class ListExpr extends ExprBase {
                         return false;
                     }
                     i = 0;
-                } else if (itmA != itmB) {
+                } else if (!itmA.equals(itmB)) {
                     return false;
                 } else {
                     ++i;
