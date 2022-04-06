@@ -151,8 +151,8 @@ public final static class ListExpr extends ExprBase {
 
 /// A valid int64 token
 public final static class IntToken extends ExprBase {
-    public int val = 0;
-    public IntToken(int val) {
+    public long val = 0;
+    public IntToken(long val) {
         this.val = val;
     }
 
@@ -163,7 +163,7 @@ public final static class IntToken extends ExprBase {
 
     @Override
     public int hashCode() {
-        return this.val;
+        return (int)this.val;
     }
 
 

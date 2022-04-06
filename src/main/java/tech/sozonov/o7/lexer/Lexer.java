@@ -201,7 +201,8 @@ public class Lexer {
         boolean isNegative = currByte == ASCII.underscore;
         if (isNegative) {
             ++ind;
-            if (ind <= walkLen) currByte = inp[ind];
+            currByte = inp[ind];
+            if (currByte < ASCII.digit0 || currByte > ASCII.digit9) return Either.left(new UnexpectedSymbolError("Expected a digit but got char " + currByte));
         }
         boolean isFloating = false;
 
@@ -240,7 +241,7 @@ public class Lexer {
         val digitList = filterBytes(inp, start, endInclusive, x -> x != ASCII.underscore);
 
         if (checkIntRange(digitList, isNegative)) {
-            int actualInt = intOfDigits(digitList);
+            long actualInt = intOfDigits(digitList);
             return Either.right(new IntToken(isNegative ? (-1)*actualInt : actualInt));
         } else {
             return
@@ -274,11 +275,11 @@ public class Lexer {
     }
 
 
-    static int intOfDigits(ByteList digits) {
-        int result = 0;
-        int powerOfTen = 1;
+    static long intOfDigits(ByteList digits) {
+        long result = 0;
+        long powerOfTen = 1;
         for (int ind = digits.length - 1; ind > -1; --ind) {
-            int digitValue = (digits.get(ind) - ASCII.digit0)*powerOfTen;
+            long digitValue = (digits.get(ind) - ASCII.digit0)*powerOfTen;
             result += digitValue;
             powerOfTen *= 10;
         }
@@ -294,9 +295,13 @@ public class Lexer {
             if (i <= walkLen) currByte = inp[i];
         }
         int startOfLetters = i;
+        if (currByte < ASCII.aUpper || currByte > ASCII.zLower || (currByte > ASCII.zUpper && currByte < ASCII.aLower)) {
+            return Either.left(new UnexpectedSymbolError("Unexpected symbol, word with initial underscores must have an alpha character after them"));
+        }
         while (i <= walkLen &&
             (  (currByte >= ASCII.aLower && currByte <= ASCII.zLower)
-            || (currByte >= ASCII.aUpper && currByte <= ASCII.zUpper))) {
+            || (currByte >= ASCII.aUpper && currByte <= ASCII.zUpper)
+            || (currByte >= ASCII.digit0 && currByte <= ASCII.digit9))) {
             ++i;
             if (i <= walkLen) currByte = inp[i];
         }
@@ -304,7 +309,7 @@ public class Lexer {
             return Either.left(new WordError("Word did not contain any letters"));
         }
         if (i <= walkLen && inp[i] == ASCII.underscore) {
-            return Either.left(new WordError("Snake-case identifier ${String.fromCharCodes(byte[].fromList(inp.sublist(start, i).toList()))}_"));
+            return Either.left(new WordError("Snake-case identifier " + (new String(subArray(inp, start, i)))));
         }
         val subList = new byte[i - start];
         for (int j = start; j < i; ++j) {

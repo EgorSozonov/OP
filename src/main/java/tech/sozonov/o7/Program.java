@@ -18,9 +18,12 @@ class Program {
     x = 5 + 2
 """;
 
-        var innp = "2";
+        var innp = "9_223_372_036_854_775_807";
 
-        var res = Lexer.lexicallyAnalyze(innp.getBytes(StandardCharsets.UTF_8));
+        val res = Lexer.lexicallyAnalyze(innp.getBytes(StandardCharsets.UTF_8));
+        val expected = ExprBase.wrapOneToken(new IntToken(Integer.MAX_VALUE));
+        l(res.item0.toString());
+        l(expected.toString());
         // var eqRes = Expr.equal(expected, expected2);
         // print("eqRes = $eqRes");
         // return;

@@ -47,6 +47,40 @@ public class LexerTest {
     }
 
     @Test
+    @DisplayName("Given integer input with max allowed 64-bit integer, the result should be an integer token")
+    void integer5() {
+        val input = "9_223_372_036_854_775_807";
+        val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
+        val expected = ExprBase.wrapOneToken(new IntToken(Long.MAX_VALUE));
+        assertTrue(ListExpr.equal(output.item0, expected));
+    }
+
+    @Test
+    @DisplayName("Given integer input larger than the max allowed 64-bit integer, the result should be an error")
+    void integer6() {
+        val input = "9_223_372_036_854_775_808";
+        val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
+        assertNotNull(output.item1);
+    }
+
+    @Test
+    @DisplayName("Given integer input with min allowed 64-bit integer, the result should be an integer token")
+    void integer7() {
+        val input = "_9_223_372_036_854_775_808";
+        val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
+        val expected = ExprBase.wrapOneToken(new IntToken(Long.MIN_VALUE));
+        assertTrue(ListExpr.equal(output.item0, expected));
+    }
+
+    @Test
+    @DisplayName("Given integer input lower than the min allowed 64-bit integer, the result should be an error")
+    void integer8() {
+        val input = "_9_223_372_036_854_775_809";
+        val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
+        assertNotNull(output.item1);
+    }
+
+    @Test
     @DisplayName("Given a word as input, the result should be a word token literal")
     void word1() {
         val input = "false";
@@ -54,6 +88,24 @@ public class LexerTest {
 
         val expected = ExprBase.wrapOneToken(new WordToken("false"));
         assertTrue(ListExpr.equal(output.item0, expected));
+    }
+
+    @Test
+    @DisplayName("Given a word containing digits and a leading underscore as input, the result should be a word token literal")
+    void word2() {
+        val input = "_a0";
+        val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
+
+        val expected = ExprBase.wrapOneToken(new WordToken("_a0"));
+        assertTrue(ListExpr.equal(output.item0, expected));
+    }
+
+    @Test
+    @DisplayName("Given a word containing internal underscores as input, the result should be an error")
+    void word3() {
+        val input = "a_b";
+        val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
+        assertNotNull(output.item1);
     }
 
 }

@@ -1,5 +1,7 @@
 package tech.sozonov.o7.utils;
 
+import java.util.Arrays;
+
 public class ByteArrayUtils {
     public static boolean areEqual(byte[] a, byte[] b) {
         if (a.length != b.length) return false;
@@ -19,5 +21,9 @@ public class ByteArrayUtils {
         } catch (Exception e) {
             return Double.NaN;
         }
+    }
+
+    public static byte[] subArray(byte[] arr, int start, int end) {
+        return Arrays.copyOfRange(arr, start, end + 1);
     }
 }

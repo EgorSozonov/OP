@@ -68,7 +68,7 @@ public static class ASTUntypedBase {
         } else if (this instanceof Assignment x3) {
             return x3.identifier + " = " + x3.rightSide;
         } else if (this instanceof IntLiteral x4) {
-            return Integer.toString(x4.val);
+            return Long.toString(x4.val);
         } else if (this instanceof FloatLiteral x5) {
             return Double.toString(x5.val);
         } else if (this instanceof Reserved x6) {
@@ -153,8 +153,8 @@ public final static class Assignment extends ASTUntypedBase {
 }
 
 public final static class IntLiteral extends ASTUntypedBase {
-    public int val;
-    public IntLiteral(int val) {
+    public long val;
+    public IntLiteral(long val) {
         this.val = val;
     }
 }
