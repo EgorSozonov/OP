@@ -19,7 +19,7 @@ import lombok.val;
 public class Lexer {
     public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
         LexErrorBase err = null;
-        if (inp.length < 2) return new Tuple<ExprBase, LexErrorBase>(new ListExpr(ExprLexicalType.curlyBraces), err);
+        if (inp.length < 1) return new Tuple<ExprBase, LexErrorBase>(new ListExpr(ExprLexicalType.curlyBraces), err);
 
         int i = 0;
         ListExpr curr = new ListExpr(ExprLexicalType.curlyBraces);

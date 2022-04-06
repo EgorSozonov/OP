@@ -11,7 +11,20 @@ import lombok.val;
 
 public class Expr {
 
-public static class ExprBase {}
+public static class ExprBase {
+
+    /**
+     * Wraps one token the way it would be wrapped when lexing a real text input.
+     */
+    public static ExprBase wrapOneToken(ExprBase token) {
+        val result = new ListExpr(ExprLexicalType.curlyBraces);
+        val stmt = new ListExpr(ExprLexicalType.statement);
+        stmt.val.add(token);
+        result.val.add(stmt);
+        return result;
+    }
+
+}
 /** A list of tokens, which can be a statement, a list of statements,
  * or a data initializer
 */
@@ -67,6 +80,7 @@ public final static class ListExpr extends ExprBase {
         }
         return true;
     }
+
 
     @Override
     public boolean equals(Object o) {
@@ -180,6 +194,10 @@ public final static class WordToken extends ExprBase {
     public byte[] val;
     public WordToken(byte[] val) {
         this.val = val;
+    }
+
+    public WordToken(String txt) {
+        this.val = txt.getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
