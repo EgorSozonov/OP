@@ -27,3 +27,5 @@ build/*
 # Ignore Gradle build output directory
 
 gradle/wrapper/*
+
+.VSCodeCounter/*

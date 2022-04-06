@@ -315,7 +315,7 @@ public class Lexer {
         for (int j = start; j < i; ++j) {
             subList[j - start] = inp[j];
         }
-        return Either.right(new Tuple<ExprBase, Integer>(new WordToken(subList), i));
+        return Either.right(new Tuple<ExprBase, Integer>(new WordToken(new String(subList, StandardCharsets.US_ASCII)), i));
     }
 
 

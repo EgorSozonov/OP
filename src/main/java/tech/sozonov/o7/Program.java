@@ -14,11 +14,15 @@ class Program {
 
 
 
-        var inp = """
+        var innp = """
     x = 5 + 2
+    {
+        print x;
+        print 5
+    }
 """;
 
-        var innp = "9_223_372_036_854_775_807";
+        var inp = "9_223_372_036_854_775_807";
 
         val res = Lexer.lexicallyAnalyze(innp.getBytes(StandardCharsets.UTF_8));
         val expected = ExprBase.wrapOneToken(new IntToken(Integer.MAX_VALUE));

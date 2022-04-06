@@ -98,16 +98,16 @@ public final static class ListStatements extends ASTUntypedBase {
     }
 }
 
-public final static class Statement extends ASTUntypedBase {
-    public List<ASTUntypedBase> val;
-    public Statement(List<ASTUntypedBase> val) {
-        this.val = val;
-    }
+// public final static class Statement extends ASTUntypedBase {
+//     public List<ASTUntypedBase> val;
+//     public Statement(List<ASTUntypedBase> val) {
+//         this.val = val;
+//     }
 
-    public Statement() {
-        this.val = new ArrayList<ASTUntypedBase>();
-    }
-}
+//     public Statement() {
+//         this.val = new ArrayList<ASTUntypedBase>();
+//     }
+// }
 
 public final static class Ident extends ASTUntypedBase {
     public String name;
@@ -181,9 +181,9 @@ public final static class StringLiteral extends ASTUntypedBase {
 }
 
 public final static class While extends ASTUntypedBase {
-    public Statement testClause;
-    public List<Statement> body;
-    public While(Statement testClause, List<Statement> body) {
+    public ASTUntyped testClause;
+    public ListStatements body;
+    public While(ASTUntyped testClause, ListStatements body) {
         this.testClause = testClause;
         this.body = body;
     }

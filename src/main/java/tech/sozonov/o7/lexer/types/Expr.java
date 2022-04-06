@@ -191,28 +191,26 @@ public final static class FloatToken extends ExprBase {
 
 /// Identifier or reserved word
 public final static class WordToken extends ExprBase {
-    public byte[] val;
-    public WordToken(byte[] val) {
-        this.val = val;
-    }
+    public String val;
+
 
     public WordToken(String txt) {
-        this.val = txt.getBytes(StandardCharsets.UTF_8);
+        this.val = txt;
     }
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof WordToken wt) ? ByteArrayUtils.areEqual(this.val, wt.val) : false;
+        return (o instanceof WordToken wt) ? this.val.equals(wt.val) : false;
     }
 
     @Override
     public int hashCode() {
-        return val.length;
+        return val.length();
     }
 
     @Override
     public String toString() {
-        return "Word " + (new String(this.val, StandardCharsets.US_ASCII));
+        return "Word " + this.val;
     }
 }
 
@@ -233,6 +231,7 @@ public final static class OperatorToken extends ExprBase {
         }
         return true;
     }
+
     @Override
     public int hashCode() {
         return val.size();
