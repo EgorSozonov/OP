@@ -6,11 +6,14 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 import tech.sozonov.o7.lexer.types.Expr;
 import tech.sozonov.o7.lexer.types.ExprLexicalType;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.lexer.types.Expr.*;
-import tech.sozonov.o7.parser.types.ReservedType;
+import tech.sozonov.o7.parser.types.CoreFormType;
+import tech.sozonov.o7.parser.types.ParsePunctuation;
 import tech.sozonov.o7.parser.types.SubexprType;
 import tech.sozonov.o7.parser.types.ASTUntyped.*;
 import tech.sozonov.o7.parser.types.CoreOperatorPackage.AssignmentType;
@@ -23,12 +26,17 @@ import lombok.val;
 
 
 public class Parser {
+    /**
+     * All the structure from the lexer stays, but new structure is added.
+     * For example, what was "if x > 5 -> (f)" becomes "if (x > 5) (f)".
+     * Full list of new punctuation symbols: -> : $
+     */
     public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
         var resultCurr = new ListStatements();
         var result = resultCurr;
 
         var backtrack = new Stack<Tuple<ListExpr, Integer>>();
-        var resultBacktrack = new Stack<Tuple<ListStatements, Integer>>();
+        var resultBacktrack = new Stack<ASTList>();
 
         var reservedWords = getReservedMap();
         var coreOperators = getOperatorList();
@@ -53,48 +61,79 @@ public class Parser {
             j = backResult.item1;
 
             while (i < curr.val.size()) {
-                if (!(curr.val.get(i) instanceof ListExpr)) {
-                    resultCurr.val.add(parseAtom(curr.val.get(i), reservedWords, coreOperators));
-                    ++i;
-                    ++j;
+                val newToken = curr.val.get(i);
+                if (!(newToken instanceof ListExpr)) {
+                    // mb a punctuational operator ?
+                    // only if not, it is an atom
+                    val mbPunctuation = mbParsePunctutation(newToken);
+                    if (mbPunctuation.isEmpty()) {
+                        val atom = parseAtom(curr.val.get(i), reservedWords, coreOperators);
+                        resultCurr.val.add(atom);
+                        ++i;
+                        ++j;
+                    } else {
+
+                    }
                 }
-                val le2 = (ListExpr)curr.val.get(i);
+                val le2 = (ListExpr)newToken;
 
                 backtrack.push(new Tuple<ListExpr, Integer>(curr, i + 1));
                 resultBacktrack.push(new Tuple<ListStatements, Integer>(resultCurr, j + 1));
 
                 if (le2.pType == ExprLexicalType.curlyBraces) {
+                    // list of stuff
                     ListStatements newList = new ListStatements(SubexprType.curlyBraces);
                     resultCurr.val.add(newList);
+
+                    resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
                     resultCurr = newList;
                 } else if (le2.pType == ExprLexicalType.dataInitializer) {
+                    // list of stuff
                     var newElem = new ListStatements(SubexprType.dataInitializer);
                     resultCurr.val.add(newElem);
 
+                    resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
                     resultCurr = newElem;
                 } else if (le2.pType == ExprLexicalType.parens) {
+                    // core synt form | func call | list of stuff
                     ListStatements newStatement = new ListStatements(SubexprType.parens);
                     resultCurr.val.add(newStatement);
+
+                    resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
                     resultCurr = newStatement;
                 } else if (le2.pType == ExprLexicalType.statement) {
-                    if (le2.val.size() >= 3 && le2.val.get(1) instanceof OperatorToken ot) {
-                        var mbAssType = getAssignmentType(ot);
-                        var identParse = parseAtom(le2.val.get(0), reservedWords, coreOperators);
-                        if (identParse instanceof Ident ident && mbAssType != null) {
-                            ListStatements rightSide = new ListStatements(SubexprType.statement);
-                            var assignment = new Assignment(ident, (AssignmentType) mbAssType, rightSide);
-                            resultCurr.val.add(assignment);
-                            resultBacktrack.push(new Tuple<ListStatements, Integer>(resultCurr, i + 1));
-                            resultCurr = rightSide;
-                            i = 2;
-                        } else {
-                            return new Tuple<ASTUntypedBase, ParseErrorBase>(result,
-                                new AssignmentError("Erroneous assignment expression, must be: identifier assignmentOper anyExpression, where assignmentOper instanceof one of: = := += -= *= /="));
-                        }
+                    // assignment | core synt form | func call | list of stuff
+                    val mbCore = getMbCore(le2, reservedWords);
+                    if (mbCore.isPresent()) {
+                        val coreForm = parseCoreForm(le2, mbCore.get());
+                        resultCurr.val.add(coreForm);
+
+                        // resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
+                        // resultCurr = coreForm.;
+
                     } else {
-                        ListStatements newStatement = new ListStatements(SubexprType.statement);
-                        resultCurr.val.add(newStatement);
-                        resultCurr = newStatement;
+                        val mbAssignment = getMbAssignment(le2);
+                        if (mbAssignment.isPresent()) {
+                            var identParse = parseAtom(le2.val.get(0), reservedWords, coreOperators);
+                            if (identParse instanceof Ident ident) {
+                                ListStatements rightSide = new ListStatements(SubexprType.statement);
+                                var assignment = new Assignment(ident, mbAssignment.get(), rightSide);
+                                resultCurr.val.add(assignment);
+
+                                resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
+                                resultCurr = rightSide;
+                                i = 2;
+                            } else {
+                                return new Tuple<ASTUntypedBase, ParseErrorBase>(result,
+                                    new AssignmentError("Erroneous assignment expression, must be: identifier assignmentOper anyExpression, where assignmentOper instanceof one of: = := += -= *= /="));
+                            }
+                        } else {
+                            ListStatements newStatement = new ListStatements(SubexprType.statement);
+                            resultCurr.val.add(newStatement);
+
+                            resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
+                            resultCurr = newStatement;
+                        }
                     }
                 }
 
@@ -107,37 +146,62 @@ public class Parser {
         return new Tuple<ASTUntypedBase, ParseErrorBase>(result, null);
     }
 
-    static boolean isReserved(ListExpr expr, Map<String, ReservedType> reserveds) {
-        if (!(expr.val.get(0) instanceof WordToken)) return false;
-        val word = (WordToken)expr.val.get(0);
-        return reserveds.containsKey(word.val);
-    }
-
-    static boolean isAssignment(ListExpr expr) {
-        if (expr.val.size() >= 3 && expr.val.get(1) instanceof OperatorToken ot) {
-            var mbAssType = getAssignmentType(ot);
-            return mbAssType != null;
+    static Optional<ParsePunctuation> mbParsePunctutation(ExprBase token) {
+        if (token instanceof OperatorToken op) {
+            if (op.val.size() == 2 && op.val.get(0) == OperatorSymb.minus && op.val.get(1) == OperatorSymb.gt) {
+                return Optional.of(ParsePunctuation.arrow);
+            } else if (op.val.size() == 1 && op.val.get(0) == OperatorSymb.colon) {
+                return Optional.of(ParsePunctuation.colon);
+            } else if (op.val.size() == 1 && op.val.get(0) == OperatorSymb.dollar) {
+                return Optional.of(ParsePunctuation.dollar);
+            } else {
+                return Optional.empty();
+            }
         } else {
-            return false;
+            return Optional.empty();
         }
     }
 
-    static AssignmentType getAssignmentType(OperatorToken ot) {
-        if (ot.val.size() == 1 && ot.val.get(0) == OperatorSymb.equals) return AssignmentType.immutableDef;
+    static ASTUntypedBase parseAssignment(ListExpr expr, AssignmentType assignType) {
+        return new Ident("TODO");
+    }
+
+    static ASTUntypedBase parseCoreForm(ListExpr expr, CoreFormType coreType) {
+        return new Ident("TODO");
+    }
+
+    static Optional<CoreFormType> getMbCore(ListExpr expr, Map<String, CoreFormType> reserveds) {
+        if (!(expr.val.get(0) instanceof WordToken)) return Optional.empty();
+        val word = (WordToken)expr.val.get(0);
+        return reserveds.containsKey(word.val) ? Optional.of(reserveds.get(word.val)) : Optional.empty();
+    }
+
+
+    static Optional<AssignmentType> getMbAssignment(ListExpr expr) {
+        if (expr.val.size() >= 3 && expr.val.get(1) instanceof OperatorToken ot) {
+            return getOperatorAssignmentType(ot);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+
+    static Optional<AssignmentType> getOperatorAssignmentType(OperatorToken ot) {
+        if (ot.val.size() == 1 && ot.val.get(0) == OperatorSymb.equals) return Optional.of(AssignmentType.immutableDef);
         if (ot.val.size() == 2 && ot.val.get(1) == OperatorSymb.equals) {
             var f = ot.val.get(0);
-            if (f == OperatorSymb.colon) return AssignmentType.mutableAssignment;
-            if (f == OperatorSymb.plus) return AssignmentType.mutablePlus;
-            if (f == OperatorSymb.minus) return AssignmentType.mutablePlus;
-            if (f == OperatorSymb.asterisk) return AssignmentType.mutablePlus;
-            if (f == OperatorSymb.slash) return AssignmentType.mutablePlus;
+            if (f == OperatorSymb.colon) return Optional.of(AssignmentType.mutableAssignment);
+            if (f == OperatorSymb.plus) return Optional.of(AssignmentType.mutablePlus);
+            if (f == OperatorSymb.minus) return Optional.of(AssignmentType.mutablePlus);
+            if (f == OperatorSymb.asterisk) return Optional.of(AssignmentType.mutablePlus);
+            if (f == OperatorSymb.slash) return Optional.of(AssignmentType.mutablePlus);
         }
-        return null;
+        return Optional.empty();
     }
 
-    static Map<String, ReservedType> getReservedMap() {
-        val result = new HashMap<String, ReservedType>();
-        EnumSet.allOf(ReservedType.class).forEach(enumValue -> {
+    static Map<String, CoreFormType> getReservedMap() {
+        val result = new HashMap<String, CoreFormType>();
+        EnumSet.allOf(CoreFormType.class).forEach(enumValue -> {
             val nm = enumValue.toString();
             result.put(nm.substring(0, nm.length() - 1), enumValue);
         });
@@ -178,7 +242,7 @@ public class Parser {
         return true;
     }
 
-    static boolean isReservedWord(WordToken wt, Map<String, ReservedType> reservedWords) {
+    static boolean isReservedWord(WordToken wt, Map<String, CoreFormType> reservedWords) {
         var str = wt.val;
         if (str == "true" || str == "false")
             return true;
@@ -186,7 +250,7 @@ public class Parser {
     }
 
     static ASTUntypedBase parseAtom(ExprBase inp,
-                                Map<String, ReservedType> reservedWords,
+                                Map<String, CoreFormType> reservedWords,
                                 List<Tuple<List<OperatorSymb>, CoreOperator>> coreOperators) {
         if (inp instanceof IntToken it) {
             return new IntLiteral(it.val);

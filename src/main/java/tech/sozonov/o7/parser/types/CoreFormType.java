@@ -1,6 +1,6 @@
 package tech.sozonov.o7.parser.types;
 
-public enum ReservedType {
+public enum CoreFormType {
     iff,
     elsee,
     whilee,

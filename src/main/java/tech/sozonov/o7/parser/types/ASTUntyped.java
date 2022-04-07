@@ -83,6 +83,40 @@ public static class ASTUntypedBase {
     }
 }
 
+public final static class ASTList extends ASTUntypedBase {
+    public ArrayList<ArrayList<ASTUntypedBase>> data;
+    public int indList;
+    public int ind;
+    public ArrayList<ASTUntypedBase> curr;
+
+    public ASTList() {
+        data = new ArrayList<>();
+        curr = new ArrayList<>();
+        data.add(curr);
+        indList = 0;
+        ind = 0;
+    }
+
+    public void add(ASTUntypedBase newItem) {
+        curr.add(newItem);
+        ind++;
+    }
+
+    public void addToNextList(ASTUntypedBase newItem) {
+        curr = new ArrayList<>();
+        curr.add(newItem);
+        data.add(curr);
+        ++indList;
+        ind = 1;
+    }
+
+    public void startNewList() {
+        curr = new ArrayList<>();
+        data.add(curr);
+        ++ind;
+    }
+}
+
 public final static class ListStatements extends ASTUntypedBase {
     public List<ASTUntypedBase> val;
     public SubexprType sType;
@@ -98,29 +132,10 @@ public final static class ListStatements extends ASTUntypedBase {
     }
 }
 
-// public final static class Statement extends ASTUntypedBase {
-//     public List<ASTUntypedBase> val;
-//     public Statement(List<ASTUntypedBase> val) {
-//         this.val = val;
-//     }
-
-//     public Statement() {
-//         this.val = new ArrayList<ASTUntypedBase>();
-//     }
-// }
-
-public final static class Ident extends ASTUntypedBase {
-    public String name;
-
-    public Ident(String name) {
-        this.name = name;
-    }
-}
-
 public final static class Reserved extends ASTUntypedBase {
-    public ReservedType val;
+    public CoreFormType val;
 
-    public Reserved(ReservedType val) {
+    public Reserved(CoreFormType val) {
         this.val = val;
     }
 }
@@ -152,6 +167,36 @@ public final static class Assignment extends ASTUntypedBase {
     }
 }
 
+
+
+public final static class While extends ASTUntypedBase {
+    public ASTUntyped testClause;
+    public ListStatements body;
+    public While(ASTUntyped testClause, ListStatements body) {
+        this.testClause = testClause;
+        this.body = body;
+    }
+}
+
+// public final static class Statement extends ASTUntypedBase {
+//     public List<ASTUntypedBase> val;
+//     public Statement(List<ASTUntypedBase> val) {
+//         this.val = val;
+//     }
+
+//     public Statement() {
+//         this.val = new ArrayList<ASTUntypedBase>();
+//     }
+// }
+
+public final static class Ident extends ASTUntypedBase {
+    public String name;
+
+    public Ident(String name) {
+        this.name = name;
+    }
+}
+
 public final static class IntLiteral extends ASTUntypedBase {
     public long val;
     public IntLiteral(long val) {
@@ -177,15 +222,6 @@ public final static class StringLiteral extends ASTUntypedBase {
     public String val;
     public StringLiteral(String val) {
         this.val = val;
-    }
-}
-
-public final static class While extends ASTUntypedBase {
-    public ASTUntyped testClause;
-    public ListStatements body;
-    public While(ASTUntyped testClause, ListStatements body) {
-        this.testClause = testClause;
-        this.body = body;
     }
 }
 
