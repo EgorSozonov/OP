@@ -88,10 +88,13 @@ public final static class ASTList extends ASTUntypedBase {
     public int indList;
     public int ind;
     public ArrayList<ASTUntypedBase> curr;
+    public SubexprType sType;
 
-    public ASTList() {
+    public ASTList(SubexprType sType) {
+        this.sType = sType;
         data = new ArrayList<>();
         curr = new ArrayList<>();
+
         data.add(curr);
         indList = 0;
         ind = 0;

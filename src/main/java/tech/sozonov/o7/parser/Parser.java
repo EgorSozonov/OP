@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import tech.sozonov.o7.lexer.types.Expr;
 import tech.sozonov.o7.lexer.types.ExprLexicalType;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
@@ -32,7 +31,7 @@ public class Parser {
      * Full list of new punctuation symbols: -> : $
      */
     public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
-        var resultCurr = new ListStatements();
+        var resultCurr = new ASTList(SubexprType.curlyBraces);
         var result = resultCurr;
 
         var backtrack = new Stack<Tuple<ListExpr, Integer>>();
@@ -46,9 +45,9 @@ public class Parser {
         }
 
         int i = 0;
-        int j = 0;
+        //int j = 0;
         backtrack.push(new Tuple<ListExpr, Integer>(le, i));
-        resultBacktrack.push(new Tuple<ListStatements, Integer>(resultCurr, i));
+        resultBacktrack.push(resultCurr);
 
         var curr = le;
         while (backtrack.peek() != null) {
@@ -56,9 +55,8 @@ public class Parser {
             curr = back.item0;
             i = back.item1;
 
-            var backResult = resultBacktrack.pop();
-            resultCurr = backResult.item0;
-            j = backResult.item1;
+            resultCurr = resultBacktrack.pop();
+
 
             while (i < curr.val.size()) {
                 val newToken = curr.val.get(i);
@@ -68,9 +66,9 @@ public class Parser {
                     val mbPunctuation = mbParsePunctutation(newToken);
                     if (mbPunctuation.isEmpty()) {
                         val atom = parseAtom(curr.val.get(i), reservedWords, coreOperators);
-                        resultCurr.val.add(atom);
+                        resultCurr.add(atom);
                         ++i;
-                        ++j;
+                        //++j;
                     } else {
 
                     }
@@ -78,35 +76,35 @@ public class Parser {
                 val le2 = (ListExpr)newToken;
 
                 backtrack.push(new Tuple<ListExpr, Integer>(curr, i + 1));
-                resultBacktrack.push(new Tuple<ListStatements, Integer>(resultCurr, j + 1));
+                resultBacktrack.push(resultCurr);
 
                 if (le2.pType == ExprLexicalType.curlyBraces) {
                     // list of stuff
-                    ListStatements newList = new ListStatements(SubexprType.curlyBraces);
-                    resultCurr.val.add(newList);
+                    val newList = new ASTList(SubexprType.curlyBraces);
+                    resultCurr.add(newList);
 
-                    resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
+                    resultBacktrack.push(resultCurr);
                     resultCurr = newList;
                 } else if (le2.pType == ExprLexicalType.dataInitializer) {
                     // list of stuff
-                    var newElem = new ListStatements(SubexprType.dataInitializer);
-                    resultCurr.val.add(newElem);
+                    val newElem = new ASTList(SubexprType.dataInitializer);
+                    resultCurr.add(newElem);
 
-                    resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
+                    resultBacktrack.push(resultCurr);
                     resultCurr = newElem;
                 } else if (le2.pType == ExprLexicalType.parens) {
                     // core synt form | func call | list of stuff
-                    ListStatements newStatement = new ListStatements(SubexprType.parens);
-                    resultCurr.val.add(newStatement);
+                    val newStatement = new ASTList(SubexprType.parens);
+                    resultCurr.add(newStatement);
 
-                    resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
+                    resultBacktrack.push(resultCurr);
                     resultCurr = newStatement;
                 } else if (le2.pType == ExprLexicalType.statement) {
                     // assignment | core synt form | func call | list of stuff
                     val mbCore = getMbCore(le2, reservedWords);
                     if (mbCore.isPresent()) {
                         val coreForm = parseCoreForm(le2, mbCore.get());
-                        resultCurr.val.add(coreForm);
+                        resultCurr.add(coreForm);
 
                         // resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
                         // resultCurr = coreForm.;
@@ -116,11 +114,11 @@ public class Parser {
                         if (mbAssignment.isPresent()) {
                             var identParse = parseAtom(le2.val.get(0), reservedWords, coreOperators);
                             if (identParse instanceof Ident ident) {
-                                ListStatements rightSide = new ListStatements(SubexprType.statement);
+                                val rightSide = new ASTList(SubexprType.statement);
                                 var assignment = new Assignment(ident, mbAssignment.get(), rightSide);
-                                resultCurr.val.add(assignment);
+                                resultCurr.add(assignment);
 
-                                resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
+                                resultBacktrack.push(resultCurr);
                                 resultCurr = rightSide;
                                 i = 2;
                             } else {
@@ -128,10 +126,10 @@ public class Parser {
                                     new AssignmentError("Erroneous assignment expression, must be: identifier assignmentOper anyExpression, where assignmentOper instanceof one of: = := += -= *= /="));
                             }
                         } else {
-                            ListStatements newStatement = new ListStatements(SubexprType.statement);
-                            resultCurr.val.add(newStatement);
+                            val newStatement = new ASTList(SubexprType.statement);
+                            resultCurr.add(newStatement);
 
-                            resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
+                            resultBacktrack.push(resultCurr);
                             resultCurr = newStatement;
                         }
                     }
@@ -139,7 +137,7 @@ public class Parser {
 
                 curr = le2;
                 i = 0;
-                j = 0;
+                //j = 0;
 
             }
         }
