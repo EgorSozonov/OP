@@ -15,8 +15,9 @@ import tech.sozonov.o7.parser.types.CoreFormType;
 import tech.sozonov.o7.parser.types.ParsePunctuation;
 import tech.sozonov.o7.parser.types.SubexprType;
 import tech.sozonov.o7.parser.types.ASTUntyped.*;
-import tech.sozonov.o7.parser.types.CoreOperatorPackage.AssignmentType;
-import tech.sozonov.o7.parser.types.CoreOperatorPackage.CoreOperator;
+import tech.sozonov.o7.parser.types.ParseContexts.AssignmentType;
+import tech.sozonov.o7.parser.types.ParseContexts.CoreOperator;
+import tech.sozonov.o7.parser.types.ParseContexts.ParseContext;
 import tech.sozonov.o7.parser.types.ParseError.*;
 import tech.sozonov.o7.utils.Tuple;
 import tech.sozonov.o7.utils.Stack;
@@ -45,7 +46,6 @@ public class Parser {
         }
 
         int i = 0;
-        //int j = 0;
         backtrack.push(new Tuple<ListExpr, Integer>(le, i));
         resultBacktrack.push(resultCurr);
 
@@ -56,88 +56,66 @@ public class Parser {
             i = back.item1;
 
             resultCurr = resultBacktrack.pop();
-
-
             while (i < curr.val.size()) {
-                val newToken = curr.val.get(i);
-                if (!(newToken instanceof ListExpr)) {
-                    // mb a punctuational operator ?
-                    // only if not, it is an atom
-                    val mbPunctuation = mbParsePunctutation(newToken);
-                    if (mbPunctuation.isEmpty()) {
-                        val atom = parseAtom(curr.val.get(i), reservedWords, coreOperators);
-                        resultCurr.add(atom);
-                        ++i;
-                        //++j;
-                    } else {
-
-                    }
-                }
-                val le2 = (ListExpr)newToken;
-
-                backtrack.push(new Tuple<ListExpr, Integer>(curr, i + 1));
-                resultBacktrack.push(resultCurr);
-
-                if (le2.pType == ExprLexicalType.curlyBraces) {
-                    // list of stuff
-                    val newList = new ASTList(SubexprType.curlyBraces);
-                    resultCurr.add(newList);
-
+                val сurrToken = curr.val.get(i);
+                if (сurrToken instanceof ListExpr le2) {
+                    backtrack.push(new Tuple<ListExpr, Integer>(curr, i + 1));
                     resultBacktrack.push(resultCurr);
-                    resultCurr = newList;
-                } else if (le2.pType == ExprLexicalType.dataInitializer) {
-                    // list of stuff
-                    val newElem = new ASTList(SubexprType.dataInitializer);
-                    resultCurr.add(newElem);
+                    val newAST = new ASTList();
 
-                    resultBacktrack.push(resultCurr);
-                    resultCurr = newElem;
-                } else if (le2.pType == ExprLexicalType.parens) {
-                    // core synt form | func call | list of stuff
-                    val newStatement = new ASTList(SubexprType.parens);
-                    resultCurr.add(newStatement);
+                    if (le2.pType == ExprLexicalType.curlyBraces) {
+                        // list of stuff
+                        val newList = new ASTList(ParseContext.curlyBraces);
+                        resultCurr.add(newList);
 
-                    resultBacktrack.push(resultCurr);
-                    resultCurr = newStatement;
-                } else if (le2.pType == ExprLexicalType.statement) {
-                    // assignment | core synt form | func call | list of stuff
-                    val mbCore = getMbCore(le2, reservedWords);
-                    if (mbCore.isPresent()) {
-                        val coreForm = parseCoreForm(le2, mbCore.get());
-                        resultCurr.add(coreForm);
+                        resultCurr = newList;
+                    } else if (le2.pType == ExprLexicalType.dataInitializer) {
+                        // list of stuff
+                        val newElem = new ASTList(ParseContext.dataInitializer);
+                        resultCurr.add(newElem);
 
-                        // resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
-                        // resultCurr = coreForm.;
+                        resultCurr = newElem;
+                    } else if (le2.pType == ExprLexicalType.parens) {
+                        // core synt form | func call | list of stuff
+                        val newStatement = new ASTList(ParseContext.parens);
+                        resultCurr.add(newStatement);
 
-                    } else {
-                        val mbAssignment = getMbAssignment(le2);
-                        if (mbAssignment.isPresent()) {
-                            var identParse = parseAtom(le2.val.get(0), reservedWords, coreOperators);
-                            if (identParse instanceof Ident ident) {
-                                val rightSide = new ASTList(SubexprType.statement);
-                                var assignment = new Assignment(ident, mbAssignment.get(), rightSide);
-                                resultCurr.add(assignment);
+                        resultCurr = newStatement;
+                    } else if (le2.pType == ExprLexicalType.statement) {
+                        // assignment | core synt form | func call | list of stuff
+                        val mbCore = getMbCore(le2, reservedWords);
+                        if (mbCore.isPresent()) {
+                            val coreForm = parseCoreForm(le2, mbCore.get());
+                            resultCurr.add(coreForm);
 
-                                resultBacktrack.push(resultCurr);
-                                resultCurr = rightSide;
-                                i = 2;
-                            } else {
-                                return new Tuple<ASTUntypedBase, ParseErrorBase>(result,
-                                    new AssignmentError("Erroneous assignment expression, must be: identifier assignmentOper anyExpression, where assignmentOper instanceof one of: = := += -= *= /="));
-                            }
+                            // resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
+                            // resultCurr = coreForm.;
+
                         } else {
-                            val newStatement = new ASTList(SubexprType.statement);
-                            resultCurr.add(newStatement);
 
-                            resultBacktrack.push(resultCurr);
-                            resultCurr = newStatement;
+
                         }
                     }
+
+                    curr = le2;
+                    i = 0;
+
+                } else {
+                    // mb a punctuational operator ?
+                    // only if not, it is an atom
+                    val mbPunctuation = mbParsePunctutation(сurrToken);
+                    if (mbPunctuation.isEmpty()) {
+                        val atom = parseAtom(сurrToken, reservedWords, coreOperators);
+                        // TODO check parsing context
+                        resultCurr.add(atom);
+                        ++i;
+                    } else {
+
+                    }
                 }
 
-                curr = le2;
-                i = 0;
-                //j = 0;
+                if (resultBacktrack.peek() != null) {
+                }
 
             }
         }

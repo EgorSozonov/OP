@@ -1,9 +1,11 @@
 package tech.sozonov.o7.parser.types;
 import java.util.ArrayList;
 import java.util.List;
+
+import tech.sozonov.o7.lexer.types.ExprLexicalType;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
-import tech.sozonov.o7.parser.types.CoreOperatorPackage.AssignmentType;
-import tech.sozonov.o7.parser.types.CoreOperatorPackage.CoreOperator;
+import tech.sozonov.o7.parser.types.ParseContexts.CoreOperator;
+import tech.sozonov.o7.parser.types.ParseContexts.ParseContext;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Tuple;
 import static tech.sozonov.o7.utils.ListUtils.*;
@@ -65,14 +67,12 @@ public static class ASTUntypedBase {
             return "id " + x.name;
         } else if (this instanceof If x2) {
             return "If " + x2.val.size();
-        } else if (this instanceof Assignment x3) {
-            return x3.identifier + " = " + x3.rightSide;
+        } else if (this instanceof ASTList x3) {
+            return "AST List";
         } else if (this instanceof IntLiteral x4) {
             return Long.toString(x4.val);
         } else if (this instanceof FloatLiteral x5) {
             return Double.toString(x5.val);
-        } else if (this instanceof Reserved x6) {
-            return x6.val.toString();
         } else if (this instanceof CoreOperatorAST x7) {
             return x7.val.toString();
         } else if (this instanceof BoolLiteral x8) {
@@ -88,10 +88,10 @@ public final static class ASTList extends ASTUntypedBase {
     public int indList;
     public int ind;
     public ArrayList<ASTUntypedBase> curr;
-    public SubexprType sType;
+    public ParseContext ctx;
 
-    public ASTList(SubexprType sType) {
-        this.sType = sType;
+    public ASTList(ParseContext ctx) {
+        this.ctx = ctx;
         data = new ArrayList<>();
         curr = new ArrayList<>();
 
@@ -99,6 +99,18 @@ public final static class ASTList extends ASTUntypedBase {
         indList = 0;
         ind = 0;
     }
+
+    // public ASTList(ExprLexicalType listType) {
+    //     if (listType == ExprLexicalType.curlyBraces) {
+    //         this.ctx = ParseContext.curlyBraces;
+    //     } else if (listType == ExprLexicalType.dataInitializer) {
+    //         this.ctx = ParseContext.dataInitializer;
+    //     } else if (listType == ExprLexicalType.parens) {
+    //         this.ctx = ParseContext.parens;
+    //     } else {
+    //         this.ctx = ParseContext.statement;
+    //     }
+    // }
 
     public void add(ASTUntypedBase newItem) {
         curr.add(newItem);
@@ -135,14 +147,6 @@ public final static class ListStatements extends ASTUntypedBase {
     }
 }
 
-public final static class Reserved extends ASTUntypedBase {
-    public CoreFormType val;
-
-    public Reserved(CoreFormType val) {
-        this.val = val;
-    }
-}
-
 public final static class If extends ASTUntypedBase {
     public List<IfClause> val;
     public If(List<IfClause> val) {
@@ -158,19 +162,6 @@ public final static class IfClause extends ASTUntypedBase {
         this.resultClause = resultClause;
     }
 }
-
-public final static class Assignment extends ASTUntypedBase {
-    public Ident identifier;
-    public AssignmentType aType;
-    public ASTUntypedBase rightSide;
-    public Assignment(Ident identifier, AssignmentType aType, ASTUntypedBase rightSide) {
-        this.identifier = identifier;
-        this.aType = aType;
-        this.rightSide = rightSide;
-    }
-}
-
-
 
 public final static class While extends ASTUntypedBase {
     public ASTUntyped testClause;
