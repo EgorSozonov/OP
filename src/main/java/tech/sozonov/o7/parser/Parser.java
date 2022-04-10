@@ -45,7 +45,6 @@ public class Parser {
 
         var currInput = le;
         ASTList curr = result;
-        boolean ingestionMode = true;
 
         while (backtrack.peek() != null) {
             val back = backtrack.pop();
@@ -64,38 +63,37 @@ public class Parser {
 
 
 
-                    if (le2.pType == ExprLexicalType.curlyBraces || le2.pType == ExprLexicalType.dataInitializer || le2.pType == ExprLexicalType.parens) {
+                    if (le2.pType == ExprLexicalType.curlyBraces || le2.pType == ExprLexicalType.parens) {
                         // Ask curr if it wants to ingest, if not - then create a nesting
-                        if (ingestionMode && isContextIngesting(curr.ctx)) {
+                        if (!curr.isContextIngesting()) {
 
-                            val newList = new ASTList(le2.pType == ExprLexicalType.curlyBraces ? SyntaxContext.curlyBraces : SyntaxContext.dataInitializer);
+                            val newList = new ASTList(le2.pType == ExprLexicalType.curlyBraces ? SyntaxContext.curlyBraces : SyntaxContext.parens);
 
                             val mbError = curr.add(newList);
                             if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
 
                             resultBacktrack.push(curr);
                             curr = newList;
-                        } else if (ingestionMode) {
-                            ingestionMode = false;
-                        } else {
-                            ingestionMode = true;
                         }
-                    } else {
+                    }
+                    if (le2.pType == ExprLexicalType.statement){
                         // Determine the type of the statement (assignment | core synt form | func call | list of stuff)
                         // Always nest!
-                        if (le2.pType == ExprLexicalType.statement) curr.newStatement();
+
 
                         val listType = determineParseContext(le2);
+                        val newStatement = new ASTList(listType);
+                        val mbSaturated = curr.newStatement(listType);
 
-                        val mbCore = getMbCore(le2, reservedWords);
-                        if (mbCore.isPresent()) {
-                            val coreForm = parseCoreForm(le2, mbCore.get());
-                            curr.add(coreForm);
 
-                            // resultBacktrack.push(new Tuple<>(resultCurr, i + 1));
-                            // resultCurr = coreForm.;
-
-                        }
+                    } else if (le2.pType == ExprLexicalType.parens) {
+                    } else {
+                        //
+                        val dataInitializer = new ASTList(SyntaxContext.dataInitializer);
+                        val mbError = curr.add(dataInitializer);
+                        if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
+                        resultBacktrack.push(curr);
+                        curr = dataInitializer;
                     }
 
                     currInput = le2;
@@ -106,18 +104,16 @@ public class Parser {
                     if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
                 }
 
-                if (resultBacktrack.peek() != null) {
-                    val mbSaturated = curr.listHasEnded();
-                    if (mbSaturated.isPresent()) {
-                        if (mbSaturated.get()) {
-                            curr = resultBacktrack.pop();
-                            ingestionMode = false;
-                        }
-                    } else {
-                        // should never happen
-                        return new Tuple<>(result, new SyntaxError("Strange error: oversaturated syntax form"));
+                val mbSaturated = curr.listHasEnded();
+                if (mbSaturated.isPresent()) {
+                    if (mbSaturated.get()) {
+                        curr = resultBacktrack.pop();
                     }
+                } else {
+                    // should never happen
+                    return new Tuple<>(result, new SyntaxError("Strange error: oversaturated syntax form"));
                 }
+
 
             }
         }

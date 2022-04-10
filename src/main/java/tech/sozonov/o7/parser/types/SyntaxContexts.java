@@ -50,7 +50,6 @@ public static enum SyntaxContext {
     macroo,
 
     // Lists of stuff
-    statement,
     dataInitializer,
     curlyBraces,
     parens,

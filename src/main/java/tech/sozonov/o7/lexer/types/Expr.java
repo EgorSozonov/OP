@@ -189,8 +189,13 @@ public final static class FloatToken extends ExprBase {
 }
 
 
-/// Identifier or reserved word
+/**
+ * Identifier or a reserved word.
+ * May be capitalized, may contain underscores initially but not otherwise.
+ * May contain dots, but not in the initial position.
+ */
 public final static class WordToken extends ExprBase {
+    // TODO take care of the dots, including "._" in word-medial positions
     public String val;
 
 
@@ -211,6 +216,36 @@ public final static class WordToken extends ExprBase {
     @Override
     public String toString() {
         return "Word " + this.val;
+    }
+}
+
+/**
+ * A dot followed by an identifier. Used for function names in calls.
+ * May be capitalized, may contain underscores initially but not otherwise.
+ * May contain dots, but not in the initial position.
+ */
+public final static class DotWordToken extends ExprBase {
+    // TODO write a lexing function
+    public String val;
+
+
+    public DotWordToken(String txt) {
+        this.val = txt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof WordToken wt) ? this.val.equals(wt.val) : false;
+    }
+
+    @Override
+    public int hashCode() {
+        return val.length();
+    }
+
+    @Override
+    public String toString() {
+        return "DotWord " + this.val;
     }
 }
 

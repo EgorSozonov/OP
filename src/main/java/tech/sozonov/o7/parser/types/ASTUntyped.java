@@ -120,6 +120,8 @@ public final static class ASTList extends ASTUntypedBase {
      */
     public Optional<ParseErrorBase> add(ASTUntypedBase newItem) {
         // TODO adding of stuff in accordance to parse context
+        // Validate all atoms + dataInitializer case
+
         // val mbPunctuation = mbParsePunctutation(сurrToken);
         // if (mbPunctuation.isEmpty()) {
 
@@ -130,6 +132,8 @@ public final static class ASTList extends ASTUntypedBase {
     }
 
     public void newStatement() {
+        curr = new ArrayList<>();
+        data.add(curr);
     }
 
     /**
@@ -176,9 +180,9 @@ public final static class ASTList extends ASTUntypedBase {
     /**
      * Returns true iff the current context is about to ingest the next list item (i.e. the next {}, () or []).
      */
-    static boolean isContextIngesting(SyntaxContext ctx) {
+    public boolean isContextIngesting() {
         // TODO finish list of enum values
-        return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh && ctx == SyntaxContext.structt);
+        return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh && ctx == SyntaxContext.structt) && curr.size() == 0;
     }
 
 
