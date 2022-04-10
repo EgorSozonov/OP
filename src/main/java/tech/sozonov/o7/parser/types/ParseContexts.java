@@ -15,6 +15,7 @@ public static enum ParseContext {
 
     // Core syntax forms
     iff,
+    matchh,
     elsee,
     whilee,
     doo,
@@ -23,7 +24,8 @@ public static enum ParseContext {
     asz,
     varr,
     mutt,
-    matchh,
+    structt,
+    sumTypee,
     privatee,
     exportt,
     importt,

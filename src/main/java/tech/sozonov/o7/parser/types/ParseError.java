@@ -31,4 +31,17 @@ public final static class AssignmentError extends ParseErrorBase {
     }
 }
 
+public final static class SyntaxError extends ParseErrorBase {
+    public String val;
+
+    public SyntaxError(String val) {
+        this.val = val;
+    }
+
+    @Override
+    public String toString() {
+        return val;
+    }
+}
+
 }

@@ -1,11 +1,13 @@
 package tech.sozonov.o7.parser.types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import tech.sozonov.o7.lexer.types.ExprLexicalType;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.parser.types.ParseContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.ParseContexts.ParseContext;
+import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Tuple;
 import static tech.sozonov.o7.utils.ListUtils.*;
@@ -16,57 +18,56 @@ public class ASTUntyped {
 public static class ASTUntypedBase {
     @Override
     public final String toString() {
-        if (this instanceof ListStatements lsOuter) {
+        if (this instanceof ASTList lsOuter) {
+            return "";
 
-            var result = new StringBuilder();
-            var backtrack = new Stack<Tuple<ListStatements, Integer>>();
-            ListStatements curr = lsOuter;
-            int i = 0;
+            // var result = new StringBuilder();
+            // var backtrack = new Stack<Tuple<ListStatements, Integer>>();
+            // ASTList curr = lsOuter;
+            // int i = 0;
 
-            do {
-                while (i < curr.val.size()) {
-                    if (curr.val.get(i) instanceof ListStatements listElem) {
-                        if (hasValues(listElem.val)) {
-                            backtrack.push(new Tuple<ListStatements, Integer>(curr, i));
-                            curr = listElem;
-                            i = 0;
-                            if (curr.sType == SubexprType.curlyBraces) {
-                                result.append("{\n ");
-                            } else if (curr.sType == SubexprType.dataInitializer) {
-                                result.append("[");
-                            } else if (curr.sType == SubexprType.parens){
-                                result.append("(");
-                            }
-                        } else {
-                            ++i;
-                        }
-                    } else {
-                        result.append(curr.val.get(i).toString());
-                        result.append(", ");
-                        ++i;
-                    }
-                }
-                if (backtrack.peek() != null) {
-                    if (curr.sType == SubexprType.curlyBraces) {
-                        result.append("}\n ");
-                    } else if (curr.sType == SubexprType.dataInitializer) {
-                        result.append("], ");
-                    } else if (curr.sType == SubexprType.parens) {
-                        result.append(") ");
-                    } else {
-                        result.append(";\n ");
-                    }
-                    var back = backtrack.pop();
-                    curr = back.item0;
-                    i = back.item1 + 1;
-                }
-            } while (backtrack.peek() != null || i < curr.val.size());
+            // do {
+            //     while (i < curr.val.size()) {
+            //         if (curr.val.get(i) instanceof ListStatements listElem) {
+            //             if (hasValues(listElem.val)) {
+            //                 backtrack.push(new Tuple<ListStatements, Integer>(curr, i));
+            //                 curr = listElem;
+            //                 i = 0;
+            //                 if (curr.ctx == ParseContext.curlyBraces) {
+            //                     result.append("{\n ");
+            //                 } else if (curr.sType == SubexprType.dataInitializer) {
+            //                     result.append("[");
+            //                 } else if (curr.sType == SubexprType.parens){
+            //                     result.append("(");
+            //                 }
+            //             } else {
+            //                 ++i;
+            //             }
+            //         } else {
+            //             result.append(curr.val.get(i).toString());
+            //             result.append(", ");
+            //             ++i;
+            //         }
+            //     }
+            //     if (backtrack.peek() != null) {
+            //         if (curr.sType == SubexprType.curlyBraces) {
+            //             result.append("}\n ");
+            //         } else if (curr.sType == SubexprType.dataInitializer) {
+            //             result.append("], ");
+            //         } else if (curr.sType == SubexprType.parens) {
+            //             result.append(") ");
+            //         } else {
+            //             result.append(";\n ");
+            //         }
+            //         var back = backtrack.pop();
+            //         curr = back.item0;
+            //         i = back.item1 + 1;
+            //     }
+            // } while (backtrack.peek() != null || i < curr.val.size());
 
-            return result.toString();
+            // return result.toString();
         } else if (this instanceof Ident x) {
             return "id " + x.name;
-        } else if (this instanceof If x2) {
-            return "If " + x2.val.size();
         } else if (this instanceof ASTList x3) {
             return "AST List";
         } else if (this instanceof IntLiteral x4) {
@@ -112,9 +113,45 @@ public final static class ASTList extends ASTUntypedBase {
     //     }
     // }
 
-    public void add(ASTUntypedBase newItem) {
+    /**
+     * Try to add a new item to the current AST node. Returns a syntax error if unsuccessful.
+     */
+    public Optional<ParseErrorBase> add(ASTUntypedBase newItem) {
+        // TODO adding of stuff in accordance to parse context
+        // val mbPunctuation = mbParsePunctutation(сurrToken);
+        // if (mbPunctuation.isEmpty()) {
+
+        // }
         curr.add(newItem);
         ind++;
+        return Optional.empty();
+    }
+
+    /**
+     * A list of tokens has ended, and we need to know whether this current AST is saturated.
+     * Returns true if saturated, false if not yet saturated, and None if oversaturated (which shouldn't ever happen).
+     *
+     * Saturation is determined by the parsing context and number of ingested lists:
+     * if/1
+     * while/2
+     * for/4
+     * foreach/2
+     * match/2
+     */
+    public Optional<Boolean> listHasEnded() {
+        int saturationLength = 0;
+        if (ctx == ParseContext.iff) {
+            saturationLength = 1;
+        } else if (ctx == ParseContext.whilee || ctx == ParseContext.foreachh || ctx == ParseContext.matchh) {
+            saturationLength = 2;
+        } else if (ctx == ParseContext.forr) {
+            saturationLength = 4;
+        } else {
+            saturationLength = 1;
+        }
+        if (data.size() < saturationLength) return Optional.of(false);
+        if (data.size() == saturationLength) return Optional.of(true);
+        return Optional.empty();
     }
 
     public void addToNextList(ASTUntypedBase newItem) {
@@ -132,45 +169,7 @@ public final static class ASTList extends ASTUntypedBase {
     }
 }
 
-public final static class ListStatements extends ASTUntypedBase {
-    public List<ASTUntypedBase> val;
-    public SubexprType sType;
 
-    public ListStatements() {
-        this.val = new ArrayList<ASTUntypedBase>();
-        this.sType = SubexprType.statement;
-    }
-
-    public ListStatements(SubexprType sType) {
-        this.val = new ArrayList<ASTUntypedBase>();
-        this.sType = sType;
-    }
-}
-
-public final static class If extends ASTUntypedBase {
-    public List<IfClause> val;
-    public If(List<IfClause> val) {
-        this.val = val;
-    }
-}
-
-public final static class IfClause extends ASTUntypedBase {
-    public ASTUntypedBase testClause;
-    public ASTUntypedBase resultClause;
-    public IfClause(ASTUntypedBase testClause, ASTUntypedBase resultClause) {
-        this.testClause = testClause;
-        this.resultClause = resultClause;
-    }
-}
-
-public final static class While extends ASTUntypedBase {
-    public ASTUntyped testClause;
-    public ListStatements body;
-    public While(ASTUntyped testClause, ListStatements body) {
-        this.testClause = testClause;
-        this.body = body;
-    }
-}
 
 // public final static class Statement extends ASTUntypedBase {
 //     public List<ASTUntypedBase> val;
