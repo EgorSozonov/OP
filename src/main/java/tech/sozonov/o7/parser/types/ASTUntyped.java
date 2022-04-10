@@ -5,8 +5,10 @@ import java.util.Optional;
 
 import tech.sozonov.o7.lexer.types.ExprLexicalType;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
-import tech.sozonov.o7.parser.types.ParseContexts.CoreOperator;
-import tech.sozonov.o7.parser.types.ParseContexts.ParseContext;
+import tech.sozonov.o7.lexer.types.Expr.ExprBase;
+import tech.sozonov.o7.lexer.types.Expr.OperatorToken;
+import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
+import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Tuple;
@@ -89,9 +91,9 @@ public final static class ASTList extends ASTUntypedBase {
     public int indList;
     public int ind;
     public ArrayList<ASTUntypedBase> curr;
-    public ParseContext ctx;
+    public SyntaxContext ctx;
 
-    public ASTList(ParseContext ctx) {
+    public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
         data = new ArrayList<>();
         curr = new ArrayList<>();
@@ -127,6 +129,9 @@ public final static class ASTList extends ASTUntypedBase {
         return Optional.empty();
     }
 
+    public void newStatement() {
+    }
+
     /**
      * A list of tokens has ended, and we need to know whether this current AST is saturated.
      * Returns true if saturated, false if not yet saturated, and None if oversaturated (which shouldn't ever happen).
@@ -140,11 +145,11 @@ public final static class ASTList extends ASTUntypedBase {
      */
     public Optional<Boolean> listHasEnded() {
         int saturationLength = 0;
-        if (ctx == ParseContext.iff) {
+        if (ctx == SyntaxContext.iff) {
             saturationLength = 1;
-        } else if (ctx == ParseContext.whilee || ctx == ParseContext.foreachh || ctx == ParseContext.matchh) {
+        } else if (ctx == SyntaxContext.whilee || ctx == SyntaxContext.foreachh || ctx == SyntaxContext.matchh) {
             saturationLength = 2;
-        } else if (ctx == ParseContext.forr) {
+        } else if (ctx == SyntaxContext.forr) {
             saturationLength = 4;
         } else {
             saturationLength = 1;
@@ -166,6 +171,47 @@ public final static class ASTList extends ASTUntypedBase {
         curr = new ArrayList<>();
         data.add(curr);
         ++ind;
+    }
+
+    /**
+     * Returns true iff the current context is about to ingest the next list item (i.e. the next {}, () or []).
+     */
+    static boolean isContextIngesting(SyntaxContext ctx) {
+        // TODO finish list of enum values
+        return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh && ctx == SyntaxContext.structt);
+    }
+
+
+
+    static Optional<ParsePunctuation> mbParsePunctutation(ExprBase token) {
+        if (token instanceof OperatorToken op) {
+            if (op.val.size() == 2 && op.val.get(0) == OperatorSymb.minus && op.val.get(1) == OperatorSymb.gt) {
+                return Optional.of(ParsePunctuation.arrow);
+            } else if (op.val.size() == 1 && op.val.get(0) == OperatorSymb.colon) {
+                return Optional.of(ParsePunctuation.colon);
+            } else if (op.val.size() == 1 && op.val.get(0) == OperatorSymb.dollar) {
+                return Optional.of(ParsePunctuation.dollar);
+            } else {
+                return Optional.empty();
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
+
+
+
+    static Optional<SyntaxContext> getOperatorAssignmentType(OperatorToken ot) {
+        if (ot.val.size() == 1 && ot.val.get(0) == OperatorSymb.equals) return Optional.of(SyntaxContext.assignImmutable);
+        if (ot.val.size() == 2 && ot.val.get(1) == OperatorSymb.equals) {
+            var f = ot.val.get(0);
+            if (f == OperatorSymb.colon) return Optional.of(SyntaxContext.assignMutable);
+            if (f == OperatorSymb.plus) return Optional.of(SyntaxContext.assignMutablePlus);
+            if (f == OperatorSymb.minus) return Optional.of(SyntaxContext.assignMutableMinus);
+            if (f == OperatorSymb.asterisk) return Optional.of(SyntaxContext.assignMutableTimes);
+            if (f == OperatorSymb.slash) return Optional.of(SyntaxContext.assignMutableDiv);
+        }
+        return Optional.empty();
     }
 }
 

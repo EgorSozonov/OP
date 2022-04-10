@@ -13,8 +13,8 @@ import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.lexer.types.Expr.*;
 import tech.sozonov.o7.parser.types.ParsePunctuation;
 import tech.sozonov.o7.parser.types.ASTUntyped.*;
-import tech.sozonov.o7.parser.types.ParseContexts.ParseContext;
-import tech.sozonov.o7.parser.types.ParseContexts.CoreOperator;
+import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
+import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.ParseError.*;
 import tech.sozonov.o7.utils.Tuple;
 import tech.sozonov.o7.utils.Stack;
@@ -29,7 +29,7 @@ public class Parser {
      * Full list of new punctuation symbols: -> : $
      */
     public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
-        var result = new ASTList(ParseContext.curlyBraces);
+        var result = new ASTList(SyntaxContext.curlyBraces);
         var reservedWords = getReservedMap();
         var coreOperators = getOperatorList();
         var backtrack = new Stack<Tuple<ListExpr, Integer>>();
@@ -44,12 +44,15 @@ public class Parser {
         resultBacktrack.push(result);
 
         var currInput = le;
+        ASTList curr = result;
+        boolean ingestionMode = true;
+
         while (backtrack.peek() != null) {
             val back = backtrack.pop();
             currInput = back.item0;
             i = back.item1;
 
-            ASTList curr;
+
             while (i < currInput.val.size()) {
                 val сurrToken = currInput.val.get(i);
 
@@ -57,19 +60,33 @@ public class Parser {
                     backtrack.push(new Tuple<ListExpr, Integer>(currInput, i + 1));
 
 
-                    if (le2.pType == ExprLexicalType.curlyBraces || le2.pType == ExprLexicalType.dataInitializer) {
-                        // list of stuff
-                        if (isContextNestable(curr.ctx)) {
-                            val newList = new ASTList(le2.pType == ExprLexicalType.curlyBraces ? ParseContext.curlyBraces : ParseContext.dataInitializer);
+
+
+
+
+                    if (le2.pType == ExprLexicalType.curlyBraces || le2.pType == ExprLexicalType.dataInitializer || le2.pType == ExprLexicalType.parens) {
+                        // Ask curr if it wants to ingest, if not - then create a nesting
+                        if (ingestionMode && isContextIngesting(curr.ctx)) {
+
+                            val newList = new ASTList(le2.pType == ExprLexicalType.curlyBraces ? SyntaxContext.curlyBraces : SyntaxContext.dataInitializer);
 
                             val mbError = curr.add(newList);
                             if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
 
                             resultBacktrack.push(curr);
                             curr = newList;
+                        } else if (ingestionMode) {
+                            ingestionMode = false;
+                        } else {
+                            ingestionMode = true;
                         }
-                    } else if (le2.pType == ExprLexicalType.parens || le2.pType == ExprLexicalType.statement) {
-                        // assignment | core synt form | func call | list of stuff
+                    } else {
+                        // Determine the type of the statement (assignment | core synt form | func call | list of stuff)
+                        // Always nest!
+                        if (le2.pType == ExprLexicalType.statement) curr.newStatement();
+
+                        val listType = determineParseContext(le2);
+
                         val mbCore = getMbCore(le2, reservedWords);
                         if (mbCore.isPresent()) {
                             val coreForm = parseCoreForm(le2, mbCore.get());
@@ -92,7 +109,10 @@ public class Parser {
                 if (resultBacktrack.peek() != null) {
                     val mbSaturated = curr.listHasEnded();
                     if (mbSaturated.isPresent()) {
-                        if (mbSaturated.get()) curr = resultBacktrack.pop();
+                        if (mbSaturated.get()) {
+                            curr = resultBacktrack.pop();
+                            ingestionMode = false;
+                        }
                     } else {
                         // should never happen
                         return new Tuple<>(result, new SyntaxError("Strange error: oversaturated syntax form"));
@@ -101,65 +121,31 @@ public class Parser {
 
             }
         }
+        // TODO check if the stack in resultBacktrack is empty
         return new Tuple<ASTUntypedBase, ParseErrorBase>(result, null);
     }
 
-    static Optional<ParsePunctuation> mbParsePunctutation(ExprBase token) {
-        if (token instanceof OperatorToken op) {
-            if (op.val.size() == 2 && op.val.get(0) == OperatorSymb.minus && op.val.get(1) == OperatorSymb.gt) {
-                return Optional.of(ParsePunctuation.arrow);
-            } else if (op.val.size() == 1 && op.val.get(0) == OperatorSymb.colon) {
-                return Optional.of(ParsePunctuation.colon);
-            } else if (op.val.size() == 1 && op.val.get(0) == OperatorSymb.dollar) {
-                return Optional.of(ParsePunctuation.dollar);
-            } else {
-                return Optional.empty();
-            }
-        } else {
-            return Optional.empty();
-        }
+
+    /**
+     * Pre-condition: the input must be either a Statement or a Parens.
+     * Determines the syntactic type of the expression: a function call, an assignment/definition, or a core syntactic form.
+     */
+    static SyntaxContext determineParseContext(ListExpr input) {
+
     }
 
-    static ASTUntypedBase parseAssignment(ListExpr expr, AssignmentType assignType) {
-        return new Ident("TODO");
-    }
 
-    static ASTUntypedBase parseCoreForm(ListExpr expr, ParseContext coreType) {
-        return new Ident("TODO");
-    }
-
-    static Optional<ParseContext> getMbCore(ListExpr expr, Map<String, ParseContext> reserveds) {
+    static Optional<SyntaxContext> getMbCore(ListExpr expr, Map<String, SyntaxContext> reserveds) {
         if (!(expr.val.get(0) instanceof WordToken)) return Optional.empty();
         val word = (WordToken)expr.val.get(0);
         return reserveds.containsKey(word.val) ? Optional.of(reserveds.get(word.val)) : Optional.empty();
     }
 
 
-    static Optional<AssignmentType> getMbAssignment(ListExpr expr) {
-        if (expr.val.size() >= 3 && expr.val.get(1) instanceof OperatorToken ot) {
-            return getOperatorAssignmentType(ot);
-        } else {
-            return Optional.empty();
-        }
-    }
 
-
-    static Optional<AssignmentType> getOperatorAssignmentType(OperatorToken ot) {
-        if (ot.val.size() == 1 && ot.val.get(0) == OperatorSymb.equals) return Optional.of(AssignmentType.immutableDef);
-        if (ot.val.size() == 2 && ot.val.get(1) == OperatorSymb.equals) {
-            var f = ot.val.get(0);
-            if (f == OperatorSymb.colon) return Optional.of(AssignmentType.mutableAssignment);
-            if (f == OperatorSymb.plus) return Optional.of(AssignmentType.mutablePlus);
-            if (f == OperatorSymb.minus) return Optional.of(AssignmentType.mutablePlus);
-            if (f == OperatorSymb.asterisk) return Optional.of(AssignmentType.mutablePlus);
-            if (f == OperatorSymb.slash) return Optional.of(AssignmentType.mutablePlus);
-        }
-        return Optional.empty();
-    }
-
-    static Map<String, ParseContext> getReservedMap() {
-        val result = new HashMap<String, ParseContext>();
-        val coreContexts = EnumSet.complementOf(EnumSet.range(ParseContext.funcall, ParseContext.assignMutableDiv));
+    static Map<String, SyntaxContext> getReservedMap() {
+        val result = new HashMap<String, SyntaxContext>();
+        val coreContexts = EnumSet.complementOf(EnumSet.range(SyntaxContext.funcall, SyntaxContext.assignMutableDiv));
         coreContexts.forEach(enumValue -> {
             val nm = enumValue.toString();
             result.put(nm.substring(0, nm.length() - 1), enumValue);
@@ -201,23 +187,15 @@ public class Parser {
         return true;
     }
 
-    static boolean isReservedWord(WordToken wt, Map<String, ParseContext> reservedWords) {
+    static boolean isReservedWord(WordToken wt, Map<String, SyntaxContext> reservedWords) {
         var str = wt.val;
         if (str == "true" || str == "false")
             return true;
         return (reservedWords.containsKey(str));
     }
 
-    /**
-     * Is the current context accepting nested lists of AST, or does it ingest next ASTs into itself?
-     */
-    static boolean isContextNestable(ParseContext ctx) {
-        // TODO finish list of enum values
-        return (ctx != ParseContext.iff && ctx != ParseContext.matchh && ctx != ParseContext.structt);
-    }
-
     static ASTUntypedBase parseAtom(ExprBase inp,
-                                Map<String, ParseContext> reservedWords,
+                                Map<String, SyntaxContext> reservedWords,
                                 List<Tuple<List<OperatorSymb>, CoreOperator>> coreOperators) {
         if (inp instanceof IntToken it) {
             return new IntLiteral(it.val);

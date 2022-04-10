@@ -1,8 +1,8 @@
 package tech.sozonov.o7.parser.types;
 
-public class ParseContexts {
+public class SyntaxContexts {
 
-public static enum ParseContext {
+public static enum SyntaxContext {
     funcall,
 
     // Assignments and definitions
