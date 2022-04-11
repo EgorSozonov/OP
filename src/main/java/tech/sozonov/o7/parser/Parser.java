@@ -57,7 +57,7 @@ public class Parser {
 
                 if (сurrToken instanceof ListExpr le2) {
                     backtrack.push(new Tuple<ListExpr, Integer>(currInput, i + 1));
-
+                    boolean skipFirstToken = false;
 
 
 
@@ -75,7 +75,7 @@ public class Parser {
                         if (curr.isContextIngesting()) {
                             curr.ingestItem();
                         } else {
-                            val newList = new ASTList(le2.pType == ExprLexicalType.curlyBraces ? SyntaxContext.curlyBraces : SyntaxContext.parens);
+                            val newList = new ASTList(SyntaxContext.curlyBraces);
 
                             val mbError = curr.add(newList);
                             if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
@@ -84,41 +84,24 @@ public class Parser {
                             curr = newList;
                         }
                     } else if (le2.pType == ExprLexicalType.statement || le2.pType == ExprLexicalType.parens){
-
-                        // if {}
-
-                        // if x > 5 -> print x
-
-                        // Determine the type of the statement (assignment | core synt form | func call | list of stuff)
-                        // Always nest!
-
-                        val listType = determineListType(le2);
-                        if (listType.isLeft()) {
-                            return new Tuple<>(result, listType.getLeft());
-                        }
+                        val listType = determineListType(le2, reservedWords);
+                        skipFirstToken = listType.item1;
 
                         if (le2.pType == ExprLexicalType.parens && curr.isContextIngesting()) {
                             curr.ingestItem();
+                        } else if (le2.pType == ExprLexicalType.statement && curr.needToClose(le2)) {
+                            // A non-ingested core form needs to close shop and pop off the stack because the next statement doesn't fit it
+
                         } else {
-                            val newList = new ASTList(listType);
+                            val newList = new ASTList(listType.item0);
 
                             val mbError = curr.add(newList);
                             if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
 
+
                             resultBacktrack.push(curr);
                             curr = newList;
                         }
-
-                        val newStatement = new ASTList(listType);
-                        curr.newStatement(listType, newStatement);
-                        resultBacktrack.push(curr);
-                        curr = newStatement;
-                    } else if (le2.pType == ExprLexicalType.parens) {
-                        val listType = determineListType(le2);
-                        val newStatement = new ASTList(listType);
-                        curr.newStatement(listType, newStatement);
-                        resultBacktrack.push(curr);
-                        curr = newStatement;
                     } else {
                         val dataInitializer = new ASTList(SyntaxContext.dataInitializer);
                         val mbError = curr.add(dataInitializer);
@@ -128,7 +111,7 @@ public class Parser {
                     }
 
                     currInput = le2;
-                    i = 0;
+                    i = skipFirstToken ? 1 : 0;
                 } else {
                     val atom = parseAtom(сurrToken, reservedWords, coreOperators);
                     val mbError = curr.add(atom);
@@ -158,9 +141,9 @@ public class Parser {
      * Determines the syntactic type of the expression: a function call, an assignment/definition, a core syntactic form, or a type declaration.
      * Returns: either a parse error, or a tuple of SyntaxContext and a boolean of whether to skip the first token (useful for core syntax forms).
      */
-    static Either<ParseErrorBase, Tuple<SyntaxContext, Boolean>> determineListType(ListExpr input, Map<String, SyntaxContext> reservedWords) {
+    static Tuple<SyntaxContext, Boolean> determineListType(ListExpr input, Map<String, SyntaxContext> reservedWords) {
         val mbCore = getMbCore(input, reservedWords);
-        if (mbCore.isPresent())  return Either.right(new Tuple<>(mbCore.get(), true));
+        if (mbCore.isPresent())  return new Tuple<>(mbCore.get(), true);
         if (input.val.size() >= 3 && input.val.get(1) instanceof OperatorToken ot) {
             val firstOper = ot.val.get(0);
             if (ot.val.size() == 1 && firstOper == OperatorSymb.equals) {
@@ -168,8 +151,8 @@ public class Parser {
             } else if (ot.val.size() == 2 && ot.val.get(1) == OperatorSymb.equals) {
                 if (firstOper == OperatorSymb.plus) return new Tuple<>(SyntaxContext.assignMutablePlus, false);
                 if (firstOper == OperatorSymb.minus) return new Tuple<>(SyntaxContext.assignMutableMinus, false);
-                if (firstOper == OperatorSymb.times) return new Tuple<>(SyntaxContext.assignMutableTimes, false);
-                if (firstOper == OperatorSymb.divideBy) return new Tuple<>(SyntaxContext.assignMutableDiv, false);
+                if (firstOper == OperatorSymb.asterisk) return new Tuple<>(SyntaxContext.assignMutableTimes, false);
+                if (firstOper == OperatorSymb.slash) return new Tuple<>(SyntaxContext.assignMutableDiv, false);
             }
             if (ot.val.size() == 2 && firstOper == OperatorSymb.colon && ot.val.get(1) == OperatorSymb.colon) return new Tuple<>(SyntaxContext.typeDeclaration, false);
         }

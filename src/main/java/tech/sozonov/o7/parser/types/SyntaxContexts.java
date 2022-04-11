@@ -2,6 +2,23 @@ package tech.sozonov.o7.parser.types;
 
 public class SyntaxContexts {
 
+/**
+ * Core forms are divided into bounded and unbounded ones in terms of their ingestion of statements.
+ * Bounded ones ingest a fixed number of statements/parens:
+ *
+ * while/2
+ * for/4
+ * foreach/2
+ * do/1 while/1
+ * try/1 catch/1 finally/1
+ *
+ * Unbounded ones have an option to ingest a single curlyBraces/parens, but otherwise ingest statements
+ * while they satisfy a condition (contain an arrow etc):
+ *
+ * if
+ * match
+ * sumType?
+ */
 public static enum SyntaxContext {
     funcall,
 
