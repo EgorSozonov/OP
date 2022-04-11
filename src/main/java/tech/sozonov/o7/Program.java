@@ -1,9 +1,7 @@
 package tech.sozonov.o7;
 import tech.sozonov.o7.lexer.Lexer;
-import tech.sozonov.o7.lexer.types.ExprLexicalType;
 import tech.sozonov.o7.lexer.types.Expr.*;
 import tech.sozonov.o7.parser.Parser;
-import static tech.sozonov.o7.utils.ListUtils.*;
 import java.nio.charset.StandardCharsets;
 import lombok.val;
 import static tech.sozonov.o7.utils.ByteArrayUtils.*;
@@ -22,7 +20,6 @@ class Program {
     }
 """;
 
-        var inp = "9_223_372_036_854_775_807";
 
         val res = Lexer.lexicallyAnalyze(innp.getBytes(StandardCharsets.UTF_8));
         val expected = ExprBase.wrapOneToken(new IntToken(Integer.MAX_VALUE));

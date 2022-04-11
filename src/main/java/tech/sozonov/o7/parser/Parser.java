@@ -63,10 +63,18 @@ public class Parser {
 
 
 
-                    if (le2.pType == ExprLexicalType.curlyBraces || le2.pType == ExprLexicalType.parens) {
-                        // Ask curr if it wants to ingest, if not - then create a nesting
-                        if (!curr.isContextIngesting()) {
+                // curly - maybe nest
+                // stmt - nest, determine
+                // () - maybe nest, determine
+                // [] - nest
 
+
+
+                    if (le2.pType == ExprLexicalType.curlyBraces) {
+                        // Ask curr if it wants to ingest, if not - then create a nesting
+                        if (curr.isContextIngesting()) {
+                            curr.ingestItem();
+                        } else {
                             val newList = new ASTList(le2.pType == ExprLexicalType.curlyBraces ? SyntaxContext.curlyBraces : SyntaxContext.parens);
 
                             val mbError = curr.add(newList);
@@ -75,20 +83,43 @@ public class Parser {
                             resultBacktrack.push(curr);
                             curr = newList;
                         }
-                    }
-                    if (le2.pType == ExprLexicalType.statement){
+                    } else if (le2.pType == ExprLexicalType.statement || le2.pType == ExprLexicalType.parens){
+
+                        // if {}
+
+                        // if x > 5 -> print x
+
                         // Determine the type of the statement (assignment | core synt form | func call | list of stuff)
                         // Always nest!
 
+                        val listType = determineListType(le2);
+                        if (listType.isLeft()) {
+                            return new Tuple<>(result, listType.getLeft());
+                        }
 
-                        val listType = determineParseContext(le2);
+                        if (le2.pType == ExprLexicalType.parens && curr.isContextIngesting()) {
+                            curr.ingestItem();
+                        } else {
+                            val newList = new ASTList(listType);
+
+                            val mbError = curr.add(newList);
+                            if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
+
+                            resultBacktrack.push(curr);
+                            curr = newList;
+                        }
+
                         val newStatement = new ASTList(listType);
-                        val mbSaturated = curr.newStatement(listType);
-
-
+                        curr.newStatement(listType, newStatement);
+                        resultBacktrack.push(curr);
+                        curr = newStatement;
                     } else if (le2.pType == ExprLexicalType.parens) {
+                        val listType = determineListType(le2);
+                        val newStatement = new ASTList(listType);
+                        curr.newStatement(listType, newStatement);
+                        resultBacktrack.push(curr);
+                        curr = newStatement;
                     } else {
-                        //
                         val dataInitializer = new ASTList(SyntaxContext.dataInitializer);
                         val mbError = curr.add(dataInitializer);
                         if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
@@ -124,10 +155,25 @@ public class Parser {
 
     /**
      * Pre-condition: the input must be either a Statement or a Parens.
-     * Determines the syntactic type of the expression: a function call, an assignment/definition, or a core syntactic form.
+     * Determines the syntactic type of the expression: a function call, an assignment/definition, a core syntactic form, or a type declaration.
+     * Returns: either a parse error, or a tuple of SyntaxContext and a boolean of whether to skip the first token (useful for core syntax forms).
      */
-    static SyntaxContext determineParseContext(ListExpr input) {
-
+    static Either<ParseErrorBase, Tuple<SyntaxContext, Boolean>> determineListType(ListExpr input, Map<String, SyntaxContext> reservedWords) {
+        val mbCore = getMbCore(input, reservedWords);
+        if (mbCore.isPresent())  return Either.right(new Tuple<>(mbCore.get(), true));
+        if (input.val.size() >= 3 && input.val.get(1) instanceof OperatorToken ot) {
+            val firstOper = ot.val.get(0);
+            if (ot.val.size() == 1 && firstOper == OperatorSymb.equals) {
+                return new Tuple<>(SyntaxContext.assignImmutable, false);
+            } else if (ot.val.size() == 2 && ot.val.get(1) == OperatorSymb.equals) {
+                if (firstOper == OperatorSymb.plus) return new Tuple<>(SyntaxContext.assignMutablePlus, false);
+                if (firstOper == OperatorSymb.minus) return new Tuple<>(SyntaxContext.assignMutableMinus, false);
+                if (firstOper == OperatorSymb.times) return new Tuple<>(SyntaxContext.assignMutableTimes, false);
+                if (firstOper == OperatorSymb.divideBy) return new Tuple<>(SyntaxContext.assignMutableDiv, false);
+            }
+            if (ot.val.size() == 2 && firstOper == OperatorSymb.colon && ot.val.get(1) == OperatorSymb.colon) return new Tuple<>(SyntaxContext.typeDeclaration, false);
+        }
+        return new Tuple<>(SyntaxContext.funcall, false);
     }
 
 
@@ -164,12 +210,18 @@ public class Parser {
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.tilde, OperatorSymb.ampersand),     CoreOperator.bitwiseNot));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.caret),                             CoreOperator.bitwiseXor));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.equals),                            CoreOperator.defineImm));
-        result.add(new Tuple<>(Arrays.asList(OperatorSymb.colon, OperatorSymb.equals),        CoreOperator.defineMut));
-        result.add(new Tuple<>(Arrays.asList(OperatorSymb.lt, OperatorSymb.minus),            CoreOperator.assignmentMut));
+        result.add(new Tuple<>(Arrays.asList(OperatorSymb.colon, OperatorSymb.equals),        CoreOperator.assignmentMut));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.plus, OperatorSymb.equals),         CoreOperator.plusMut));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.minus, OperatorSymb.equals),        CoreOperator.minusMut));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.asterisk, OperatorSymb.equals),     CoreOperator.timesMut));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.slash, OperatorSymb.equals),        CoreOperator.divideMut));
+
+        result.add(new Tuple<>(Arrays.asList(OperatorSymb.minus, OperatorSymb.gt),            CoreOperator.arrow));
+        result.add(new Tuple<>(Arrays.asList(OperatorSymb.equals, OperatorSymb.gt),           CoreOperator.fatArrow));
+        result.add(new Tuple<>(Arrays.asList(OperatorSymb.colon, OperatorSymb.colon),         CoreOperator.typeDecl));
+        result.add(new Tuple<>(Arrays.asList(OperatorSymb.colon),                             CoreOperator.colon));
+        result.add(new Tuple<>(Arrays.asList(OperatorSymb.pipe),                             CoreOperator.pipe));
+
         return result;
     }
 

@@ -16,17 +16,12 @@ public static enum SyntaxContext {
     // Core syntax forms
     iff,
     matchh,
-    elsee,
     whilee,
     doo,
     forr,
     foreachh,
-    asz,
-    varr,
-    mutt,
     structt,
     sumTypee,
-    privatee,
     exportt,
     importt,
     hidingg,
@@ -52,7 +47,7 @@ public static enum SyntaxContext {
     // Lists of stuff
     dataInitializer,
     curlyBraces,
-    parens,
+    typeDeclaration,
 }
 
 public enum CoreOperator {
@@ -67,13 +62,19 @@ public enum CoreOperator {
     bitwiseOr,
     bitwiseNot,
     bitwiseXor,
+
     defineImm,
-    defineMut,
     assignmentMut,
     plusMut,
     minusMut,
     timesMut,
     divideMut,
+
+    arrow,
+    fatArrow,
+    typeDecl,
+    colon,
+    pipe,
 }
 
 

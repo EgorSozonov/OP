@@ -2,17 +2,12 @@ package tech.sozonov.o7.parser.types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import tech.sozonov.o7.lexer.types.ExprLexicalType;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.lexer.types.Expr.ExprBase;
 import tech.sozonov.o7.lexer.types.Expr.OperatorToken;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
-import tech.sozonov.o7.utils.Stack;
-import tech.sozonov.o7.utils.Tuple;
-import static tech.sozonov.o7.utils.ListUtils.*;
 
 
 public class ASTUntyped {
@@ -92,6 +87,7 @@ public final static class ASTList extends ASTUntypedBase {
     public int ind;
     public ArrayList<ASTUntypedBase> curr;
     public SyntaxContext ctx;
+    public int itemsIngested;
 
     public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
@@ -101,6 +97,7 @@ public final static class ASTList extends ASTUntypedBase {
         data.add(curr);
         indList = 0;
         ind = 0;
+        itemsIngested = 0;
     }
 
     // public ASTList(ExprLexicalType listType) {
@@ -126,14 +123,25 @@ public final static class ASTList extends ASTUntypedBase {
         // if (mbPunctuation.isEmpty()) {
 
         // }
+        if (newItem instanceof CoreOperatorAST co) {
+            if ((ctx == SyntaxContext.iff && co.val == CoreOperator.arrow)
+                || (ctx == SyntaxContext.matchh && co.val == CoreOperator.arrow)
+                || (ctx == SyntaxContext.matchh && co.val == CoreOperator.arrow)
+                || (ctx == SyntaxContext.structt && co.val == CoreOperator.colon)) {
+                curr = new ArrayList<>();
+                data.add(curr);
+                return Optional.empty();
+            }
+        }
         curr.add(newItem);
         ind++;
         return Optional.empty();
     }
 
-    public void newStatement() {
+    public void newStatement(SyntaxContext statType, ASTList newItem) {
         curr = new ArrayList<>();
         data.add(curr);
+        curr.add(newItem);
     }
 
     /**
@@ -156,19 +164,11 @@ public final static class ASTList extends ASTUntypedBase {
         } else if (ctx == SyntaxContext.forr) {
             saturationLength = 4;
         } else {
-            saturationLength = 1;
+            saturationLength = 0;
         }
-        if (data.size() < saturationLength) return Optional.of(false);
-        if (data.size() == saturationLength) return Optional.of(true);
+        if (itemsIngested < saturationLength) return Optional.of(false);
+        if (itemsIngested == saturationLength) return Optional.of(true);
         return Optional.empty();
-    }
-
-    public void addToNextList(ASTUntypedBase newItem) {
-        curr = new ArrayList<>();
-        curr.add(newItem);
-        data.add(curr);
-        ++indList;
-        ind = 1;
     }
 
     public void startNewList() {
@@ -181,8 +181,12 @@ public final static class ASTList extends ASTUntypedBase {
      * Returns true iff the current context is about to ingest the next list item (i.e. the next {}, () or []).
      */
     public boolean isContextIngesting() {
-        // TODO finish list of enum values
-        return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh && ctx == SyntaxContext.structt) && curr.size() == 0;
+        return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh || ctx == SyntaxContext.structt || ctx == SyntaxContext.sumTypee);
+    }
+
+    public void ingestItem() {
+        startNewList();
+        ++itemsIngested;
     }
 
 

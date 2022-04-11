@@ -35,7 +35,7 @@ publishing {
 }
 
 tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
+    options.encoding = "UTF-8"
 }
 
 application {
@@ -44,24 +44,10 @@ application {
 
 test {
 
-    // testLogging {
-	// 	events "PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR"
-	// }
-
-    // beforeTest { descriptor ->
-    //     println "\nStart "
-    //     logger.lifecycle("Running test: " + descriptor)
-    //     numTests++
-    // }
     failFast = true
     useJUnitPlatform()
     maxHeapSize = '1G'
 
-    //include "src/test/java/tech/sozonov/o7/*"
     testLogging.showStandardStreams = true
-
-    // doLast {
-    //     println "\nnumTests executed: ${numTests}"
-    // }
 
 }
