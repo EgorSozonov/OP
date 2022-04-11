@@ -89,8 +89,8 @@ public class Parser {
 
                         if (le2.pType == ExprLexicalType.parens && curr.isContextIngesting()) {
                             curr.ingestItem();
-                        } else if (le2.pType == ExprLexicalType.statement && curr.needToClose(le2)) {
-                            // A non-ingested core form needs to close shop and pop off the stack because the next statement doesn't fit it
+                        } else if (le2.pType == ExprLexicalType.statement && curr.unboundedNeedsToStop(le2)) {
+                            // An unbounded core form needs to close shop and pop off the stack because the next statement doesn't fit it
 
                         } else {
                             val newList = new ASTList(listType.item0);
@@ -160,10 +160,16 @@ public class Parser {
     }
 
 
+    /**
+     * Determines core syntactical forms, but only judging on the first token (or first 2 tokens for unbounded-able forms).
+     */
     static Optional<SyntaxContext> getMbCore(ListExpr expr, Map<String, SyntaxContext> reserveds) {
         if (!(expr.val.get(0) instanceof WordToken)) return Optional.empty();
         val word = (WordToken)expr.val.get(0);
-        return reserveds.containsKey(word.val) ? Optional.of(reserveds.get(word.val)) : Optional.empty();
+        if (!reserveds.containsKey(word.val)) return Optional.empty();
+        val reservedWord = reserveds.get(word.val);
+        if (ASTList.isUnboundable(reservedWord)) {
+        }
     }
 
 
@@ -216,13 +222,6 @@ public class Parser {
                 return false;
         }
         return true;
-    }
-
-    static boolean isReservedWord(WordToken wt, Map<String, SyntaxContext> reservedWords) {
-        var str = wt.val;
-        if (str == "true" || str == "false")
-            return true;
-        return (reservedWords.containsKey(str));
     }
 
     static ASTUntypedBase parseAtom(ExprBase inp,

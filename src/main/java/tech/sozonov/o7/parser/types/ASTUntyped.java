@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.lexer.types.Expr.ExprBase;
+import tech.sozonov.o7.lexer.types.Expr.ListExpr;
 import tech.sozonov.o7.lexer.types.Expr.OperatorToken;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
@@ -13,6 +14,16 @@ import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
 public class ASTUntyped {
 
 public static class ASTUntypedBase {
+
+    public static boolean isUnbounded(SyntaxContext ctx) {
+        return (ctx == SyntaxContext.ifUnboundedd || ctx == SyntaxContext.matchUnboundedd
+                || ctx == SyntaxContext.structUnboundedd || ctx == SyntaxContext.sumTypeUnboundedd);
+    }
+
+    public static boolean isUnboundable(SyntaxContext ctx) {
+        return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh
+                || ctx == SyntaxContext.structt || ctx == SyntaxContext.sumTypee);
+    }
     @Override
     public final String toString() {
         if (this instanceof ASTList lsOuter) {
@@ -88,6 +99,7 @@ public final static class ASTList extends ASTUntypedBase {
     public ArrayList<ASTUntypedBase> curr;
     public SyntaxContext ctx;
     public int itemsIngested;
+    private boolean isUnboundedMode;
 
     public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
@@ -98,6 +110,7 @@ public final static class ASTList extends ASTUntypedBase {
         indList = 0;
         ind = 0;
         itemsIngested = 0;
+        isUnboundedMode = false;
     }
 
     // public ASTList(ExprLexicalType listType) {
@@ -144,6 +157,8 @@ public final static class ASTList extends ASTUntypedBase {
         curr.add(newItem);
     }
 
+
+
     /**
      * A list of tokens has ended, and we need to know whether this current AST is saturated.
      * Returns true if saturated, false if not yet saturated, and None if oversaturated (which shouldn't ever happen).
@@ -169,6 +184,13 @@ public final static class ASTList extends ASTUntypedBase {
         if (itemsIngested < saturationLength) return Optional.of(false);
         if (itemsIngested == saturationLength) return Optional.of(true);
         return Optional.empty();
+    }
+
+
+
+    public boolean unboundedNeedsToStop(ListExpr le) {
+        // TODO
+        return false;
     }
 
     public void startNewList() {
