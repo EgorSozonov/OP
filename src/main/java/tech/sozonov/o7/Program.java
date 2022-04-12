@@ -4,7 +4,7 @@ import tech.sozonov.o7.lexer.types.Expr.*;
 import tech.sozonov.o7.parser.Parser;
 import java.nio.charset.StandardCharsets;
 import lombok.val;
-import static tech.sozonov.o7.utils.ByteArrayUtils.*;
+import static tech.sozonov.o7.utils.ArrayUtils.*;
 
 
 class Program {

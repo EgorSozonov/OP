@@ -28,13 +28,6 @@ public static enum SyntaxContext {
     // Lists of stuff
     dataInitializer,
     curlyBraces,
-    typeDeclaration,
-
-    // unbounded syntax forms (i.e. ones that span an unbouned number of statements following them)
-    ifUnboundedd,
-    matchUnboundedd,
-    structUnboundedd,
-    sumTypeUnboundedd,
 
     // Assignments and definitions
     assignImmutable,
@@ -44,20 +37,36 @@ public static enum SyntaxContext {
     assignMutableTimes,
     assignMutableDiv,
 
-
-
     // Core syntax forms
     iff,
     matchh,
+    structt,
+    sumTypee,
     whilee,
     doo,
     forr,
     foreachh,
-    structt,
-    sumTypee,
+    tryy,
+    catchh,
+    finallyy,
+    typeDeclaration,
+    //macroo, // for the future
+
+        // unbounded syntax forms (i.e. ones that span an unbouned number of statements following them)
+    ifUnboundedd,
+    matchUnboundedd,
+    structUnboundedd,
+    sumTypeUnboundedd,
+}
+
+/**
+ * The reserved words except the ones which are used to mark syntax contexts (like "if", "while" etc).
+ */
+public static enum ReservedWord {
     exportt,
     importt,
     hidingg,
+    asz,
     modulee,
     typee,
     aliass,
@@ -66,16 +75,10 @@ public static enum SyntaxContext {
     returnn,
     breakk,
     continuee,
-    gotoo,
-    asyncc,
     awaitt,
     yieldd,
     assertt,
-    tryy,
-    catchh,
-    finallyy,
     nodestructt,
-    macroo,
 }
 
 public static enum CoreOperator {

@@ -9,7 +9,7 @@ import tech.sozonov.o7.utils.Tuple;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Either;
 import static tech.sozonov.o7.utils.ListUtils.*;
-import static tech.sozonov.o7.utils.ByteArrayUtils.*;
+import static tech.sozonov.o7.utils.ArrayUtils.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -7,6 +7,7 @@ import tech.sozonov.o7.lexer.types.Expr.ExprBase;
 import tech.sozonov.o7.lexer.types.Expr.ListExpr;
 import tech.sozonov.o7.lexer.types.Expr.OperatorToken;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
+import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
 
@@ -294,13 +295,22 @@ public final static class BoolLiteral extends ASTUntypedBase {
     }
 }
 
+/**
+ * Reserved words which are not markers for core forms (i.e. do not occur in the initial position)
+ */
+public final static class ReservedLiteral extends ASTUntypedBase {
+    public ReservedWord val;
+    public ReservedLiteral(ReservedWord val) {
+        this.val = val;
+    }
+}
+
 public final static class StringLiteral extends ASTUntypedBase {
     public String val;
     public StringLiteral(String val) {
         this.val = val;
     }
 }
-
 
 /**
  * Built-in operators that are functions (arithmetic, bitwise etc).
@@ -313,7 +323,7 @@ public final static class FunctionOperatorAST extends ASTUntypedBase {
 }
 
 /**
- * Built-in operators that are syntactical (arrows, pipes etc).
+ * Built-in operators that are syntactical markers (arrows, pipes etc).
  */
 public final static class CoreOperatorAST extends ASTUntypedBase {
     public CoreOperator val;
