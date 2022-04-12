@@ -24,6 +24,15 @@ public static class ASTUntypedBase {
         return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh
                 || ctx == SyntaxContext.structt || ctx == SyntaxContext.sumTypee);
     }
+
+    public static SyntaxContext makeUnbounded(SyntaxContext ctx) {
+        if (ctx == SyntaxContext.iff) return SyntaxContext.ifUnboundedd;
+        if (ctx == SyntaxContext.matchh) return SyntaxContext.matchUnboundedd;
+        if (ctx == SyntaxContext.structt) return SyntaxContext.structUnboundedd;
+        // if ctx == sumTypee
+        return SyntaxContext.sumTypeUnboundedd;
+    }
+
     @Override
     public final String toString() {
         if (this instanceof ASTList lsOuter) {
@@ -99,7 +108,7 @@ public final static class ASTList extends ASTUntypedBase {
     public ArrayList<ASTUntypedBase> curr;
     public SyntaxContext ctx;
     public int itemsIngested;
-    private boolean isUnboundedMode;
+    private final boolean isUnbounded;
 
     public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
@@ -110,7 +119,7 @@ public final static class ASTList extends ASTUntypedBase {
         indList = 0;
         ind = 0;
         itemsIngested = 0;
-        isUnboundedMode = false;
+        isUnbounded = ASTList.isUnbounded(ctx);
     }
 
     // public ASTList(ExprLexicalType listType) {
@@ -202,8 +211,8 @@ public final static class ASTList extends ASTUntypedBase {
     /**
      * Returns true iff the current context is about to ingest the next list item (i.e. the next {}, () or []).
      */
-    public boolean isContextIngesting() {
-        return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh || ctx == SyntaxContext.structt || ctx == SyntaxContext.sumTypee);
+    public boolean isUnbounded() {
+        return this.isUnbounded;
     }
 
     public void ingestItem() {
@@ -228,8 +237,6 @@ public final static class ASTList extends ASTUntypedBase {
             return Optional.empty();
         }
     }
-
-
 
     static Optional<SyntaxContext> getOperatorAssignmentType(OperatorToken ot) {
         if (ot.val.size() == 1 && ot.val.get(0) == OperatorSymb.equals) return Optional.of(SyntaxContext.assignImmutable);
@@ -294,6 +301,20 @@ public final static class StringLiteral extends ASTUntypedBase {
     }
 }
 
+
+/**
+ * Built-in operators that are functions (arithmetic, bitwise etc).
+ */
+public final static class FunctionOperatorAST extends ASTUntypedBase {
+    public CoreOperator val;
+    public FunctionOperatorAST(CoreOperator val) {
+        this.val = val;
+    }
+}
+
+/**
+ * Built-in operators that are syntactical (arrows, pipes etc).
+ */
 public final static class CoreOperatorAST extends ASTUntypedBase {
     public CoreOperator val;
     public CoreOperatorAST(CoreOperator val) {

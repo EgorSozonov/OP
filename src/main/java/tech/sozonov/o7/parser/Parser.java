@@ -31,12 +31,13 @@ public class Parser {
     public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
         var result = new ASTList(SyntaxContext.curlyBraces);
         var reservedWords = getReservedMap();
-        var coreOperators = getOperatorList();
+        var coreOperators = getCoreOperatorList();
+        var functionOperators = getFunctionOperatorList();
         var backtrack = new Stack<Tuple<ListExpr, Integer>>();
         var resultBacktrack = new Stack<ASTList>();
 
         if (!(inp instanceof ListExpr le)) {
-            return new Tuple<ASTUntypedBase, ParseErrorBase>(parseAtom(inp, reservedWords, coreOperators), null);
+            return new Tuple<ASTUntypedBase, ParseErrorBase>(parseAtom(inp, reservedWords, coreOperators, functionOperators), null);
         }
 
         int i = 0;
@@ -72,7 +73,7 @@ public class Parser {
 
                     if (le2.pType == ExprLexicalType.curlyBraces) {
                         // Ask curr if it wants to ingest, if not - then create a nesting
-                        if (curr.isContextIngesting()) {
+                        if (curr.isUnbounded()) {
                             curr.ingestItem();
                         } else {
                             val newList = new ASTList(SyntaxContext.curlyBraces);
@@ -87,7 +88,7 @@ public class Parser {
                         val listType = determineListType(le2, reservedWords);
                         skipFirstToken = listType.item1;
 
-                        if (le2.pType == ExprLexicalType.parens && curr.isContextIngesting()) {
+                        if (le2.pType == ExprLexicalType.parens && curr.isUnbounded()) {
                             curr.ingestItem();
                         } else if (le2.pType == ExprLexicalType.statement && curr.unboundedNeedsToStop(le2)) {
                             // An unbounded core form needs to close shop and pop off the stack because the next statement doesn't fit it
@@ -113,7 +114,7 @@ public class Parser {
                     currInput = le2;
                     i = skipFirstToken ? 1 : 0;
                 } else {
-                    val atom = parseAtom(сurrToken, reservedWords, coreOperators);
+                    val atom = parseAtom(сurrToken, reservedWords, coreOperators, functionOperators);
                     val mbError = curr.add(atom);
                     if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
                 }
@@ -163,13 +164,20 @@ public class Parser {
     /**
      * Determines core syntactical forms, but only judging on the first token (or first 2 tokens for unbounded-able forms).
      */
-    static Optional<SyntaxContext> getMbCore(ListExpr expr, Map<String, SyntaxContext> reserveds) {
+    static Optional<SyntaxContext> getMbCore(ListExpr expr, Map<String, SyntaxContext> reservedWords) {
         if (!(expr.val.get(0) instanceof WordToken)) return Optional.empty();
         val word = (WordToken)expr.val.get(0);
-        if (!reserveds.containsKey(word.val)) return Optional.empty();
-        val reservedWord = reserveds.get(word.val);
-        if (ASTList.isUnboundable(reservedWord)) {
+        if (!reservedWords.containsKey(word.val)) return Optional.empty();
+
+        val coreSyntaxContext = reservedWords.get(word.val);
+        if (ASTUntypedBase.isUnboundable(coreSyntaxContext)) {
+            if (expr.val.size() == 2
+                && (expr.val.get(1) instanceof ListExpr le)
+                && (le.pType == ExprLexicalType.curlyBraces || le.pType == ExprLexicalType.parens)) {
+                return Optional.of(ASTUntypedBase.makeUnbounded(coreSyntaxContext));
+            }
         }
+        return Optional.of(coreSyntaxContext);
     }
 
 
@@ -185,7 +193,7 @@ public class Parser {
         return result;
     }
 
-    static List<Tuple<List<OperatorSymb>, CoreOperator>> getOperatorList() {
+    static List<Tuple<List<OperatorSymb>, CoreOperator>> getFunctionOperatorList() {
         var result = new ArrayList<Tuple<List<OperatorSymb>, CoreOperator>>();
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.plus),                              CoreOperator.plus));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.minus),                             CoreOperator.minus));
@@ -198,18 +206,22 @@ public class Parser {
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.pipe),                              CoreOperator.bitwiseOr));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.tilde, OperatorSymb.ampersand),     CoreOperator.bitwiseNot));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.caret),                             CoreOperator.bitwiseXor));
+        return result;
+    }
+
+    static List<Tuple<List<OperatorSymb>, CoreOperator>> getCoreOperatorList() {
+        var result = new ArrayList<Tuple<List<OperatorSymb>, CoreOperator>>();
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.equals),                            CoreOperator.defineImm));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.colon, OperatorSymb.equals),        CoreOperator.assignmentMut));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.plus, OperatorSymb.equals),         CoreOperator.plusMut));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.minus, OperatorSymb.equals),        CoreOperator.minusMut));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.asterisk, OperatorSymb.equals),     CoreOperator.timesMut));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.slash, OperatorSymb.equals),        CoreOperator.divideMut));
-
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.minus, OperatorSymb.gt),            CoreOperator.arrow));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.equals, OperatorSymb.gt),           CoreOperator.fatArrow));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.colon, OperatorSymb.colon),         CoreOperator.typeDecl));
         result.add(new Tuple<>(Arrays.asList(OperatorSymb.colon),                             CoreOperator.colon));
-        result.add(new Tuple<>(Arrays.asList(OperatorSymb.pipe),                             CoreOperator.pipe));
+        result.add(new Tuple<>(Arrays.asList(OperatorSymb.pipe),                              CoreOperator.pipe));
 
         return result;
     }
@@ -226,7 +238,8 @@ public class Parser {
 
     static ASTUntypedBase parseAtom(ExprBase inp,
                                 Map<String, SyntaxContext> reservedWords,
-                                List<Tuple<List<OperatorSymb>, CoreOperator>> coreOperators) {
+                                List<Tuple<List<OperatorSymb>, CoreOperator>> coreOperators,
+                                List<Tuple<List<OperatorSymb>, CoreOperator>> functionOperators) {
         if (inp instanceof IntToken it) {
             return new IntLiteral(it.val);
         } else if (inp instanceof FloatToken ft) {
@@ -243,6 +256,11 @@ public class Parser {
             for (val oper : coreOperators) {
                 if (arraysEqual(ot.val, oper.item0)) {
                     return new CoreOperatorAST(oper.item1);
+                }
+            }
+            for (val oper : functionOperators) {
+                if (arraysEqual(ot.val, oper.item0)) {
+                    return new FunctionOperatorAST(oper.item1);
                 }
             }
             return new OperatorAST(ot.val);
