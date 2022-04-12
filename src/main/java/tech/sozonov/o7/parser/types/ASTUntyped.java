@@ -1,26 +1,23 @@
 package tech.sozonov.o7.parser.types;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.lexer.types.Expr.ExprBase;
 import tech.sozonov.o7.lexer.types.Expr.ListExpr;
 import tech.sozonov.o7.lexer.types.Expr.OperatorToken;
+import tech.sozonov.o7.lexer.types.Expr.WordToken;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
+import tech.sozonov.o7.utils.ArrayUtils;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
 
 
 public class ASTUntyped {
 
 public static class ASTUntypedBase {
-
-    public static boolean isUnbounded(SyntaxContext ctx) {
-        return (ctx == SyntaxContext.ifUnboundedd || ctx == SyntaxContext.matchUnboundedd
-                || ctx == SyntaxContext.structUnboundedd || ctx == SyntaxContext.sumTypeUnboundedd);
-    }
-
     public static boolean isUnboundable(SyntaxContext ctx) {
         return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh
                 || ctx == SyntaxContext.structt || ctx == SyntaxContext.sumTypee);
@@ -109,31 +106,18 @@ public final static class ASTList extends ASTUntypedBase {
     public ArrayList<ASTUntypedBase> curr;
     public SyntaxContext ctx;
     public int itemsIngested;
-    private final boolean isUnbounded;
+    public final boolean isUnbounded;
 
     public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
         data = new ArrayList<>();
         curr = new ArrayList<>();
-
         data.add(curr);
         indList = 0;
         ind = 0;
         itemsIngested = 0;
-        isUnbounded = ASTList.isUnbounded(ctx);
+        isUnbounded = this.isUnbounded();
     }
-
-    // public ASTList(ExprLexicalType listType) {
-    //     if (listType == ExprLexicalType.curlyBraces) {
-    //         this.ctx = ParseContext.curlyBraces;
-    //     } else if (listType == ExprLexicalType.dataInitializer) {
-    //         this.ctx = ParseContext.dataInitializer;
-    //     } else if (listType == ExprLexicalType.parens) {
-    //         this.ctx = ParseContext.parens;
-    //     } else {
-    //         this.ctx = ParseContext.statement;
-    //     }
-    // }
 
     /**
      * Try to add a new item to the current AST node. Returns a syntax error if unsuccessful.
@@ -146,6 +130,9 @@ public final static class ASTList extends ASTUntypedBase {
         // if (mbPunctuation.isEmpty()) {
 
         // }
+        if (isAssignment()) {
+            // TODO split on the first assignment symbol, and error out on the second
+        }
         if (newItem instanceof CoreOperatorAST co) {
             if ((ctx == SyntaxContext.iff && co.val == CoreOperator.arrow)
                 || (ctx == SyntaxContext.matchh && co.val == CoreOperator.arrow)
@@ -197,31 +184,73 @@ public final static class ASTList extends ASTUntypedBase {
     }
 
 
+    /**
+     * Does the next statement conform to the current core syntax form, or not?
+     * In case not, it's a syntax error or the end of the current core form.
+     */
+    public boolean statementFitsCoreForm(ListExpr le) {
+        final int len = le.val.size();
+        if (ctx == SyntaxContext.iff || ctx == SyntaxContext.ifUnboundedd) {
+            // Must be of the form "a .func b -> b"
+            if (len < 3) return false;
+            if (le.val.get(len - 2) instanceof OperatorToken ot) {
+                return (ArrayUtils.arraysEqual(Syntax.arrow, ot.val));
+            } else return false;
 
-    public boolean unboundedNeedsToStop(ListExpr le) {
-        // TODO
-        return false;
+        } else if (ctx == SyntaxContext.matchh || ctx == SyntaxContext.matchUnboundedd) {
+            // Must be of the form "A -> b" or "Aaa | Bbb | Ccc -> b"
+            if (len < 3) return false;
+            if (le.val.get(len - 2) instanceof OperatorToken ot) {
+                if (ArrayUtils.arraysEqual(Syntax.arrow, ot.val)) {
+                    for (int i = 0; i < len - 2; ++i) {
+                        if ((i % 2 == 0 && (le.val.get(i) instanceof WordToken wt) && Character.isUpperCase(wt.val.charAt(0)))
+                            || i % 2 == 1 && (le.val.get(i) instanceof OperatorToken ot2) && ArrayUtils.arraysEqual(Syntax.pipe, ot2.val)) {
+                            continue;
+                        }
+                        return false;
+                    }
+                } else return false;
+            } else return false;
+            // check for arrow symbol in penultimate position, plus the preceding must be either a single wordtoken or several split with pipes
+        } else if (ctx == SyntaxContext.structt || ctx == SyntaxContext.structUnboundedd) {
+            // check for colon in second position, plus the following must be a sequence of type names
+        } else if (ctx == SyntaxContext.sumTypee || ctx == SyntaxContext.sumTypeUnboundedd) {
+            // TODO write a check for a sum type clause
+        }
+        return true;
     }
 
     public void startNewList() {
         curr = new ArrayList<>();
         data.add(curr);
         ++ind;
-    }
-
-    /**
-     * Returns true iff the current context is about to ingest the next list item (i.e. the next {}, () or []).
-     */
-    public boolean isUnbounded() {
-        return this.isUnbounded;
-    }
-
-    public void ingestItem() {
-        startNewList();
         ++itemsIngested;
     }
 
+    public boolean isFuncall() {
+        return ctx == SyntaxContext.funcall;
+    }
 
+    public boolean isAssignment() {
+        return EnumSet.range(SyntaxContext.assignImmutable, SyntaxContext.assignMutableDiv).contains(ctx);
+    }
+
+    public boolean isCoreForm() {
+        return EnumSet.range(SyntaxContext.iff, SyntaxContext.sumTypeUnboundedd).contains(ctx);
+    }
+
+    public boolean isUnbounded() {
+        return (ctx == SyntaxContext.ifUnboundedd || ctx == SyntaxContext.matchUnboundedd
+                || ctx == SyntaxContext.structUnboundedd || ctx == SyntaxContext.sumTypeUnboundedd);
+    }
+
+    public boolean isBounded() {
+        return EnumSet.range(SyntaxContext.iff, SyntaxContext.typeDeclaration).contains(ctx);
+    }
+
+    public boolean isEmpty() {
+        return this.data.size() == 1 && curr.size() == 0;
+    }
 
     static Optional<ParsePunctuation> mbParsePunctutation(ExprBase token) {
         if (token instanceof OperatorToken op) {

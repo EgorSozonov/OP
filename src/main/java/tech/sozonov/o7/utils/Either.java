@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.Optional;
 
-@SuppressWarnings("deprecation")
+
 public abstract class Either<L, R>{
     private Either() {
     }

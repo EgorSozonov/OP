@@ -11,15 +11,17 @@ import java.util.List;
 import tech.sozonov.o7.utils.Tuple;
 
 
-public class Syntax {
+public final class Syntax {
 
-public final Map<String, SyntaxContext> syntaxes;
+public final Map<String, SyntaxContext> contexts;
 public final Map<String, ReservedWord> reservedWords;
 public final List<Tuple<List<OperatorSymb>, CoreOperator>> coreOperators;
 public final List<Tuple<List<OperatorSymb>, CoreOperator>> functionOperators;
+public static final List<OperatorSymb> arrow = Arrays.asList(OperatorSymb.minus, OperatorSymb.gt);
+public static final List<OperatorSymb> pipe = Arrays.asList(OperatorSymb.pipe);
 
 public Syntax() {
-    syntaxes = getSyntaxContexts();
+    contexts = getSyntaxContexts();
     reservedWords = getReservedWords();
     coreOperators = getCoreOperatorList();
     functionOperators = getFunctionOperatorList();
@@ -74,11 +76,11 @@ static List<Tuple<List<OperatorSymb>, CoreOperator>> getCoreOperatorList() {
     result.add(new Tuple<>(Arrays.asList(OperatorSymb.minus, OperatorSymb.equals),        CoreOperator.minusMut));
     result.add(new Tuple<>(Arrays.asList(OperatorSymb.asterisk, OperatorSymb.equals),     CoreOperator.timesMut));
     result.add(new Tuple<>(Arrays.asList(OperatorSymb.slash, OperatorSymb.equals),        CoreOperator.divideMut));
-    result.add(new Tuple<>(Arrays.asList(OperatorSymb.minus, OperatorSymb.gt),            CoreOperator.arrow));
+    result.add(new Tuple<>(Syntax.arrow,                                                  CoreOperator.arrow));
     result.add(new Tuple<>(Arrays.asList(OperatorSymb.equals, OperatorSymb.gt),           CoreOperator.fatArrow));
     result.add(new Tuple<>(Arrays.asList(OperatorSymb.colon, OperatorSymb.colon),         CoreOperator.typeDecl));
     result.add(new Tuple<>(Arrays.asList(OperatorSymb.colon),                             CoreOperator.colon));
-    result.add(new Tuple<>(Arrays.asList(OperatorSymb.pipe),                              CoreOperator.pipe));
+    result.add(new Tuple<>(pipe,                                                         CoreOperator.pipe));
 
     return result;
 }

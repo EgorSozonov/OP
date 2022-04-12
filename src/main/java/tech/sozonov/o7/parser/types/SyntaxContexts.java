@@ -52,7 +52,7 @@ public static enum SyntaxContext {
     typeDeclaration,
     //macroo, // for the future
 
-        // unbounded syntax forms (i.e. ones that span an unbouned number of statements following them)
+    // unbounded syntax forms (i.e. ones that span an unbouned number of statements following them)
     ifUnboundedd,
     matchUnboundedd,
     structUnboundedd,
