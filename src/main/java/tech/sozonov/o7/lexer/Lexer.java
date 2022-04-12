@@ -66,13 +66,23 @@ public class Lexer {
 
                 ++i;
             } else if (cChar == ASCII.curlyOpen) {
-                val newList = new ListExpr(ExprLexicalType.curlyBraces);
-                val newCurr = new ListExpr(ExprLexicalType.statement);
-                newList.val.add(newCurr);
-                curr.val.add(newList);
-                backtrack.push(curr);
-                backtrack.push(newList);
-                curr = newCurr;
+                if (curr.pType == ExprLexicalType.statement && curr.val.isEmpty()) {
+                    curr.pType = ExprLexicalType.curlyBraces;
+                    val newCurr = new ListExpr(ExprLexicalType.statement);
+                    curr.val.add(newCurr);
+                    backtrack.push(curr);
+                    curr = newCurr;
+
+                } else {
+                    val newList = new ListExpr(ExprLexicalType.curlyBraces);
+                    val newCurr = new ListExpr(ExprLexicalType.statement);
+                    newList.val.add(newCurr);
+                    curr.val.add(newList);
+                    backtrack.push(curr);
+                    backtrack.push(newList);
+                    curr = newCurr;
+                }
+
                 ++i;
             } else if (cChar == ASCII.curlyClose) {
                 if (backtrack.peek() == null || backtrack.peek().pType != ExprLexicalType.curlyBraces) {

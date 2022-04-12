@@ -25,9 +25,6 @@ class Program {
         val expected = ExprBase.wrapOneToken(new IntToken(Integer.MAX_VALUE));
         l(res.item0.toString());
         l(expected.toString());
-        // var eqRes = Expr.equal(expected, expected2);
-        // print("eqRes = $eqRes");
-        // return;
 
 
         l("");
