@@ -63,6 +63,7 @@ public static enum SyntaxContext {
  * The reserved words except the ones which are used to mark syntax contexts (like "if", "while" etc).
  */
 public static enum ReservedWord {
+    elsee,
     exportt,
     importt,
     hidingg,

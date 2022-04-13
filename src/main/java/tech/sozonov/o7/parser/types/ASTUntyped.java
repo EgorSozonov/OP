@@ -11,7 +11,8 @@ import tech.sozonov.o7.lexer.types.Expr.WordToken;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
-import tech.sozonov.o7.utils.ArrayUtils;
+import static tech.sozonov.o7.utils.ArrayUtils.*;
+import static tech.sozonov.o7.utils.ListUtils.*;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
 
 
@@ -137,12 +138,11 @@ public final static class ASTList extends ASTUntypedBase {
             }
         }
         if (newItem instanceof CoreOperatorAST co) {
-            if ((ctx == SyntaxContext.iff && co.val == CoreOperator.arrow)
-                || (ctx == SyntaxContext.matchh && co.val == CoreOperator.arrow)
-                || (ctx == SyntaxContext.sumTypee && co.val == CoreOperator.pipe)
-                || (ctx == SyntaxContext.structt && co.val == CoreOperator.colon)) {
-                curr = new ArrayList<>();
-                data.add(curr);
+            if ((co.val == CoreOperator.arrow && (ctx == SyntaxContext.matchh || ctx == SyntaxContext.matchUnboundedd
+                                                        || ctx == SyntaxContext.iff || ctx == SyntaxContext.ifUnboundedd))
+                || (co.val == CoreOperator.pipe && (ctx == SyntaxContext.sumTypee || ctx == SyntaxContext.sumTypeUnboundedd) )
+                || (co.val == CoreOperator.colon && (ctx == SyntaxContext.structt || ctx == SyntaxContext.structUnboundedd))) {
+                newStatement();
                 return Optional.empty();
             }
         }
@@ -182,7 +182,13 @@ public final static class ASTList extends ASTUntypedBase {
             if (itemsIngested == saturationLength) return Optional.of(true);
             return Optional.empty();
         } else if (isUnbounded()) {
-            return Optional.of(false);
+            if ((ctx == SyntaxContext.ifUnboundedd || ctx == SyntaxContext.matchUnboundedd)
+                && data.size() > 1 && last(data).get(0) instanceof ReservedLiteral rl && rl.val == ReservedWord.elsee) {
+                return Optional.of(true);
+            } else {
+                newStatement();
+                return Optional.of(false);
+            }
         } else {
             return Optional.of(true);
         }
@@ -199,17 +205,17 @@ public final static class ASTList extends ASTUntypedBase {
             // Must be of the form "a .func b -> b"
             if (len < 3) return false;
             if (le.val.get(len - 2) instanceof OperatorToken ot) {
-                return (ArrayUtils.arraysEqual(Syntax.arrow, ot.val));
+                return (arraysEqual(Syntax.arrow, ot.val));
             } else return false;
 
         } else if (ctx == SyntaxContext.matchh || ctx == SyntaxContext.matchUnboundedd) {
             // Must be of the form "A -> b" or "Aaa | Bbb | Ccc -> b"
             if (len < 3) return false;
             if (le.val.get(len - 2) instanceof OperatorToken ot) {
-                if (ArrayUtils.arraysEqual(Syntax.arrow, ot.val)) {
+                if (arraysEqual(Syntax.arrow, ot.val)) {
                     for (int i = 0; i < len - 2; ++i) {
                         if ((i % 2 == 0 && (le.val.get(i) instanceof WordToken wt) && Character.isUpperCase(wt.val.charAt(0)))
-                            || i % 2 == 1 && (le.val.get(i) instanceof OperatorToken ot2) && ArrayUtils.arraysEqual(Syntax.pipe, ot2.val)) {
+                            || i % 2 == 1 && (le.val.get(i) instanceof OperatorToken ot2) && arraysEqual(Syntax.pipe, ot2.val)) {
                             continue;
                         }
                         return false;

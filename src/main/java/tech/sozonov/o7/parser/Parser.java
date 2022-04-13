@@ -62,6 +62,7 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                         curr.startNewList();
                     } else {
                         val newList = new ASTList(SyntaxContext.curlyBraces);
+                        curr.add(newList);
                         resultBacktrack.push(curr);
                         curr = newList;
                     }
@@ -178,8 +179,11 @@ static Optional<SyntaxContext> getMbCore(ListExpr expr, Map<String, SyntaxContex
         if (expr.val.size() == 2
             && (expr.val.get(1) instanceof ListExpr le)
             && (le.pType == ExprLexicalType.curlyBraces || le.pType == ExprLexicalType.parens)) {
+            return Optional.of(coreSyntaxContext);
+        } else {
             return Optional.of(ASTUntypedBase.makeUnbounded(coreSyntaxContext));
         }
+
     }
     return Optional.of(coreSyntaxContext);
 }

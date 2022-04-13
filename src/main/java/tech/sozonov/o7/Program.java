@@ -15,7 +15,9 @@ class Program {
         var innp = """
     x = 5 + 2
     {
-        print x;
+        if x > 5 -> 5
+           x > 1 -> 1
+           else -> 0
         print 5
     }
 """;
