@@ -109,7 +109,6 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
 
                     resultBacktrack.push(curr);
                     curr = newList;
-
                 } else {
                     if (curr.isCoreForm()) {
                         return new Tuple<>(result, new SyntaxError("Data initializers are not allowed in a core syntax form like " + curr.ctx));
@@ -129,7 +128,6 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                 val atom = parseAtom(сurrToken, syntax);
                 val mbError = curr.add(atom);
                 if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
-
                 ++i;
             }
 
@@ -150,13 +148,13 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
     return new Tuple<ASTUntypedBase, ParseErrorBase>(result, null);
 }
 
+
 static ASTList cleanPop(Stack<ASTList> backtrack, ASTList curr) {
     if (last(curr.data).isEmpty()) {
         removeLast(curr.data);
     }
     return backtrack.pop();
 }
-
 
 /**
  * Pre-condition: the input must be either a Statement or a Parens.

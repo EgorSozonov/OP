@@ -5,13 +5,13 @@ import tech.sozonov.o7.parser.Parser;
 import java.nio.charset.StandardCharsets;
 import lombok.val;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
-
+import java.util.Arrays;
 
 class Program {
     public static void main(String[] args) {
 
 
-
+        //val innp = "abc _5 4.21";
         var innp = """
         if x > 5 -> 5
            x > 1 -> 1
@@ -21,11 +21,11 @@ class Program {
 
 
         val res = Lexer.lexicallyAnalyze(innp.getBytes(StandardCharsets.UTF_8));
-        val expected = ExprBase.wrapOneToken(new IntToken(Integer.MAX_VALUE));
+        val expected = ExprBase.wrapListTokens(Arrays.asList(new WordToken("abc"), new IntToken(-5), new FloatToken(4.21)));
         l(res.item0.toString());
         l(expected.toString());
 
-
+        l("equality = " + ListExpr.equal(expected, res.item0));
         l("");
         if (res.item1 != null) {
             l("Lexer error");

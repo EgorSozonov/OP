@@ -12,8 +12,6 @@ import tech.sozonov.o7.lexer.types.Expr.WordToken;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
-import tech.sozonov.o7.utils.Either;
-
 import static tech.sozonov.o7.utils.ArrayUtils.*;
 import static tech.sozonov.o7.utils.ListUtils.*;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
@@ -91,6 +89,9 @@ public static class ASTUntypedBase {
             // return result.toString();
         } else if (this instanceof Ident x) {
             return "id " + x.name;
+        } else if (this instanceof ReservedLiteral x) {
+            val str = x.val.toString();
+            return str.substring(0, str.length() - 1);
         } else if (this instanceof ASTList x3) {
             return "AST List";
         } else if (this instanceof IntLiteral x4) {
@@ -98,6 +99,10 @@ public static class ASTUntypedBase {
         } else if (this instanceof FloatLiteral x5) {
             return Double.toString(x5.val);
         } else if (this instanceof CoreOperatorAST x7) {
+            return x7.val.toString();
+        } else if (this instanceof FunctionOperatorAST x7) {
+            return x7.val.toString();
+        } else if (this instanceof OperatorAST x7) {
             return x7.val.toString();
         } else if (this instanceof BoolLiteral x8) {
             return "boolean " + Boolean.toString(x8.val);
@@ -132,12 +137,6 @@ public final static class ASTList extends ASTUntypedBase {
      */
     public Optional<ParseErrorBase> add(ASTUntypedBase newItem) {
         // TODO adding of stuff in accordance to parse context
-        // Validate all atoms + dataInitializer case
-
-        // val mbPunctuation = mbParsePunctutation(сurrToken);
-        // if (mbPunctuation.isEmpty()) {
-
-        // }
         if (isAssignment()) {
             if (newItem instanceof CoreOperatorAST co && EnumSet.range(CoreOperator.defineImm, CoreOperator.divideMut).contains(co.val)) {
                 newStatement();

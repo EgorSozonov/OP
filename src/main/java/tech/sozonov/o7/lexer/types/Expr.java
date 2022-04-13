@@ -2,6 +2,7 @@ package tech.sozonov.o7.lexer.types;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
+import tech.sozonov.o7.lexer.types.LexError.LexErrorBase;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Tuple;
 import lombok.val;
@@ -20,6 +21,24 @@ public static class ExprBase {
         stmt.val.add(token);
         result.val.add(stmt);
         return result;
+    }
+
+    /**
+     * Wraps a list of tokens into a statement the way it would be wrapped when lexing a real text input.
+     */
+    public static ExprBase wrapListTokens(List<ExprBase> tokens) {
+        val result = new ListExpr(ExprLexicalType.curlyBraces);
+        val stmt = new ListExpr(ExprLexicalType.statement);
+        stmt.val = tokens;
+        result.val.add(stmt);
+        return result;
+    }
+
+    /**
+     * Wraps a list of tokens into a statement the way it would be wrapped when lexing a real text input.
+     */
+    public static boolean checkEquality(ExprBase a, Tuple<ExprBase, LexErrorBase> b) {
+        return b.item1 == null && ListExpr.equal(a, b.item0);
     }
 
 }
@@ -178,6 +197,16 @@ public final static class FloatToken extends ExprBase {
 
     public FloatToken(double val) {
         this.val = val;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof FloatToken ft) ? this.val == ft.val : false;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int)val;
     }
 
     @Override

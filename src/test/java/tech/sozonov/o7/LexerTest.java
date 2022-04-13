@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import lombok.val;
 import tech.sozonov.o7.lexer.Lexer;
 import tech.sozonov.o7.lexer.types.Expr.*;
+import java.util.Arrays;
 
 
 @DisplayName("Lexer tests")
@@ -95,7 +96,6 @@ public class LexerTest {
     void word2() {
         val input = "_a0";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
-
         val expected = ExprBase.wrapOneToken(new WordToken("_a0"));
         assertTrue(ListExpr.equal(output.item0, expected));
     }
@@ -106,6 +106,15 @@ public class LexerTest {
         val input = "a_b";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
         assertNotNull(output.item1);
+    }
+
+    @Test
+    @DisplayName("Given a simple statement of different tokens, they should be lexed correctly")
+    void statement1() {
+        val input = "abc _5 4.21";
+        val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
+        val expected = ExprBase.wrapListTokens(Arrays.asList(new WordToken("abc"), new IntToken(-5), new FloatToken(4.21)));
+        assertTrue(ExprBase.checkEquality(expected, output));
     }
 
 }
