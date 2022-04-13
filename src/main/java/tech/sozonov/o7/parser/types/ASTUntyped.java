@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import lombok.val;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.lexer.types.Expr.ExprBase;
 import tech.sozonov.o7.lexer.types.Expr.ListExpr;
@@ -11,6 +12,8 @@ import tech.sozonov.o7.lexer.types.Expr.WordToken;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
+import tech.sozonov.o7.utils.Either;
+
 import static tech.sozonov.o7.utils.ArrayUtils.*;
 import static tech.sozonov.o7.utils.ListUtils.*;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
@@ -108,6 +111,7 @@ public final static class ASTList extends ASTUntypedBase {
     public SyntaxContext ctx;
     public int itemsIngested;
     public final boolean isUnbounded;
+    private final SyntaxContext parentCtx;
 
     public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
@@ -118,6 +122,7 @@ public final static class ASTList extends ASTUntypedBase {
         ind = 0;
         itemsIngested = 0;
         isUnbounded = this.isUnbounded();
+        parentCtx = null;
     }
 
     /**
@@ -136,14 +141,15 @@ public final static class ASTList extends ASTUntypedBase {
                 newStatement();
                 return Optional.empty();
             }
-        }
-        if (newItem instanceof CoreOperatorAST co) {
-            if ((co.val == CoreOperator.arrow && (ctx == SyntaxContext.matchh || ctx == SyntaxContext.matchUnboundedd
-                                                        || ctx == SyntaxContext.iff || ctx == SyntaxContext.ifUnboundedd))
-                || (co.val == CoreOperator.pipe && (ctx == SyntaxContext.sumTypee || ctx == SyntaxContext.sumTypeUnboundedd) )
-                || (co.val == CoreOperator.colon && (ctx == SyntaxContext.structt || ctx == SyntaxContext.structUnboundedd))) {
-                newStatement();
-                return Optional.empty();
+        } else if (isClauseBased()) {
+            if (newItem instanceof CoreOperatorAST co) {
+                if ((co.val == CoreOperator.arrow && (parentCtx == SyntaxContext.matchh || parentCtx == SyntaxContext.matchUnboundedd
+                                                            || parentCtx == SyntaxContext.iff || parentCtx == SyntaxContext.ifUnboundedd))
+                    || (co.val == CoreOperator.pipe && (parentCtx == SyntaxContext.sumTypee || parentCtx == SyntaxContext.sumTypeUnboundedd) )
+                    || (co.val == CoreOperator.colon && (parentCtx == SyntaxContext.structt || parentCtx == SyntaxContext.structUnboundedd))) {
+                    newStatement();
+                    return Optional.empty();
+                }
             }
         }
         curr.add(newItem);
@@ -156,7 +162,7 @@ public final static class ASTList extends ASTUntypedBase {
         data.add(curr);
     }
 
-    public void newStatement(SyntaxContext statType, ASTList newItem) {
+    public void newStatement(ASTList newItem) {
         curr = new ArrayList<>();
         data.add(curr);
         curr.add(newItem);
@@ -257,6 +263,10 @@ public final static class ASTList extends ASTUntypedBase {
 
     public boolean isBounded() {
         return EnumSet.range(SyntaxContext.iff, SyntaxContext.typeDeclaration).contains(ctx);
+    }
+
+    public boolean isClauseBased() {
+        return isBounded() || isUnbounded();
     }
 
     public boolean isEmpty() {

@@ -25,6 +25,9 @@ public class SyntaxContexts {
 public static enum SyntaxContext {
     funcall,
 
+    // The name of a type, or a type constructor, or a type constructor application
+    typecall,
+
     // Lists of stuff
     dataInitializer,
     curlyBraces,
@@ -37,22 +40,22 @@ public static enum SyntaxContext {
     assignMutableTimes,
     assignMutableDiv,
 
-    // Core syntax forms
-    iff,
-    matchh,
-    structt,
-    sumTypee,
-    whilee,
-    doo,
-    forr,
-    foreachh,
-    tryy,
-    catchh,
-    finallyy,
-    typeDeclaration,
+    // Bounded core syntax forms (i.e. ones that span a fixed number of items - curlyBraces, parens and/or statements)
+    iff, // 1 item
+    matchh, // 1 curlybraces item after an unbounded number of identifiers
+    structt, // 1 item
+    sumTypee, // 1 item
+    whilee, // 2 items, except as part of "do-while" when it has 1
+    doo, // 1 item
+    forr, // 4 items
+    foreachh, // 2 items
+    tryy, // 1 item
+    catchh, // 1 item
+    finallyy, // 1 item
+    typeDeclaration, // 1 item after 1 identifier
     //macroo, // for the future
 
-    // unbounded syntax forms (i.e. ones that span an unbouned number of statements following them)
+    // Unbounded core syntax forms (i.e. ones that span an unbouned number of statements following them)
     ifUnboundedd,
     matchUnboundedd,
     structUnboundedd,
