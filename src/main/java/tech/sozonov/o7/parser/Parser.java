@@ -119,19 +119,20 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                 val atom = parseAtom(сurrToken, syntax);
                 val mbError = curr.add(atom);
                 if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
+                ++i;
             }
 
-            val mbSaturated = curr.listHasEnded();
-            if (mbSaturated.isPresent()) {
-                if (mbSaturated.get()) {
-                    curr = resultBacktrack.pop();
+            if (i == currInput.val.size()) {
+                val mbSaturated = curr.listHasEnded();
+                if (mbSaturated.isPresent()) {
+                    if (mbSaturated.get()) {
+                        curr = resultBacktrack.pop();
+                    }
+                } else {
+                    // should never happen
+                    return new Tuple<>(result, new SyntaxError("Strange error: oversaturated syntax form"));
                 }
-            } else {
-                // should never happen
-                return new Tuple<>(result, new SyntaxError("Strange error: oversaturated syntax form"));
             }
-
-
         }
     }
     // TODO check if the stack in resultBacktrack is empty

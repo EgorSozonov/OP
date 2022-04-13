@@ -131,12 +131,15 @@ public final static class ASTList extends ASTUntypedBase {
 
         // }
         if (isAssignment()) {
-            // TODO split on the first assignment symbol, and error out on the second
+            if (newItem instanceof CoreOperatorAST co && EnumSet.range(CoreOperator.defineImm, CoreOperator.divideMut).contains(co.val)) {
+                newStatement();
+                return Optional.empty();
+            }
         }
         if (newItem instanceof CoreOperatorAST co) {
             if ((ctx == SyntaxContext.iff && co.val == CoreOperator.arrow)
                 || (ctx == SyntaxContext.matchh && co.val == CoreOperator.arrow)
-                || (ctx == SyntaxContext.matchh && co.val == CoreOperator.arrow)
+                || (ctx == SyntaxContext.sumTypee && co.val == CoreOperator.pipe)
                 || (ctx == SyntaxContext.structt && co.val == CoreOperator.colon)) {
                 curr = new ArrayList<>();
                 data.add(curr);
@@ -148,39 +151,41 @@ public final static class ASTList extends ASTUntypedBase {
         return Optional.empty();
     }
 
+    public void newStatement() {
+        curr = new ArrayList<>();
+        data.add(curr);
+    }
+
     public void newStatement(SyntaxContext statType, ASTList newItem) {
         curr = new ArrayList<>();
         data.add(curr);
         curr.add(newItem);
     }
 
-
-
     /**
      * A list of tokens has ended, and we need to know whether this current AST is saturated.
      * Returns true if saturated, false if not yet saturated, and None if oversaturated (which shouldn't ever happen).
-     *
-     * Saturation is determined by the parsing context and number of ingested lists:
-     * if/1
-     * while/2
-     * for/4
-     * foreach/2
-     * match/2
      */
     public Optional<Boolean> listHasEnded() {
-        int saturationLength = 0;
-        if (ctx == SyntaxContext.iff) {
-            saturationLength = 1;
-        } else if (ctx == SyntaxContext.whilee || ctx == SyntaxContext.foreachh || ctx == SyntaxContext.matchh) {
-            saturationLength = 2;
-        } else if (ctx == SyntaxContext.forr) {
-            saturationLength = 4;
+        if (isBounded()) {
+            int saturationLength = 0;
+            if (ctx == SyntaxContext.iff) {
+                saturationLength = 1;
+            } else if (ctx == SyntaxContext.whilee || ctx == SyntaxContext.foreachh || ctx == SyntaxContext.matchh) {
+                saturationLength = 2;
+            } else if (ctx == SyntaxContext.forr) {
+                saturationLength = 4;
+            } else {
+                saturationLength = 0;
+            }
+            if (itemsIngested < saturationLength) return Optional.of(false);
+            if (itemsIngested == saturationLength) return Optional.of(true);
+            return Optional.empty();
+        } else if (isUnbounded()) {
+            return Optional.of(false);
         } else {
-            saturationLength = 0;
+            return Optional.of(true);
         }
-        if (itemsIngested < saturationLength) return Optional.of(false);
-        if (itemsIngested == saturationLength) return Optional.of(true);
-        return Optional.empty();
     }
 
 
@@ -281,19 +286,6 @@ public final static class ASTList extends ASTUntypedBase {
         return Optional.empty();
     }
 }
-
-
-
-// public final static class Statement extends ASTUntypedBase {
-//     public List<ASTUntypedBase> val;
-//     public Statement(List<ASTUntypedBase> val) {
-//         this.val = val;
-//     }
-
-//     public Statement() {
-//         this.val = new ArrayList<ASTUntypedBase>();
-//     }
-// }
 
 public final static class Ident extends ASTUntypedBase {
     public String name;
