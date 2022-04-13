@@ -10,6 +10,7 @@ import static tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext.*;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import tech.sozonov.o7.parser.types.ParseError.*;
 import tech.sozonov.o7.utils.Tuple;
+import tech.sozonov.o7.utils.Either;
 import tech.sozonov.o7.utils.Stack;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
 import static tech.sozonov.o7.utils.ListUtils.*;
@@ -80,10 +81,11 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                         }
                     }
                     if (!curr.isClauseBased()) {
-                        val listType = determineListType(le2, curr, syntax.contexts);
-                        skipFirstToken = listType.item1;
+                        val listType = determineListType(le2, syntax.contexts);
+                        if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
+                        skipFirstToken = listType.get().item1;
 
-                        val newList = new ASTList(listType.item0);
+                        val newList = new ASTList(listType.get().item0);
                         val mbError = curr.add(newList);
                         if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
 
@@ -91,14 +93,17 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                         curr = newList;
                     }
                 } else if (le2.pType == ExprLexicalType.parens) {
+                    // TODO what about bounded core forms? They don't need to nest here
                     if (curr.isUnbounded()) {
                         return new Tuple<>(result, new SyntaxError("Parentheses are not allowed in an unbounded core syntax form like " + curr.ctx));
                     }
                     if (curr.ctx == curlyBraces) return new Tuple<>(result, new SyntaxError("Parentheses are not allowed in curly braces"));
 
-                    val listType = determineListType(le2, curr, syntax.contexts);
-                    skipFirstToken = listType.item1;
-                    val newList = new ASTList(listType.item0);
+                    val listType = determineListType(le2, syntax.contexts);
+                    if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
+
+                    skipFirstToken = listType.get().item1;
+                    val newList = new ASTList(listType.get().item0);
                     val mbError = curr.add(newList);
                     if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
 
@@ -158,8 +163,7 @@ static ASTList cleanPop(Stack<ASTList> backtrack, ASTList curr) {
  * Determines the syntactic type of the expression: a function call, an assignment/definition, a core syntactic form, or a type declaration.
  * Returns: either a parse error, or a tuple of SyntaxContext and a boolean of whether to skip the first token (useful for core syntax forms).
  */
-static Tuple<SyntaxContext, Boolean> determineListType(ListExpr input, ASTList parent, Map<String, SyntaxContext> syntaxContexts) {
-    // TODO signal a possible error (for example, a parens input may not be an assignment)
+static Tuple<SyntaxContext, Boolean> determineListTypeNoErrCheck(ListExpr input, Map<String, SyntaxContext> syntaxContexts) {
     val mbCore = getMbCore(input, syntaxContexts);
     if (mbCore.isPresent())  return new Tuple<>(mbCore.get(), true);
 
@@ -176,6 +180,20 @@ static Tuple<SyntaxContext, Boolean> determineListType(ListExpr input, ASTList p
         if (ot.val.size() == 2 && firstOper == OperatorSymb.colon && ot.val.get(1) == OperatorSymb.colon) return new Tuple<>(typeDeclaration, false);
     }
     return new Tuple<>(funcall, false);
+}
+
+/**
+ * Pre-condition: the input must be either a Statement or a Parens.
+ * Determines the syntactic type of the expression: a function call, an assignment/definition, a core syntactic form, or a type declaration.
+ * Returns: either a parse error, or a tuple of SyntaxContext and a boolean of whether to skip the first token (useful for core syntax forms).
+ */
+static Either<ParseErrorBase, Tuple<SyntaxContext, Boolean>> determineListType(ListExpr input, Map<String, SyntaxContext> syntaxContexts) {
+    val tuple = determineListTypeNoErrCheck(input, syntaxContexts);
+    if (input.pType == ExprLexicalType.parens && ASTUntypedBase.isAssignment(tuple.item0)) {
+        return Either.left(new SyntaxError("Assignments are not allowed in parentheses, only on the statement level (i.e. inside curly braces)"));
+    } else {
+        return Either.right(tuple);
+    }
 }
 
 

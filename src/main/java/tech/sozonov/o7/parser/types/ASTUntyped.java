@@ -35,6 +35,10 @@ public static class ASTUntypedBase {
         return SyntaxContext.sumTypeUnboundedd;
     }
 
+    public static boolean isAssignment(SyntaxContext ctx) {
+        return EnumSet.range(SyntaxContext.assignImmutable, SyntaxContext.assignMutableDiv).contains(ctx);
+    }
+
     @Override
     public final String toString() {
         if (this instanceof ASTList lsOuter) {
