@@ -4,7 +4,6 @@ import java.util.Optional;
 import tech.sozonov.o7.lexer.types.ExprLexicalType;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.lexer.types.Expr.*;
-import tech.sozonov.o7.parser.types.ASTUntyped;
 import tech.sozonov.o7.parser.types.Syntax;
 import tech.sozonov.o7.parser.types.ASTUntyped.*;
 import static tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext.*;
@@ -13,6 +12,7 @@ import tech.sozonov.o7.parser.types.ParseError.*;
 import tech.sozonov.o7.utils.Tuple;
 import tech.sozonov.o7.utils.Stack;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
+import static tech.sozonov.o7.utils.ListUtils.*;
 import lombok.val;
 
 
@@ -59,7 +59,7 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                 if (le2.pType == ExprLexicalType.curlyBraces) {
                     if (curr.isUnbounded()) {
                         if (curr.isEmpty()) return new Tuple<>(result, new SyntaxError("Curly braces are not allowed in an unbounded core syntax form like " + curr.ctx));
-                        curr = resultBacktrack.pop();
+                        curr = cleanPop(resultBacktrack, curr);
                     } else if (curr.isBounded()) {
                         curr.startNewList();
                     } else {
@@ -72,15 +72,14 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                     if (curr.ctx != curlyBraces && !curr.isCoreForm()) {
                         return new Tuple<>(result, new SyntaxError("Statements are only allowed in curly braces or core syntax forms, not inside " + curr.ctx));
                     }
-                    if (curr.isClauseBased()) {
-                        if (!curr.statementFitsCoreForm(le2)) {
+                    if (curr.isClauseBased() && !curr.statementFitsCoreForm(le2)) {
                         if (curr.isUnbounded()) {
-                            curr = resultBacktrack.pop();
+                            curr = cleanPop(resultBacktrack, curr);
                         } else {
                             return new Tuple<>(result, new SyntaxError("Syntax error inside " + curr.ctx));
                         }
                     }
-                    } else {
+                    if (!curr.isClauseBased()) {
                         val listType = determineListType(le2, curr, syntax.contexts);
                         skipFirstToken = listType.item1;
 
@@ -90,10 +89,7 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
 
                         resultBacktrack.push(curr);
                         curr = newList;
-
                     }
-
-
                 } else if (le2.pType == ExprLexicalType.parens) {
                     if (curr.isUnbounded()) {
                         return new Tuple<>(result, new SyntaxError("Parentheses are not allowed in an unbounded core syntax form like " + curr.ctx));
@@ -136,7 +132,7 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                 val mbSaturated = curr.listHasEnded();
                 if (mbSaturated.isPresent()) {
                     if (mbSaturated.get()) {
-                        curr = resultBacktrack.pop();
+                        curr = cleanPop(resultBacktrack, curr);
                     }
                 } else {
                     // should never happen
@@ -147,6 +143,13 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
     }
     // TODO check if the stack in resultBacktrack is empty
     return new Tuple<ASTUntypedBase, ParseErrorBase>(result, null);
+}
+
+static ASTList cleanPop(Stack<ASTList> backtrack, ASTList curr) {
+    if (last(curr.data).isEmpty()) {
+        removeLast(curr.data);
+    }
+    return backtrack.pop();
 }
 
 

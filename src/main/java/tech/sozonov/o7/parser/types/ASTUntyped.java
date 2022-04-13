@@ -111,7 +111,6 @@ public final static class ASTList extends ASTUntypedBase {
     public SyntaxContext ctx;
     public int itemsIngested;
     public final boolean isUnbounded;
-    private final SyntaxContext parentCtx;
 
     public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
@@ -122,7 +121,6 @@ public final static class ASTList extends ASTUntypedBase {
         ind = 0;
         itemsIngested = 0;
         isUnbounded = this.isUnbounded();
-        parentCtx = null;
     }
 
     /**
@@ -143,10 +141,10 @@ public final static class ASTList extends ASTUntypedBase {
             }
         } else if (isClauseBased()) {
             if (newItem instanceof CoreOperatorAST co) {
-                if ((co.val == CoreOperator.arrow && (parentCtx == SyntaxContext.matchh || parentCtx == SyntaxContext.matchUnboundedd
-                                                            || parentCtx == SyntaxContext.iff || parentCtx == SyntaxContext.ifUnboundedd))
-                    || (co.val == CoreOperator.pipe && (parentCtx == SyntaxContext.sumTypee || parentCtx == SyntaxContext.sumTypeUnboundedd) )
-                    || (co.val == CoreOperator.colon && (parentCtx == SyntaxContext.structt || parentCtx == SyntaxContext.structUnboundedd))) {
+                if ((co.val == CoreOperator.arrow && (ctx == SyntaxContext.matchh || ctx == SyntaxContext.matchUnboundedd
+                                                            || ctx == SyntaxContext.iff || ctx == SyntaxContext.ifUnboundedd))
+                    || (co.val == CoreOperator.pipe && (ctx == SyntaxContext.sumTypee || ctx == SyntaxContext.sumTypeUnboundedd) )
+                    || (co.val == CoreOperator.colon && (ctx == SyntaxContext.structt || ctx == SyntaxContext.structUnboundedd))) {
                     newStatement();
                     return Optional.empty();
                 }
