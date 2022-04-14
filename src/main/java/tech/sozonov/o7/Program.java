@@ -12,10 +12,17 @@ class Program {
 
 
         //val innp = "abc _5 4.21";
-        var innp = """
-        if x > 5 -> 5
-           x > 1 -> 1
+        var inp = """
+        if x > 5 -> 6
+           x > 1 -> 2
            else -> 0
+        print 5
+""";
+        var innp = """
+        if { x > 5 -> 6
+             x > 1 -> 2
+             else -> 0
+            }
         print 5
 """;
 

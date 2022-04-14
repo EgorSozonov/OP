@@ -61,8 +61,8 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                     if (curr.isUnbounded()) {
                         if (curr.isEmpty()) return new Tuple<>(result, new SyntaxError("Curly braces are not allowed in an unbounded core syntax form like " + curr.ctx));
                         curr = cleanPop(resultBacktrack, curr);
-                    } else if (curr.isBounded()) {
-                        curr.startNewList();
+                    } else if (curr.isBounded() && curr.getSkipNesting()) {
+                        curr.newItemForBounded();
                     } else {
                         val newList = new ASTList(curlyBraces);
                         curr.add(newList);
@@ -85,12 +85,16 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                         if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
                         skipFirstToken = listType.get().item1;
 
-                        val newList = new ASTList(listType.get().item0);
-                        val mbError = curr.add(newList);
-                        if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
+                        if (curr.isBounded() && curr.getSkipNesting()) {
+                            curr.newItemForBounded();
+                        } else {
+                            val newList = new ASTList(listType.get().item0);
+                            val mbError = curr.add(newList);
+                            if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
 
-                        resultBacktrack.push(curr);
-                        curr = newList;
+                            resultBacktrack.push(curr);
+                            curr = newList;
+                        }
                     }
                 } else if (le2.pType == ExprLexicalType.parens) {
                     // TODO what about bounded core forms? They don't need to nest here
@@ -103,15 +107,20 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                     if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
 
                     skipFirstToken = listType.get().item1;
-                    val newList = new ASTList(listType.get().item0);
-                    val mbError = curr.add(newList);
-                    if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
 
-                    resultBacktrack.push(curr);
-                    curr = newList;
+                    if (curr.isBounded() && curr.getSkipNesting()) {
+                        curr.newItemForBounded();
+                    } else {
+                        val newList = new ASTList(listType.get().item0);
+                        val mbError = curr.add(newList);
+                        if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
+
+                        resultBacktrack.push(curr);
+                        curr = newList;
+                    }
                 } else {
-                    if (curr.isCoreForm()) {
-                        return new Tuple<>(result, new SyntaxError("Data initializers are not allowed in a core syntax form like " + curr.ctx));
+                    if (curr.isBounded() && curr.getSkipNesting()) {
+                        return new Tuple<>(result, new SyntaxError("Data initializers are not allowed in a bounded core syntax form like " + curr.ctx));
                     }
 
                     val dataInit = new ASTList(dataInitializer);

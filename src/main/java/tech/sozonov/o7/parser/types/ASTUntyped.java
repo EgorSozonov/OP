@@ -114,22 +114,19 @@ public static class ASTUntypedBase {
 
 public final static class ASTList extends ASTUntypedBase {
     public ArrayList<ArrayList<ASTUntypedBase>> data;
-    public int indList;
-    public int ind;
     public ArrayList<ASTUntypedBase> curr;
     public SyntaxContext ctx;
     public int itemsIngested;
-    public final boolean isUnbounded;
+    /** Flag for bounded core forms so they can skip exactly one level of nesting */
+    private boolean skipNesting;
 
     public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
         data = new ArrayList<>();
         curr = new ArrayList<>();
         data.add(curr);
-        indList = 0;
-        ind = 0;
         itemsIngested = 0;
-        isUnbounded = this.isUnbounded();
+        skipNesting = isBounded();
     }
 
     /**
@@ -152,20 +149,25 @@ public final static class ASTList extends ASTUntypedBase {
                     return Optional.empty();
                 }
             }
+            if (isBounded() && skipNesting) {
+                skipNesting = false;
+            }
         }
         curr.add(newItem);
-        ind++;
+        // ind++;
         return Optional.empty();
     }
 
     public void newStatement() {
         curr = new ArrayList<>();
         data.add(curr);
+        if (isBounded() && !skipNesting) {
+            skipNesting = true;
+        }
     }
 
     public void newStatement(ASTList newItem) {
-        curr = new ArrayList<>();
-        data.add(curr);
+        newStatement();
         curr.add(newItem);
     }
 
@@ -238,10 +240,10 @@ public final static class ASTList extends ASTUntypedBase {
         return true;
     }
 
-    public void startNewList() {
-        curr = new ArrayList<>();
-        data.add(curr);
-        ++ind;
+    public void newItemForBounded() {
+        if (!isBounded()) return;
+        newStatement();
+        skipNesting = false;
         ++itemsIngested;
     }
 
@@ -268,6 +270,10 @@ public final static class ASTList extends ASTUntypedBase {
 
     public boolean isClauseBased() {
         return isBounded() || isUnbounded();
+    }
+
+    public boolean getSkipNesting() {
+        return this.skipNesting;
     }
 
     public boolean isEmpty() {
