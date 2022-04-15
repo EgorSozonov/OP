@@ -18,7 +18,7 @@ public class LexerTest {
         val input = "_1234567";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
         val expected = ExprBase.wrapOneToken(new IntToken(-1234567));
-        assertTrue(ListExpr.equal(output.item0, expected));
+        assertTrue(ListExpr.equal(output.i0, expected));
     }
 
     @Test
@@ -27,7 +27,7 @@ public class LexerTest {
         val input = "2";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
         val expected = ExprBase.wrapOneToken(new IntToken(2));
-        assertTrue(ListExpr.equal(output.item0, expected));
+        assertTrue(ListExpr.equal(output.i0, expected));
     }
 
     @Test
@@ -36,7 +36,7 @@ public class LexerTest {
         val input = "_12_3456_7";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
         val expected = ExprBase.wrapOneToken(new IntToken(-1234567));
-        assertTrue(ListExpr.equal(output.item0, expected));
+        assertTrue(ListExpr.equal(output.i0, expected));
     }
 
     @Test
@@ -44,7 +44,7 @@ public class LexerTest {
     void integer4() {
         val input = "__1234567";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
-        assertNotNull(output.item1);
+        assertNotNull(output.i1);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class LexerTest {
         val input = "9_223_372_036_854_775_807";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
         val expected = ExprBase.wrapOneToken(new IntToken(Long.MAX_VALUE));
-        assertTrue(ListExpr.equal(output.item0, expected));
+        assertTrue(ListExpr.equal(output.i0, expected));
     }
 
     @Test
@@ -61,7 +61,7 @@ public class LexerTest {
     void integer6() {
         val input = "9_223_372_036_854_775_808";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
-        assertNotNull(output.item1);
+        assertNotNull(output.i1);
     }
 
     @Test
@@ -70,7 +70,7 @@ public class LexerTest {
         val input = "_9_223_372_036_854_775_808";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
         val expected = ExprBase.wrapOneToken(new IntToken(Long.MIN_VALUE));
-        assertTrue(ListExpr.equal(output.item0, expected));
+        assertTrue(ListExpr.equal(output.i0, expected));
     }
 
     @Test
@@ -78,7 +78,7 @@ public class LexerTest {
     void integer8() {
         val input = "_9_223_372_036_854_775_809";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
-        assertNotNull(output.item1);
+        assertNotNull(output.i1);
     }
 
     @Test
@@ -88,7 +88,7 @@ public class LexerTest {
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
 
         val expected = ExprBase.wrapOneToken(new WordToken("false"));
-        assertTrue(ListExpr.equal(output.item0, expected));
+        assertTrue(ListExpr.equal(output.i0, expected));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class LexerTest {
         val input = "_a0";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
         val expected = ExprBase.wrapOneToken(new WordToken("_a0"));
-        assertTrue(ListExpr.equal(output.item0, expected));
+        assertTrue(ListExpr.equal(output.i0, expected));
     }
 
     @Test
@@ -105,7 +105,7 @@ public class LexerTest {
     void word3() {
         val input = "a_b";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
-        assertNotNull(output.item1);
+        assertNotNull(output.i1);
     }
 
     @Test

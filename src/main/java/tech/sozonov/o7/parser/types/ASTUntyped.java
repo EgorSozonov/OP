@@ -161,7 +161,7 @@ public final static class ASTList extends ASTUntypedBase {
      * A list of tokens has ended, and we need to know whether this current AST is saturated.
      * Returns true if saturated, false if not yet saturated, and None if oversaturated (which shouldn't ever happen).
      */
-    public Optional<Boolean> listHasEnded() {
+    public Optional<Boolean> gotSaturated() {
         if (isBounded()) {
             int saturationLength = 0;
             if (ctx == SyntaxContext.iff) {
@@ -178,10 +178,9 @@ public final static class ASTList extends ASTUntypedBase {
             return Optional.empty();
         } else if (isUnbounded()) {
             if ((ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh)
-                && data.size() > 1 && last(data).get(0) instanceof ReservedLiteral rl && rl.val == ReservedWord.elsee) {
+                && data.size() >= 4 && data.get(data.size() - 2).get(0) instanceof ReservedLiteral rl && rl.val == ReservedWord.elsee) {
                 return Optional.of(true);
             } else {
-                newStatement();
                 return Optional.of(false);
             }
         } else {

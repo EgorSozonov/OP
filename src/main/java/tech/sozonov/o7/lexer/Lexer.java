@@ -164,8 +164,8 @@ public class Lexer {
                     return new Tuple<ExprBase, LexErrorBase>(result, mbToken.getLeft());
                 } else {
                     val rt = mbToken.get();
-                    curr.val.add(rt.item0);
-                    i = rt.item1;
+                    curr.val.add(rt.i0);
+                    i = rt.i1;
                 }
             }
         }

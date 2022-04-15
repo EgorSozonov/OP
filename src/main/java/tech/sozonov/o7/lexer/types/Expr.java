@@ -38,7 +38,7 @@ public static class ExprBase {
      * Wraps a list of tokens into a statement the way it would be wrapped when lexing a real text input.
      */
     public static boolean checkEquality(ExprBase a, Tuple<ExprBase, LexErrorBase> b) {
-        return b.item1 == null && ListExpr.equal(a, b.item0);
+        return b.i1 == null && ListExpr.equal(a, b.i0);
     }
 
 }
@@ -69,22 +69,22 @@ public final static class ListExpr extends ExprBase {
 
             var listA = backtrackA.pop();
             var listB = backtrackB.pop();
-            i = listA.item1;
-            if (listA.item0.pType != listB.pType || listA.item0.val.size() != listB.val.size()) {
+            i = listA.i1;
+            if (listA.i0.pType != listB.pType || listA.i0.val.size() != listB.val.size()) {
                 return false;
             }
 
-            while (i < listA.item0.val.size()) {
-                var itmA = listA.item0.val.get(i);
+            while (i < listA.i0.val.size()) {
+                var itmA = listA.i0.val.get(i);
                 var itmB = listB.val.get(i);
 
                 if (itmA instanceof ListExpr && itmB instanceof ListExpr) {
-                    backtrackA.push(new Tuple<ListExpr, Integer>(listA.item0, i + 1));
+                    backtrackA.push(new Tuple<ListExpr, Integer>(listA.i0, i + 1));
                     backtrackB.push(listB);
                     listA = new Tuple<ListExpr, Integer>((ListExpr)itmA, 0);
                     listB = (ListExpr)itmB;
 
-                    if (listA.item0.pType != listB.pType || listA.item0.val.size() != listB.val.size()) {
+                    if (listA.i0.pType != listB.pType || listA.i0.val.size() != listB.val.size()) {
                         return false;
                     }
                     i = 0;
@@ -156,8 +156,8 @@ public final static class ListExpr extends ExprBase {
                     result.append(" |, ");
                 }
                 val back = backtrack.pop();
-                curr = back.item0;
-                i = back.item1 + 1;
+                curr = back.i0;
+                i = back.i1 + 1;
             }
         } while (backtrack.peek() != null || i < curr.val.size());
 

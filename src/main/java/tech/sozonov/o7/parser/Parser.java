@@ -43,8 +43,8 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
 
     while (backtrack.peek() != null) {
         val back = backtrack.pop();
-        currInput = back.item0;
-        i = back.item1;
+        currInput = back.i0;
+        i = back.i1;
 
         while (i < currInput.val.size()) {
             val сurrToken = currInput.val.get(i);
@@ -71,15 +71,19 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                     if (curr.ctx != curlyBraces && !curr.isCoreForm()) {
                         return new Tuple<>(result, new SyntaxError("Statements are only allowed in curly braces or core syntax forms, not inside " + curr.ctx));
                     }
-                    if (curr.isUnbounded() && !curr.statementFitsCoreForm(le2)) {
-                        curr = cleanPop(resultBacktrack, curr);
+                    if (curr.isUnbounded()) {
+                        if (curr.statementFitsCoreForm(le2)) {
+                            curr.newStatement();
+                        } else {
+                            curr = cleanPop(resultBacktrack, curr);
+                        }
                     }
                     if (!curr.isClauseBased()) {
                         val listType = determineListType(le2, syntax.contexts);
                         if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
-                        skipFirstToken = listType.get().item1;
+                        skipFirstToken = listType.get().i1;
 
-                        val newList = new ASTList(listType.get().item0);
+                        val newList = new ASTList(listType.get().i0);
                         val mbError = curr.add(newList);
                         if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
 
@@ -96,10 +100,10 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                     val listType = determineListType(le2, syntax.contexts);
                     if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
 
-                    skipFirstToken = listType.get().item1;
+                    skipFirstToken = listType.get().i1;
 
 
-                    val newList = new ASTList(listType.get().item0);
+                    val newList = new ASTList(listType.get().i0);
                     val mbError = curr.add(newList);
                     if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
 
@@ -126,11 +130,9 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                 if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
                 ++i;
             }
-
-
         }
         if (i == currInput.val.size()) {
-            val mbSaturated = curr.listHasEnded();
+            val mbSaturated = curr.gotSaturated();
             if (mbSaturated.isPresent()) {
                 if (mbSaturated.get()) {
                     curr = cleanPop(resultBacktrack, curr);
@@ -187,7 +189,7 @@ static Tuple<SyntaxContext, Boolean> determineListTypeNoErrCheck(ListExpr input,
  */
 static Either<ParseErrorBase, Tuple<SyntaxContext, Boolean>> determineListType(ListExpr input, Map<String, SyntaxContext> syntaxContexts) {
     val tuple = determineListTypeNoErrCheck(input, syntaxContexts);
-    if (input.pType == ExprLexicalType.parens && ASTUntypedBase.isAssignment(tuple.item0)) {
+    if (input.pType == ExprLexicalType.parens && ASTUntypedBase.isAssignment(tuple.i0)) {
         return Either.left(new SyntaxError("Assignments are not allowed in parentheses, only on the statement level (i.e. inside curly braces)"));
     } else {
         return Either.right(tuple);
@@ -229,13 +231,13 @@ static ASTUntypedBase parseAtom(ExprBase inp, Syntax syntax) {
         return new Ident(str);
     } else if (inp instanceof OperatorToken ot) {
         for (val oper : syntax.coreOperators) {
-            if (arraysEqual(ot.val, oper.item0)) {
-                return new CoreOperatorAST(oper.item1);
+            if (arraysEqual(ot.val, oper.i0)) {
+                return new CoreOperatorAST(oper.i1);
             }
         }
         for (val oper : syntax.functionOperators) {
-            if (arraysEqual(ot.val, oper.item0)) {
-                return new FunctionOperatorAST(oper.item1);
+            if (arraysEqual(ot.val, oper.i0)) {
+                return new FunctionOperatorAST(oper.i1);
             }
         }
         return new OperatorAST(ot.val);
