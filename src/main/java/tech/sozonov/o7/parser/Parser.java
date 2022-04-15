@@ -62,6 +62,7 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                         if (curr.isEmpty()) return new Tuple<>(result, new SyntaxError("Curly braces are not allowed in an unbounded core syntax form like " + curr.ctx));
                         curr = cleanPop(resultBacktrack, curr);
                     } else {
+                        if (curr.isBounded()) curr.newStatement();
                         val newList = new ASTList(curlyBraces);
                         curr.add(newList);
                         resultBacktrack.push(curr);
@@ -78,7 +79,9 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                             curr = cleanPop(resultBacktrack, curr);
                         }
                     }
+                    if (curr.isBounded()) curr.newStatement();
                     if (!curr.isClauseBased()) {
+
                         val listType = determineListType(le2, syntax.contexts);
                         if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
                         skipFirstToken = listType.get().i1;
@@ -91,17 +94,16 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                         curr = newList;
                     }
                 } else if (le2.pType == ExprLexicalType.parens) {
-                    // TODO what about bounded core forms? They don't need to nest here
                     if (curr.isUnbounded()) {
                         if (curr.isEmpty()) new Tuple<>(result, new SyntaxError("Parentheses are not allowed in an unbounded core syntax form like " + curr.ctx));
                     }
+                    if (curr.isBounded()) curr.newStatement();
                     if (curr.ctx == curlyBraces) return new Tuple<>(result, new SyntaxError("Parentheses are not allowed directly in curly braces"));
 
                     val listType = determineListType(le2, syntax.contexts);
                     if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
 
                     skipFirstToken = listType.get().i1;
-
 
                     val newList = new ASTList(listType.get().i0);
                     val mbError = curr.add(newList);
@@ -131,6 +133,7 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                 ++i;
             }
         }
+
         if (i == currInput.val.size()) {
             val mbSaturated = curr.gotSaturated();
             if (mbSaturated.isPresent()) {
@@ -158,7 +161,8 @@ static ASTList cleanPop(Stack<ASTList> backtrack, ASTList curr) {
 /**
  * Pre-condition: the input must be either a Statement or a Parens.
  * Determines the syntactic type of the expression: a function call, an assignment/definition, a core syntactic form, or a type declaration.
- * Returns: either a parse error, or a tuple of SyntaxContext and a boolean of whether to skip the first token (necessary for core syntax forms).
+ * Returns: either a parse error,
+ * or a tuple of SyntaxContext and a boolean of whether to skip the first token (necessary for the case of a core syntax form).
  */
 static Tuple<SyntaxContext, Boolean> determineListTypeNoErrCheck(ListExpr input, Map<String, SyntaxContext> syntaxContexts) {
     val mbCore = getMbCore(input, syntaxContexts);

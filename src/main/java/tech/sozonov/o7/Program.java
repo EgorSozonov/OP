@@ -19,15 +19,10 @@ class Program {
         print 5
 """;
         val innp = """
-        if   x > 5 -> ({
-                if
-                    y < 10 -> 11
-                    else -> _1
-                })
-             x > 1 -> 2
-             else -> 0
-
-        print 5
+        while x > 5 {
+            print x
+            x += 1
+        }
 """;
 
 

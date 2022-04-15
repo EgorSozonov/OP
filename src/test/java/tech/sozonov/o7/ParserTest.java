@@ -10,16 +10,16 @@ import tech.sozonov.o7.parser.Parser;
 
 public class ParserTest {
     @Test
-    @DisplayName("Given an unbounded syntax form like \"if\" with some nesting, parsing should be correct")
+    @DisplayName("Given an unbounded syntax form like \"if\" with another if nested, parsing should be correct")
     void unbounded1() {
         val input = """
-        if   x > 5 -> ({
+        if x > 5 -> ({
                 if
                     y < 10 -> 11
                     else -> _1
                 })
-             x > 1 -> 2
-             else -> 0
+           x > 1 -> 2
+           else  -> 0
 
         print 5
         """;
