@@ -29,7 +29,7 @@ public Syntax() {
 
 static Map<String, SyntaxContext> getSyntaxContexts() {
     val result = new HashMap<String, SyntaxContext>();
-    val coreContexts = EnumSet.complementOf(EnumSet.range(SyntaxContext.ifUnboundedd, SyntaxContext.sumTypeUnboundedd));
+    val coreContexts = EnumSet.allOf(SyntaxContext.class);
     coreContexts.forEach(enumValue -> {
         val nm = enumValue.toString();
         result.put(nm.substring(0, nm.length() - 1), enumValue);

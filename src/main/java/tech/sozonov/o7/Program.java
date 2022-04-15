@@ -19,10 +19,13 @@ class Program {
         print 5
 """;
         var innp = """
-        if { x > 5 -> 6
+        if   x > 5 -> ({
+                print "hw"
+                6
+                })
              x > 1 -> 2
              else -> 0
-            }
+
         print 5
 """;
 

@@ -61,8 +61,6 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                     if (curr.isUnbounded()) {
                         if (curr.isEmpty()) return new Tuple<>(result, new SyntaxError("Curly braces are not allowed in an unbounded core syntax form like " + curr.ctx));
                         curr = cleanPop(resultBacktrack, curr);
-                    } else if (curr.isBounded() && curr.getSkipNesting()) {
-                        curr.newItemForBounded();
                     } else {
                         val newList = new ASTList(curlyBraces);
                         curr.add(newList);
@@ -73,44 +71,14 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                     if (curr.ctx != curlyBraces && !curr.isCoreForm()) {
                         return new Tuple<>(result, new SyntaxError("Statements are only allowed in curly braces or core syntax forms, not inside " + curr.ctx));
                     }
-                    if (curr.isClauseBased() && !curr.statementFitsCoreForm(le2)) {
-                        if (curr.isUnbounded()) {
-                            curr = cleanPop(resultBacktrack, curr);
-                        } else {
-                            return new Tuple<>(result, new SyntaxError("Syntax error inside " + curr.ctx));
-                        }
+                    if (curr.isUnbounded() && !curr.statementFitsCoreForm(le2)) {
+                        curr = cleanPop(resultBacktrack, curr);
                     }
                     if (!curr.isClauseBased()) {
                         val listType = determineListType(le2, syntax.contexts);
                         if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
                         skipFirstToken = listType.get().item1;
 
-                        if (curr.isBounded() && curr.getSkipNesting()) {
-                            curr.newItemForBounded();
-                        } else {
-                            val newList = new ASTList(listType.get().item0);
-                            val mbError = curr.add(newList);
-                            if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
-
-                            resultBacktrack.push(curr);
-                            curr = newList;
-                        }
-                    }
-                } else if (le2.pType == ExprLexicalType.parens) {
-                    // TODO what about bounded core forms? They don't need to nest here
-                    if (curr.isUnbounded()) {
-                        return new Tuple<>(result, new SyntaxError("Parentheses are not allowed in an unbounded core syntax form like " + curr.ctx));
-                    }
-                    if (curr.ctx == curlyBraces) return new Tuple<>(result, new SyntaxError("Parentheses are not allowed in curly braces"));
-
-                    val listType = determineListType(le2, syntax.contexts);
-                    if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
-
-                    skipFirstToken = listType.get().item1;
-
-                    if (curr.isBounded() && curr.getSkipNesting()) {
-                        curr.newItemForBounded();
-                    } else {
                         val newList = new ASTList(listType.get().item0);
                         val mbError = curr.add(newList);
                         if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
@@ -118,8 +86,27 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                         resultBacktrack.push(curr);
                         curr = newList;
                     }
+                } else if (le2.pType == ExprLexicalType.parens) {
+                    // TODO what about bounded core forms? They don't need to nest here
+                    if (curr.isUnbounded()) {
+                        if (curr.isEmpty()) new Tuple<>(result, new SyntaxError("Parentheses are not allowed in an unbounded core syntax form like " + curr.ctx));
+                    }
+                    if (curr.ctx == curlyBraces) return new Tuple<>(result, new SyntaxError("Parentheses are not allowed directly in curly braces"));
+
+                    val listType = determineListType(le2, syntax.contexts);
+                    if (listType.isLeft()) return new Tuple<>(result, listType.getLeft());
+
+                    skipFirstToken = listType.get().item1;
+
+
+                    val newList = new ASTList(listType.get().item0);
+                    val mbError = curr.add(newList);
+                    if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
+
+                    resultBacktrack.push(curr);
+                    curr = newList;
                 } else {
-                    if (curr.isBounded() && curr.getSkipNesting()) {
+                    if (curr.isBounded()) {
                         return new Tuple<>(result, new SyntaxError("Data initializers are not allowed in a bounded core syntax form like " + curr.ctx));
                     }
 
@@ -140,16 +127,17 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                 ++i;
             }
 
-            if (i == currInput.val.size()) {
-                val mbSaturated = curr.listHasEnded();
-                if (mbSaturated.isPresent()) {
-                    if (mbSaturated.get()) {
-                        curr = cleanPop(resultBacktrack, curr);
-                    }
-                } else {
-                    // should never happen
-                    return new Tuple<>(result, new SyntaxError("Strange error: oversaturated syntax form"));
+
+        }
+        if (i == currInput.val.size()) {
+            val mbSaturated = curr.listHasEnded();
+            if (mbSaturated.isPresent()) {
+                if (mbSaturated.get()) {
+                    curr = cleanPop(resultBacktrack, curr);
                 }
+            } else {
+                // should never happen
+                return new Tuple<>(result, new SyntaxError("Strange error: oversaturated syntax form"));
             }
         }
     }
@@ -168,7 +156,7 @@ static ASTList cleanPop(Stack<ASTList> backtrack, ASTList curr) {
 /**
  * Pre-condition: the input must be either a Statement or a Parens.
  * Determines the syntactic type of the expression: a function call, an assignment/definition, a core syntactic form, or a type declaration.
- * Returns: either a parse error, or a tuple of SyntaxContext and a boolean of whether to skip the first token (useful for core syntax forms).
+ * Returns: either a parse error, or a tuple of SyntaxContext and a boolean of whether to skip the first token (necessary for core syntax forms).
  */
 static Tuple<SyntaxContext, Boolean> determineListTypeNoErrCheck(ListExpr input, Map<String, SyntaxContext> syntaxContexts) {
     val mbCore = getMbCore(input, syntaxContexts);
@@ -185,6 +173,9 @@ static Tuple<SyntaxContext, Boolean> determineListTypeNoErrCheck(ListExpr input,
             if (firstOper == OperatorSymb.slash) return new Tuple<>(assignMutableDiv, false);
         }
         if (ot.val.size() == 2 && firstOper == OperatorSymb.colon && ot.val.get(1) == OperatorSymb.colon) return new Tuple<>(typeDeclaration, false);
+    }
+    if (input.val.size() == 1 && input.val.get(0) instanceof ListExpr le && le.pType == ExprLexicalType.curlyBraces) {
+        return new Tuple<>(curlyBraces, false);
     }
     return new Tuple<>(funcall, false);
 }
@@ -213,15 +204,6 @@ static Optional<SyntaxContext> getMbCore(ListExpr expr, Map<String, SyntaxContex
     if (!reservedWords.containsKey(word.val)) return Optional.empty();
 
     val coreSyntaxContext = reservedWords.get(word.val);
-    if (ASTUntypedBase.isUnboundable(coreSyntaxContext)) {
-        if (expr.val.size() == 2
-            && (expr.val.get(1) instanceof ListExpr le)
-            && (le.pType == ExprLexicalType.curlyBraces || le.pType == ExprLexicalType.parens)) {
-            return Optional.of(coreSyntaxContext);
-        } else {
-            return Optional.of(ASTUntypedBase.makeUnbounded(coreSyntaxContext));
-        }
-    }
     return Optional.of(coreSyntaxContext);
 }
 

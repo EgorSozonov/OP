@@ -20,18 +20,11 @@ import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
 public class ASTUntyped {
 
 public static class ASTUntypedBase {
-    public static boolean isUnboundable(SyntaxContext ctx) {
+    public static boolean isContextUnbounded(SyntaxContext ctx) {
         return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh
                 || ctx == SyntaxContext.structt || ctx == SyntaxContext.sumTypee);
     }
 
-    public static SyntaxContext makeUnbounded(SyntaxContext ctx) {
-        if (ctx == SyntaxContext.iff) return SyntaxContext.ifUnboundedd;
-        if (ctx == SyntaxContext.matchh) return SyntaxContext.matchUnboundedd;
-        if (ctx == SyntaxContext.structt) return SyntaxContext.structUnboundedd;
-        // if ctx == sumTypee
-        return SyntaxContext.sumTypeUnboundedd;
-    }
 
     public static boolean isAssignment(SyntaxContext ctx) {
         return EnumSet.range(SyntaxContext.assignImmutable, SyntaxContext.assignMutableDiv).contains(ctx);
@@ -116,9 +109,7 @@ public final static class ASTList extends ASTUntypedBase {
     public ArrayList<ArrayList<ASTUntypedBase>> data;
     public ArrayList<ASTUntypedBase> curr;
     public SyntaxContext ctx;
-    public int itemsIngested;
-    /** Flag for bounded core forms so they can skip exactly one level of nesting */
-    private boolean skipNesting;
+    private int itemsIngested;
 
     public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
@@ -126,7 +117,6 @@ public final static class ASTList extends ASTUntypedBase {
         curr = new ArrayList<>();
         data.add(curr);
         itemsIngested = 0;
-        skipNesting = isBounded();
     }
 
     /**
@@ -134,6 +124,7 @@ public final static class ASTList extends ASTUntypedBase {
      */
     public Optional<ParseErrorBase> add(ASTUntypedBase newItem) {
         // TODO adding of stuff in accordance to parse context
+        // TODO forbid core form initial words in any position except initial
         if (isAssignment()) {
             if (newItem instanceof CoreOperatorAST co && EnumSet.range(CoreOperator.defineImm, CoreOperator.divideMut).contains(co.val)) {
                 newStatement();
@@ -141,16 +132,12 @@ public final static class ASTList extends ASTUntypedBase {
             }
         } else if (isClauseBased()) {
             if (newItem instanceof CoreOperatorAST co) {
-                if ((co.val == CoreOperator.arrow && (ctx == SyntaxContext.matchh || ctx == SyntaxContext.matchUnboundedd
-                                                            || ctx == SyntaxContext.iff || ctx == SyntaxContext.ifUnboundedd))
-                    || (co.val == CoreOperator.pipe && (ctx == SyntaxContext.sumTypee || ctx == SyntaxContext.sumTypeUnboundedd) )
-                    || (co.val == CoreOperator.colon && (ctx == SyntaxContext.structt || ctx == SyntaxContext.structUnboundedd))) {
+                if ((co.val == CoreOperator.arrow && (ctx == SyntaxContext.matchh || ctx == SyntaxContext.iff))
+                    || (co.val == CoreOperator.pipe && (ctx == SyntaxContext.sumTypee) )
+                    || (co.val == CoreOperator.colon && (ctx == SyntaxContext.structt))) {
                     newStatement();
                     return Optional.empty();
                 }
-            }
-            if (isBounded() && skipNesting) {
-                skipNesting = false;
             }
         }
         curr.add(newItem);
@@ -159,10 +146,9 @@ public final static class ASTList extends ASTUntypedBase {
     }
 
     public void newStatement() {
-        curr = new ArrayList<>();
-        data.add(curr);
-        if (isBounded() && !skipNesting) {
-            skipNesting = true;
+        if (!curr.isEmpty()) {
+            curr = new ArrayList<>();
+            data.add(curr);
         }
     }
 
@@ -191,7 +177,7 @@ public final static class ASTList extends ASTUntypedBase {
             if (itemsIngested == saturationLength) return Optional.of(true);
             return Optional.empty();
         } else if (isUnbounded()) {
-            if ((ctx == SyntaxContext.ifUnboundedd || ctx == SyntaxContext.matchUnboundedd)
+            if ((ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh)
                 && data.size() > 1 && last(data).get(0) instanceof ReservedLiteral rl && rl.val == ReservedWord.elsee) {
                 return Optional.of(true);
             } else {
@@ -210,14 +196,16 @@ public final static class ASTList extends ASTUntypedBase {
      */
     public boolean statementFitsCoreForm(ListExpr le) {
         final int len = le.val.size();
-        if (ctx == SyntaxContext.iff || ctx == SyntaxContext.ifUnboundedd) {
+
+        // TODO forbid new core forms within the current one
+        if (ctx == SyntaxContext.iff) {
             // Must be of the form "a .func b -> b"
             if (len < 3) return false;
             if (le.val.get(len - 2) instanceof OperatorToken ot) {
                 return (arraysEqual(Syntax.arrow, ot.val));
             } else return false;
 
-        } else if (ctx == SyntaxContext.matchh || ctx == SyntaxContext.matchUnboundedd) {
+        } else if (ctx == SyntaxContext.matchh) {
             // Must be of the form "A -> b" or "Aaa | Bbb | Ccc -> b"
             if (len < 3) return false;
             if (le.val.get(len - 2) instanceof OperatorToken ot) {
@@ -232,9 +220,9 @@ public final static class ASTList extends ASTUntypedBase {
                 } else return false;
             } else return false;
             // check for arrow symbol in penultimate position, plus the preceding must be either a single wordtoken or several split with pipes
-        } else if (ctx == SyntaxContext.structt || ctx == SyntaxContext.structUnboundedd) {
+        } else if (ctx == SyntaxContext.structt) {
             // check for colon in second position, plus the following must be a sequence of type names
-        } else if (ctx == SyntaxContext.sumTypee || ctx == SyntaxContext.sumTypeUnboundedd) {
+        } else if (ctx == SyntaxContext.sumTypee) {
             // TODO write a check for a sum type clause
         }
         return true;
@@ -243,7 +231,6 @@ public final static class ASTList extends ASTUntypedBase {
     public void newItemForBounded() {
         if (!isBounded()) return;
         newStatement();
-        skipNesting = false;
         ++itemsIngested;
     }
 
@@ -256,24 +243,19 @@ public final static class ASTList extends ASTUntypedBase {
     }
 
     public boolean isCoreForm() {
-        return EnumSet.range(SyntaxContext.iff, SyntaxContext.sumTypeUnboundedd).contains(ctx);
+        return EnumSet.range(SyntaxContext.whilee, SyntaxContext.sumTypee).contains(ctx);
     }
 
     public boolean isUnbounded() {
-        return (ctx == SyntaxContext.ifUnboundedd || ctx == SyntaxContext.matchUnboundedd
-                || ctx == SyntaxContext.structUnboundedd || ctx == SyntaxContext.sumTypeUnboundedd);
+        return EnumSet.range(SyntaxContext.iff, SyntaxContext.sumTypee).contains(ctx);
     }
 
     public boolean isBounded() {
-        return EnumSet.range(SyntaxContext.iff, SyntaxContext.typeDeclaration).contains(ctx);
+        return EnumSet.range(SyntaxContext.whilee, SyntaxContext.typeDeclaration).contains(ctx);
     }
 
     public boolean isClauseBased() {
         return isBounded() || isUnbounded();
-    }
-
-    public boolean getSkipNesting() {
-        return this.skipNesting;
     }
 
     public boolean isEmpty() {

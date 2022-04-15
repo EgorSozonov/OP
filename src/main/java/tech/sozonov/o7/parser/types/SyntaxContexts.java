@@ -29,8 +29,9 @@ public static enum SyntaxContext {
     typecall,
 
     // Lists of stuff
-    dataInitializer,
     curlyBraces,
+    dataInitializer,
+
 
     // Assignments and definitions
     assignImmutable,
@@ -41,10 +42,6 @@ public static enum SyntaxContext {
     assignMutableDiv,
 
     // Bounded core syntax forms (i.e. ones that span a fixed number of items - curlyBraces, parens and/or statements)
-    iff, // 1 item
-    matchh, // 1 curlybraces item after an unbounded number of identifiers
-    structt, // 1 item
-    sumTypee, // 1 item
     whilee, // 2 items, except as part of "do-while" when it has 1
     doo, // 1 item
     forr, // 4 items
@@ -56,10 +53,10 @@ public static enum SyntaxContext {
     //macroo, // for the future
 
     // Unbounded core syntax forms (i.e. ones that span an unbouned number of statements following them)
-    ifUnboundedd,
-    matchUnboundedd,
-    structUnboundedd,
-    sumTypeUnboundedd,
+    iff,
+    matchh,
+    structt,
+    sumTypee,
 }
 
 /**
