@@ -12,12 +12,7 @@ class Program {
 
 
         //val innp = "abc _5 4.21";
-        val inp = """
-        if x > 5 -> 6
-           x > 1 -> 2
-           else -> 0
-        print 5
-""";
+
         val innp = """
         while x > 5 {
             print x

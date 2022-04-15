@@ -12,8 +12,9 @@ import tech.sozonov.o7.lexer.types.Expr.WordToken;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
+import tech.sozonov.o7.utils.ArrayUtils;
+import tech.sozonov.o7.utils.Stack;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
-import static tech.sozonov.o7.utils.ListUtils.*;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
 
 
@@ -29,6 +30,80 @@ public static class ASTUntypedBase {
     public static boolean isAssignment(SyntaxContext ctx) {
         return EnumSet.range(SyntaxContext.assignImmutable, SyntaxContext.assignMutableDiv).contains(ctx);
     }
+
+    public static boolean equal(ASTUntypedBase a, ASTUntypedBase b) {
+        if (a.getClass() != b.getClass()) return false;
+
+        if (a instanceof ASTList l1) {
+            val l2 = (ASTList)b;
+            val backtrackA = new Stack<Tuple<ASTList, Integer>>();
+            val backtrackB = new Stack<ASTList>();
+            backtrackA.push(new Tuple<>(l1, 0));
+            backtrackB.push(l2);
+
+            int i = 0;
+            while(backtrackA.peek() != null) {
+                if (backtrackB.peek() == null) return false;
+                var listA = backtrackA.pop();
+                var listB = backtrackB.pop();
+                i = listA.i1;
+                if (listA.i0.ctx != listB.ctx || listA.i0.data.size() != listB.data.size()) {
+                    return false;
+                }
+                for (int d = 0; d < listA.i0.data.size(); ++d) {
+                    while (i < listA.i0.val.size()) {
+                        var itmA = listA.i0.val.get(i);
+                        var itmB = listB.val.get(i);
+
+                        if (itmA instanceof ASTList && itmB instanceof ASTList) {
+                            backtrackA.push(new Tuple<>(listA.i0, i + 1));
+                            backtrackB.push(listB);
+                            listA = new Tuple<>((ListExpr)itmA, 0);
+                            listB = (ASTList)itmB;
+
+                            if (listA.i0.ctx != listB.ctx || listA.i0.val.size() != listB.val.size()) {
+                                return false;
+                            }
+                            i = 0;
+                        } else if (!itmA.equals(itmB)) {
+                            return false;
+                        } else {
+                            ++i;
+                        }
+                    }
+                }
+            }
+        } else if (a instanceof Ident x1){
+            val y1 = (Ident)b;
+            return x1.name.equals(y1.name);
+        } else if (a instanceof IntLiteral x2){
+            val y2 = (IntLiteral)b;
+            return x2.val == y2.val;
+        } else if (a instanceof FloatLiteral x3){
+            val y3 = (FloatLiteral)b;
+            return x3.val == y3.val;
+        } else if (a instanceof BoolLiteral x4){
+            val y4 = (BoolLiteral)b;
+            return x4.val == y4.val;
+        } else if (a instanceof ReservedLiteral x5){
+            val y5 = (ReservedLiteral)b;
+            return x5.val == y5.val;
+        } else if (a instanceof StringLiteral x6){
+            val y6 = (StringLiteral)b;
+            return x6.val.equals(y6.val);
+        } else if (a instanceof FunctionOperatorAST x7){
+            val y7 = (FunctionOperatorAST)b;
+            return x7.val == y7.val;
+        } else if (a instanceof CoreOperatorAST x8){
+            val y8 = (CoreOperatorAST)b;
+            return x8.val == y8.val;
+        } else if (a instanceof OperatorAST x9){
+            val y9 = (OperatorAST)b;
+            return ArrayUtils.arraysEqual(x9.val, y9.val);
+        }
+        return false;
+    }
+
 
     @Override
     public final String toString() {
@@ -86,7 +161,7 @@ public static class ASTUntypedBase {
             val str = x.val.toString();
             return str.substring(0, str.length() - 1);
         } else if (this instanceof ASTList x3) {
-            return "AST List";
+            return "AST List TODO";
         } else if (this instanceof IntLiteral x4) {
             return Long.toString(x4.val);
         } else if (this instanceof FloatLiteral x5) {
@@ -98,7 +173,7 @@ public static class ASTUntypedBase {
         } else if (this instanceof OperatorAST x7) {
             return x7.val.toString();
         } else if (this instanceof BoolLiteral x8) {
-            return "boolean " + Boolean.toString(x8.val);
+            return Boolean.toString(x8.val);
         } else {
             return "Something else";
         }
