@@ -13,6 +13,10 @@ class Program {
 
         //val innp = "abc _5 4.21";
 
+        if (2 > 1) return;
+
+
+
         val innp = """
         while x > 5 {
             print x

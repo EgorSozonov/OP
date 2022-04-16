@@ -92,13 +92,13 @@ public class Lexer {
                 if (backtrack.peek() == null) {
                     return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingCurlyBraceError());
                 }
-                // TODO
+
                 val back = backtrack.pop();
                 val theLast = last(back.val);
-
                 if (theLast instanceof ListExpr le && !le.val.isEmpty() && last(le.val) instanceof ListExpr le2 && le2.val.isEmpty()) {
                     removeLast(le.val);
                 }
+
                 curr = back;
                 ++i;
             } else if (cChar == ASCII.parenthesisOpen) {
@@ -113,7 +113,6 @@ public class Lexer {
                 }
                 val back = backtrack.pop();
 
-                // TODO
                 val theLast = last(back.val);
                 if (theLast instanceof ListExpr le && le.val.isEmpty()) {
                     removeLast(back.val);
@@ -134,7 +133,6 @@ public class Lexer {
                 }
                 val back = backtrack.pop();
 
-                // TODO
                 val theLast = last(back.val);
                 if (theLast instanceof ListExpr le && le.val.isEmpty()) {
                     removeLast(back.val);

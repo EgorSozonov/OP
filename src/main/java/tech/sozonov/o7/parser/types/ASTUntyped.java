@@ -14,6 +14,8 @@ import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import tech.sozonov.o7.utils.ArrayUtils;
 import tech.sozonov.o7.utils.Stack;
+import tech.sozonov.o7.utils.Tuple;
+import tech.sozonov.o7.utils.Triple;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
 
@@ -36,36 +38,47 @@ public static class ASTUntypedBase {
 
         if (a instanceof ASTList l1) {
             val l2 = (ASTList)b;
-            val backtrackA = new Stack<Tuple<ASTList, Integer>>();
+            val backtrackA = new Stack<Triple<ASTList, Integer, Integer>>();
             val backtrackB = new Stack<ASTList>();
-            backtrackA.push(new Tuple<>(l1, 0));
+            backtrackA.push(new Triple<>(l1, 0, 0));
             backtrackB.push(l2);
 
             int i = 0;
+            int j = 0;
             while(backtrackA.peek() != null) {
                 if (backtrackB.peek() == null) return false;
                 var listA = backtrackA.pop();
                 var listB = backtrackB.pop();
                 i = listA.i1;
+                j = listA.i2;
                 if (listA.i0.ctx != listB.ctx || listA.i0.data.size() != listB.data.size()) {
                     return false;
                 }
-                for (int d = 0; d < listA.i0.data.size(); ++d) {
-                    while (i < listA.i0.val.size()) {
-                        var itmA = listA.i0.val.get(i);
-                        var itmB = listB.val.get(i);
 
-                        if (itmA instanceof ASTList && itmB instanceof ASTList) {
-                            backtrackA.push(new Tuple<>(listA.i0, i + 1));
-                            backtrackB.push(listB);
-                            listA = new Tuple<>((ListExpr)itmA, 0);
+                while (i < listB.data.size()) {
+                    int lenSubList = listB.data.get(i).size();
+                    while (j < lenSubList) {
+                        val itmA = listA.i0.data.get(i).get(j);
+                        val itmB = listB.data.get(i).get(j);
+
+                        if (itmA instanceof ASTList le1) {
+                            if (!(itmB instanceof ASTList)) return false;
+
+
+                            listA = new Triple<>(le1, 0, 0);
                             listB = (ASTList)itmB;
 
-                            if (listA.i0.ctx != listB.ctx || listA.i0.val.size() != listB.val.size()) {
+                            if (listA.i0.ctx != listB.ctx || listA.i0.data.size() != listB.data.size()) {
                                 return false;
                             }
                             i = 0;
-                        } else if (!itmA.equals(itmB)) {
+                            if (j < (lenSubList - 1)) {
+                                backtrackA.push(new Triple<>(listA.i0, i, j + 1));
+                            } else {
+                                backtrackA.push(new Triple<>(listA.i0, i + 1, 0));
+                            }
+                            backtrackB.push(listB);
+                        } else if (!equal(itmA, itmB)) {
                             return false;
                         } else {
                             ++i;
