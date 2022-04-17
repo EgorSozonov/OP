@@ -79,14 +79,14 @@ public final static class ListExpr extends ExprBase {
                 var itmB = listB.val.get(i);
 
                 if (itmA instanceof ListExpr && itmB instanceof ListExpr) {
-                    backtrackA.push(new Tuple<ListExpr, Integer>(listA.i0, i + 1));
-                    backtrackB.push(listB);
                     listA = new Tuple<ListExpr, Integer>((ListExpr)itmA, 0);
                     listB = (ListExpr)itmB;
 
                     if (listA.i0.pType != listB.pType || listA.i0.val.size() != listB.val.size()) {
                         return false;
                     }
+                    backtrackA.push(new Tuple<ListExpr, Integer>(listA.i0, i + 1));
+                    backtrackB.push(listB);
                     i = 0;
                 } else if (!itmA.equals(itmB)) {
                     return false;

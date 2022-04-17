@@ -54,36 +54,45 @@ public static class ASTUntypedBase {
                 if (listA.i0.ctx != listB.ctx || listA.i0.data.size() != listB.data.size()) {
                     return false;
                 }
-
+                outerList:
                 while (i < listB.data.size()) {
                     int lenSubList = listB.data.get(i).size();
+                    if (listA.i0.data.get(i).size() != lenSubList) {
+                        return false;
+                    }
+
                     while (j < lenSubList) {
                         val itmA = listA.i0.data.get(i).get(j);
                         val itmB = listB.data.get(i).get(j);
 
                         if (itmA instanceof ASTList le1) {
-                            if (!(itmB instanceof ASTList)) return false;
-
-
-                            listA = new Triple<>(le1, 0, 0);
-                            listB = (ASTList)itmB;
-
-                            if (listA.i0.ctx != listB.ctx || listA.i0.data.size() != listB.data.size()) {
+                            if (!(itmB instanceof ASTList)) {
                                 return false;
                             }
-                            i = 0;
+
                             if (j < (lenSubList - 1)) {
                                 backtrackA.push(new Triple<>(listA.i0, i, j + 1));
                             } else {
                                 backtrackA.push(new Triple<>(listA.i0, i + 1, 0));
                             }
                             backtrackB.push(listB);
+                            listA = new Triple<>(le1, 0, 0);
+                            listB = (ASTList)itmB;
+                            i = 0;
+                            j = 0;
+                            if (listA.i0.ctx != listB.ctx || listA.i0.data.size() != listB.data.size()) {
+                                return false;
+                            }
+
+                            continue outerList;
                         } else if (!equal(itmA, itmB)) {
                             return false;
                         } else {
-                            ++i;
+                            ++j;
                         }
                     }
+                    ++i;
+                    j = 0;
                 }
             }
         } else if (a instanceof Ident x1){
@@ -114,7 +123,7 @@ public static class ASTUntypedBase {
             val y9 = (OperatorAST)b;
             return ArrayUtils.arraysEqual(x9.val, y9.val);
         }
-        return false;
+        return true;
     }
 
 

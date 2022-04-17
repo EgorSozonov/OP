@@ -95,6 +95,11 @@ public static enum CoreOperator {
     bitwiseNot,
     bitwiseXor,
 
+    greaterThan,
+    greaterThanOrEq,
+    lessThan,
+    lessThanOrEq,
+
     defineImm,
     assignmentMut,
     plusMut,

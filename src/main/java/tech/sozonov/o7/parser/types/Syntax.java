@@ -64,6 +64,10 @@ static List<Tuple<List<OperatorSymb>, CoreOperator>> getFunctionOperatorList() {
     result.add(new Tuple<>(Arrays.asList(OperatorSymb.pipe),                              CoreOperator.bitwiseOr));
     result.add(new Tuple<>(Arrays.asList(OperatorSymb.tilde, OperatorSymb.ampersand),     CoreOperator.bitwiseNot));
     result.add(new Tuple<>(Arrays.asList(OperatorSymb.caret),                             CoreOperator.bitwiseXor));
+    result.add(new Tuple<>(Arrays.asList(OperatorSymb.gt),                                CoreOperator.greaterThan));
+    result.add(new Tuple<>(Arrays.asList(OperatorSymb.gt, OperatorSymb.equals),           CoreOperator.greaterThanOrEq));
+    result.add(new Tuple<>(Arrays.asList(OperatorSymb.lt),                                CoreOperator.lessThan));
+    result.add(new Tuple<>(Arrays.asList(OperatorSymb.lt, OperatorSymb.equals),           CoreOperator.lessThanOrEq));
     return result;
 }
 
