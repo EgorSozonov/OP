@@ -166,7 +166,6 @@ public final static class ListExpr extends ExprBase {
 }
 
 
-/// A valid int64 token
 public final static class IntToken extends ExprBase {
     public long val = 0;
     public IntToken(long val) {
@@ -191,7 +190,6 @@ public final static class IntToken extends ExprBase {
 }
 
 
-/// A floating-point number token
 public final static class FloatToken extends ExprBase {
     public double val = 0;
 

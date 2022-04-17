@@ -1,6 +1,9 @@
 package tech.sozonov.o7.lexer.types;
 
-/// & + - / * ! ~ $ % ^ | > < ? =
+
+/**
+ * & + - / * ! ~ $ % ^ | > < ? =
+ */
 public enum OperatorSymb {
     ampersand,
     plus,

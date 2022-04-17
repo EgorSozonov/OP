@@ -114,6 +114,8 @@ class Program {
 
                 l(ASTUntypedBase.equal(parseRes.i0, expected) + "");
 
+                l(expected.toString());
+
                 l("Parser successful");
                 //l(parseRes.i0.toString());
             }

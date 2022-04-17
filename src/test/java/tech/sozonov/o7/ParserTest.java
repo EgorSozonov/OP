@@ -2,6 +2,8 @@ package tech.sozonov.o7;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
@@ -11,6 +13,7 @@ import tech.sozonov.o7.parser.Parser;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
+import tech.sozonov.o7.parser.types.ASTUntyped;
 import tech.sozonov.o7.parser.types.ASTUntyped.*;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
 
@@ -24,14 +27,15 @@ public class ParserTest {
                     y < 10 -> 11
                     else -> _1
                 })
-           x > 1 -> 2
+           z > 1 -> 2
            else  -> 0
 
         print 5
         """;
+
         val expected = new ASTList(SyntaxContext.curlyBraces);
 
-        val outerIf = new ASTList(SyntaxContext.curlyBraces);
+        val outerIf = new ASTList(SyntaxContext.iff);
         outerIf.data.get(0).add(new Ident("x"));
         outerIf.data.get(0).add(new FunctionOperatorAST(CoreOperator.greaterThan));
         outerIf.data.get(0).add(new IntLiteral(5));
@@ -40,13 +44,21 @@ public class ParserTest {
         val innerCB = new ASTList(SyntaxContext.curlyBraces);
         val innerIf = new ASTList(SyntaxContext.iff);
         innerIf.data.get(0).add(new Ident("y"));
+        innerIf.data.get(0).add(new FunctionOperatorAST(CoreOperator.lessThan));
+        innerIf.data.get(0).add(new IntLiteral(10));
+        innerIf.data.add(new ArrayList<>());
+        innerIf.data.get(1).add(new IntLiteral(11));
+        innerIf.data.add(new ArrayList<>());
+        innerIf.data.get(2).add(new ReservedLiteral(ReservedWord.elsee));
+        innerIf.data.add(new ArrayList<>());
+        innerIf.data.get(3).add(new IntLiteral(-1));
 
         innerCB.data.get(0).add(innerIf);
         outerCB.data.get(0).add(innerCB);
         outerIf.data.get(1).add(outerCB);
 
         outerIf.data.add(new ArrayList<>());
-        outerIf.data.get(2).add(new Ident("x"));
+        outerIf.data.get(2).add(new Ident("z"));
         outerIf.data.get(2).add(new FunctionOperatorAST(CoreOperator.greaterThan));
         outerIf.data.get(2).add(new IntLiteral(1));
 
@@ -60,7 +72,6 @@ public class ParserTest {
         outerIf.data.get(5).add(new IntLiteral(0));
         expected.data.get(0).add(outerIf);
 
-
         val print5 = new ASTList(SyntaxContext.funcall);
         print5.data.get(0).add(new Ident("print"));
         print5.data.get(0).add(new IntLiteral(5));
@@ -69,9 +80,10 @@ public class ParserTest {
         val lexResult = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
         var lexed = lexResult.i0;
         assertNull(lexResult.i1);
-
         var parseRes = Parser.parse(lexed);
         assertNull(parseRes.i1);
+
+        assertTrue(ASTUntypedBase.equal(parseRes.i0, expected));
     }
 
 }

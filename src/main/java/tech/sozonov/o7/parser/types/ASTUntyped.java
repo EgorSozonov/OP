@@ -14,7 +14,6 @@ import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import tech.sozonov.o7.utils.ArrayUtils;
 import tech.sozonov.o7.utils.Stack;
-import tech.sozonov.o7.utils.Tuple;
 import tech.sozonov.o7.utils.Triple;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
@@ -66,9 +65,7 @@ public static class ASTUntypedBase {
                         val itmB = listB.data.get(i).get(j);
 
                         if (itmA instanceof ASTList le1) {
-                            if (!(itmB instanceof ASTList)) {
-                                return false;
-                            }
+                            if (!(itmB instanceof ASTList)) return false;
 
                             if (j < (lenSubList - 1)) {
                                 backtrackA.push(new Triple<>(listA.i0, i, j + 1));
@@ -80,7 +77,7 @@ public static class ASTUntypedBase {
                             listB = (ASTList)itmB;
                             i = 0;
                             j = 0;
-                            if (listA.i0.ctx != listB.ctx || listA.i0.data.size() != listB.data.size()) {
+                            if (le1.ctx != listB.ctx || le1.data.size() != listB.data.size()) {
                                 return false;
                             }
 
@@ -130,12 +127,43 @@ public static class ASTUntypedBase {
     @Override
     public final String toString() {
         if (this instanceof ASTList lsOuter) {
-            return "";
+            val result = new StringBuffer();
+            val backtrack = new Stack<Triple<ASTList, Integer, Integer>>();
+            ASTList curr = lsOuter;
+            int i = 0;
+            int j = 0;
+            do {
+                outerLoop:
+                while (i < curr.data.size()) {
+                    int lenSublist = curr.data.get(i).size();
+                    while (j < lenSublist) {
+                        val itm = curr.data.get(i).get(j);
+                        if (itm instanceof ASTList lst) {
+                            if (j < (lenSublist - 1)) {
+                                backtrack.push(new Triple<> (lst, i, j + 1));
+                            } else {
+                                backtrack.push(new Triple<> (lst, i + 1, 0));
+                            }
+                            i = 0;
+                            j = 0;
+                            continue outerLoop;
+                        } else {
+                            result.append(itm.toString());
+                            result.append(" ");
+                        }
 
-            // var result = new StringBuilder();
-            // var backtrack = new Stack<Tuple<ListStatements, Integer>>();
-            // ASTList curr = lsOuter;
-            // int i = 0;
+                        ++j;
+                    }
+                    ++i;
+                    j = 0;
+                }
+                if (backtrack.peek() != null) {
+                    val back = backtrack.pop();
+                    curr = back.i0;
+                    i = back.i1;
+                    j = back.i2;
+                }
+            } while (backtrack.peek() != null || i < curr.data.size());
 
             // do {
             //     while (i < curr.val.size()) {
@@ -176,28 +204,28 @@ public static class ASTUntypedBase {
             //     }
             // } while (backtrack.peek() != null || i < curr.val.size());
 
-            // return result.toString();
+            return result.toString();
         } else if (this instanceof Ident x) {
             return "id " + x.name;
-        } else if (this instanceof ReservedLiteral x) {
-            val str = x.val.toString();
-            return str.substring(0, str.length() - 1);
-        } else if (this instanceof ASTList x3) {
-            return "AST List TODO";
         } else if (this instanceof IntLiteral x4) {
             return Long.toString(x4.val);
         } else if (this instanceof FloatLiteral x5) {
             return Double.toString(x5.val);
-        } else if (this instanceof CoreOperatorAST x7) {
-            return x7.val.toString();
+        } else if (this instanceof BoolLiteral x8) {
+            return Boolean.toString(x8.val);
+        } else if (this instanceof ReservedLiteral x) {
+            val str = x.val.toString();
+            return str.substring(0, str.length() - 1);
+        } else if (this instanceof StringLiteral x7) {
+            return "Str: x7.val";
         } else if (this instanceof FunctionOperatorAST x7) {
+            return x7.val.toString();
+        } else if (this instanceof CoreOperatorAST x7) {
             return x7.val.toString();
         } else if (this instanceof OperatorAST x7) {
             return x7.val.toString();
-        } else if (this instanceof BoolLiteral x8) {
-            return Boolean.toString(x8.val);
         } else {
-            return "Something else";
+            return "The thing that should not be";
         }
     }
 }
