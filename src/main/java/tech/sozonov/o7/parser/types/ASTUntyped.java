@@ -46,7 +46,9 @@ public static class ASTUntypedBase {
             int i = 0;
             int j = 0;
             while(backtrackA.peek() != null) {
-                if (backtrackB.peek() == null) return false;
+                if (backtrackB.peek() == null) {
+                     return false;
+                }
                 var listA = backtrackA.pop();
                 var listB = backtrackB.pop();
                 i = listA.i1;
@@ -66,7 +68,9 @@ public static class ASTUntypedBase {
                         val itmB = listB.data.get(i).get(j);
 
                         if (itmA instanceof ASTList le1) {
-                            if (!(itmB instanceof ASTList)) return false;
+                            if (!(itmB instanceof ASTList)) {
+                                return false;
+                            }
 
                             if (j < (lenSubList - 1)) {
                                 backtrackA.push(new Triple<>(listA.i0, i, j + 1));

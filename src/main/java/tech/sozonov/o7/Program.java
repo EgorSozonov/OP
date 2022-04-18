@@ -90,11 +90,12 @@ class Program {
                                     new ArrayList<>(List.of(new ReservedLiteral(ReservedWord.elsee))),
                                     new ArrayList<>(List.of( new IntLiteral(0)))
                                 )
-                            ))),
-                        new ArrayList<>(List.of(new ASTList(SyntaxContext.funcall, List.of(
-                new ArrayList<>(List.of(new Ident("print"), new IntLiteral(5)))
-                )))));
+                            ),
 
+                            new ASTList(SyntaxContext.funcall, List.of(
+                                new ArrayList<>(List.of(new Ident("print"), new IntLiteral(5)))
+                                ))
+                            )));
                 val expected = new ASTList(SyntaxContext.curlyBraces, innards);
 
                 l(ASTUntypedBase.equal(parseRes.i0, expected) + "");
