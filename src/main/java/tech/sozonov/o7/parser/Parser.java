@@ -245,6 +245,8 @@ static ASTUntypedBase parseAtom(ExprBase inp, Syntax syntax) {
             }
         }
         return new OperatorAST(ot.val);
+    } else if (inp instanceof CommentToken ct) {
+        return new CommentAST(ct.val);
     } else {
         // should never happen
         return new IntLiteral(-1);

@@ -56,7 +56,7 @@ class Program {
         } else {
             l("Lexer successful");
             var lexed = res.i0;
-            l(lexed.toString());
+            //l(lexed.toString());
             l("");
 
             var parseRes = Parser.parse(lexed);

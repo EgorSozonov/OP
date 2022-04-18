@@ -11,25 +11,26 @@ import tech.sozonov.o7.lexer.types.Expr.OperatorToken;
 import tech.sozonov.o7.lexer.types.Expr.WordToken;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
-import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import tech.sozonov.o7.utils.ArrayUtils;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Triple;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
 import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
+import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
+import static tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext.*;
 
 
 public class ASTUntyped {
 
 public static class ASTUntypedBase {
     public static boolean isContextUnbounded(SyntaxContext ctx) {
-        return (ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh
-                || ctx == SyntaxContext.structt || ctx == SyntaxContext.sumTypee);
+        return (ctx == iff || ctx == matchh
+                || ctx == structt || ctx == sumTypee);
     }
 
 
     public static boolean isAssignment(SyntaxContext ctx) {
-        return EnumSet.range(SyntaxContext.assignImmutable, SyntaxContext.assignMutableDiv).contains(ctx);
+        return EnumSet.range(assignImmutable, assignMutableDiv).contains(ctx);
     }
 
     public static boolean equal(ASTUntypedBase a, ASTUntypedBase b) {
@@ -139,11 +140,17 @@ public static class ASTUntypedBase {
                     while (j < lenSublist) {
                         val itm = curr.data.get(i).get(j);
                         if (itm instanceof ASTList lst) {
-                            if (j < (lenSublist - 1)) {
-                                backtrack.push(new Triple<> (lst, i, j + 1));
-                            } else {
-                                backtrack.push(new Triple<> (lst, i + 1, 0));
+                            if (lst.ctx == curlyBraces) {
+                                result.append("{\n");
+                            } else if (lst.ctx == iff) {
+                                result.append("if ");
                             }
+                            if (j < (lenSublist - 1)) {
+                                backtrack.push(new Triple<> (curr, i, j + 1));
+                            } else {
+                                backtrack.push(new Triple<> (curr, i + 1, 0));
+                            }
+                            curr = lst;
                             i = 0;
                             j = 0;
                             continue outerLoop;
@@ -159,51 +166,14 @@ public static class ASTUntypedBase {
                 }
                 if (backtrack.peek() != null) {
                     val back = backtrack.pop();
+                    if (back.i0.ctx == curlyBraces) {
+                        result.append("\n}\n");
+                    }
                     curr = back.i0;
                     i = back.i1;
                     j = back.i2;
                 }
             } while (backtrack.peek() != null || i < curr.data.size());
-
-            // do {
-            //     while (i < curr.val.size()) {
-            //         if (curr.val.get(i) instanceof ListStatements listElem) {
-            //             if (hasValues(listElem.val)) {
-            //                 backtrack.push(new Tuple<ListStatements, Integer>(curr, i));
-            //                 curr = listElem;
-            //                 i = 0;
-            //                 if (curr.ctx == ParseContext.curlyBraces) {
-            //                     result.append("{\n ");
-            //                 } else if (curr.sType == SubexprType.dataInitializer) {
-            //                     result.append("[");
-            //                 } else if (curr.sType == SubexprType.parens){
-            //                     result.append("(");
-            //                 }
-            //             } else {
-            //                 ++i;
-            //             }
-            //         } else {
-            //             result.append(curr.val.get(i).toString());
-            //             result.append(", ");
-            //             ++i;
-            //         }
-            //     }
-            //     if (backtrack.peek() != null) {
-            //         if (curr.sType == SubexprType.curlyBraces) {
-            //             result.append("}\n ");
-            //         } else if (curr.sType == SubexprType.dataInitializer) {
-            //             result.append("], ");
-            //         } else if (curr.sType == SubexprType.parens) {
-            //             result.append(") ");
-            //         } else {
-            //             result.append(";\n ");
-            //         }
-            //         var back = backtrack.pop();
-            //         curr = back.item0;
-            //         i = back.item1 + 1;
-            //     }
-            // } while (backtrack.peek() != null || i < curr.val.size());
-
             return result.toString();
         } else if (this instanceof Ident x) {
             return "id " + x.name;
@@ -224,6 +194,8 @@ public static class ASTUntypedBase {
             return x7.val.toString();
         } else if (this instanceof OperatorAST x7) {
             return x7.val.toString();
+        } else if (this instanceof CommentAST) {
+            return "# comment .#";
         } else {
             return "The thing that should not be";
         }
@@ -244,6 +216,15 @@ public final static class ASTList extends ASTUntypedBase {
         itemsIngested = 0;
     }
 
+    public ASTList(SyntaxContext ctx, List<ArrayList<ASTUntypedBase>> _data) {
+        this.ctx = ctx;
+        data = new ArrayList<ArrayList<ASTUntypedBase>>(_data);
+        curr = data.get(0);
+        itemsIngested = 0;
+    }
+
+
+
     /**
      * Try to add a new item to the current AST node. Returns a syntax error if unsuccessful.
      */
@@ -257,9 +238,9 @@ public final static class ASTList extends ASTUntypedBase {
             }
         } else if (isClauseBased()) {
             if (newItem instanceof CoreOperatorAST co) {
-                if ((co.val == CoreOperator.arrow && (ctx == SyntaxContext.matchh || ctx == SyntaxContext.iff))
-                    || (co.val == CoreOperator.pipe && (ctx == SyntaxContext.sumTypee) )
-                    || (co.val == CoreOperator.colon && (ctx == SyntaxContext.structt))) {
+                if ((co.val == CoreOperator.arrow && (ctx == matchh || ctx == iff))
+                    || (co.val == CoreOperator.pipe && (ctx == sumTypee) )
+                    || (co.val == CoreOperator.colon && (ctx == structt))) {
                     newStatement();
                     return Optional.empty();
                 }
@@ -289,11 +270,11 @@ public final static class ASTList extends ASTUntypedBase {
     public Optional<Boolean> gotSaturated() {
         if (isBounded()) {
             int saturationLength = 0;
-            if (ctx == SyntaxContext.iff) {
+            if (ctx == iff) {
                 saturationLength = 1;
-            } else if (ctx == SyntaxContext.whilee || ctx == SyntaxContext.foreachh || ctx == SyntaxContext.matchh) {
+            } else if (ctx == whilee || ctx == foreachh || ctx == matchh) {
                 saturationLength = 2;
-            } else if (ctx == SyntaxContext.forr) {
+            } else if (ctx == forr) {
                 saturationLength = 4;
             } else {
                 saturationLength = 0;
@@ -302,7 +283,7 @@ public final static class ASTList extends ASTUntypedBase {
             if (itemsIngested == saturationLength) return Optional.of(true);
             return Optional.empty();
         } else if (isUnbounded()) {
-            if ((ctx == SyntaxContext.iff || ctx == SyntaxContext.matchh)
+            if ((ctx == iff || ctx == matchh)
                 && data.size() >= 4 && data.get(data.size() - 2).get(0) instanceof ReservedLiteral rl && rl.val == ReservedWord.elsee) {
                 return Optional.of(true);
             } else {
@@ -322,14 +303,14 @@ public final static class ASTList extends ASTUntypedBase {
         final int len = le.val.size();
 
         // TODO forbid new core forms within the current one
-        if (ctx == SyntaxContext.iff) {
+        if (ctx == iff) {
             // Must be of the form "a .func b -> b"
             if (len < 3) return false;
             if (le.val.get(len - 2) instanceof OperatorToken ot) {
                 return (arraysEqual(Syntax.arrow, ot.val));
             } else return false;
 
-        } else if (ctx == SyntaxContext.matchh) {
+        } else if (ctx == matchh) {
             // Must be of the form "A -> b" or "Aaa | Bbb | Ccc -> b"
             if (len < 3) return false;
             if (le.val.get(len - 2) instanceof OperatorToken ot) {
@@ -344,9 +325,9 @@ public final static class ASTList extends ASTUntypedBase {
                 } else return false;
             } else return false;
             // check for arrow symbol in penultimate position, plus the preceding must be either a single wordtoken or several split with pipes
-        } else if (ctx == SyntaxContext.structt) {
+        } else if (ctx == structt) {
             // check for colon in second position, plus the following must be a sequence of type names
-        } else if (ctx == SyntaxContext.sumTypee) {
+        } else if (ctx == sumTypee) {
             // TODO write a check for a sum type clause
         }
         return true;
@@ -359,23 +340,23 @@ public final static class ASTList extends ASTUntypedBase {
     }
 
     public boolean isFuncall() {
-        return ctx == SyntaxContext.funcall;
+        return ctx == funcall;
     }
 
     public boolean isAssignment() {
-        return EnumSet.range(SyntaxContext.assignImmutable, SyntaxContext.assignMutableDiv).contains(ctx);
+        return EnumSet.range(assignImmutable, assignMutableDiv).contains(ctx);
     }
 
     public boolean isCoreForm() {
-        return EnumSet.range(SyntaxContext.whilee, SyntaxContext.sumTypee).contains(ctx);
+        return EnumSet.range(whilee, sumTypee).contains(ctx);
     }
 
     public boolean isUnbounded() {
-        return EnumSet.range(SyntaxContext.iff, SyntaxContext.sumTypee).contains(ctx);
+        return EnumSet.range(iff, sumTypee).contains(ctx);
     }
 
     public boolean isBounded() {
-        return EnumSet.range(SyntaxContext.whilee, SyntaxContext.typeDeclaration).contains(ctx);
+        return EnumSet.range(whilee, typeDeclaration).contains(ctx);
     }
 
     public boolean isClauseBased() {
@@ -403,14 +384,14 @@ public final static class ASTList extends ASTUntypedBase {
     }
 
     static Optional<SyntaxContext> getOperatorAssignmentType(OperatorToken ot) {
-        if (ot.val.size() == 1 && ot.val.get(0) == OperatorSymb.equals) return Optional.of(SyntaxContext.assignImmutable);
+        if (ot.val.size() == 1 && ot.val.get(0) == OperatorSymb.equals) return Optional.of(assignImmutable);
         if (ot.val.size() == 2 && ot.val.get(1) == OperatorSymb.equals) {
             var f = ot.val.get(0);
-            if (f == OperatorSymb.colon) return Optional.of(SyntaxContext.assignMutable);
-            if (f == OperatorSymb.plus) return Optional.of(SyntaxContext.assignMutablePlus);
-            if (f == OperatorSymb.minus) return Optional.of(SyntaxContext.assignMutableMinus);
-            if (f == OperatorSymb.asterisk) return Optional.of(SyntaxContext.assignMutableTimes);
-            if (f == OperatorSymb.slash) return Optional.of(SyntaxContext.assignMutableDiv);
+            if (f == OperatorSymb.colon) return Optional.of(assignMutable);
+            if (f == OperatorSymb.plus) return Optional.of(assignMutablePlus);
+            if (f == OperatorSymb.minus) return Optional.of(assignMutableMinus);
+            if (f == OperatorSymb.asterisk) return Optional.of(assignMutableTimes);
+            if (f == OperatorSymb.slash) return Optional.of(assignMutableDiv);
         }
         return Optional.empty();
     }
@@ -485,6 +466,13 @@ public final static class CoreOperatorAST extends ASTUntypedBase {
 public final static class OperatorAST extends ASTUntypedBase {
     public List<OperatorSymb> val;
     public OperatorAST(List<OperatorSymb> val) {
+        this.val = val;
+    }
+}
+
+public final static class CommentAST extends ASTUntypedBase {
+    public String val;
+    public CommentAST(String val) {
         this.val = val;
     }
 }

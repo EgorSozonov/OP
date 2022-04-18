@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import lombok.val;
 import tech.sozonov.o7.lexer.Lexer;
@@ -32,6 +34,19 @@ public class ParserTest {
 
         print 5
         """;
+
+        List<ArrayList<ASTUntypedBase>> innards = List.of(
+            new ArrayList<>(
+                List.of(
+                    new ASTList(SyntaxContext.iff,
+                        new ArrayList<ArrayList<ASTUntypedBase>>(
+                            List.of(new Ident("x"), new FunctionOperatorAST(CoreOperator.greaterThan), new IntLiteral(5)),
+                            List.of(new ASTList(SyntaxContext.curlyBraces))
+                        )
+                    )
+                ),
+            new ArrayList<>(List.of(new Ident("print"), new IntLiteral(5))));
+        val altExpected = new ASTList(SyntaxContext.curlyBraces, innards);
 
         val expected = new ASTList(SyntaxContext.curlyBraces);
 
