@@ -38,14 +38,34 @@ public class ParserTest {
         List<ArrayList<ASTUntypedBase>> innards = List.of(
             new ArrayList<>(
                 List.of(
-                    new ASTList(SyntaxContext.iff,
-                        new ArrayList<ArrayList<ASTUntypedBase>>(
-                            List.of(new Ident("x"), new FunctionOperatorAST(CoreOperator.greaterThan), new IntLiteral(5)),
-                            List.of(new ASTList(SyntaxContext.curlyBraces))
+
+                    new ASTList(SyntaxContext.iff, List.of(
+                        new ArrayList<>(
+                            List.of(new Ident("x"), new FunctionOperatorAST(CoreOperator.greaterThan), new IntLiteral(5))),
+                        new ArrayList<>(List.of(new ASTList(SyntaxContext.curlyBraces, List.of(
+                            new ArrayList<>(List.of(new ASTList(SyntaxContext.curlyBraces,
+                                List.of(new ArrayList<>(List.of( new ASTList(SyntaxContext.iff, List.of(
+                                        new ArrayList<>(List.of(
+                                            new Ident("y"), new FunctionOperatorAST(CoreOperator.lessThan), new IntLiteral(10)
+                                        )),
+                                        new ArrayList<>(List.of(
+                                            new IntLiteral(11)
+                                        )),
+                                        new ArrayList<>(List.of(
+                                            new ReservedLiteral(ReservedWord.elsee)
+                                        )),
+                                        new ArrayList<>(List.of(
+                                            new IntLiteral(0)
+                                        ))
+                                    )
+                                ))))
+                            ))))))
                         )
                     )
-                ),
-            new ArrayList<>(List.of(new Ident("print"), new IntLiteral(5))));
+                ))),
+            new ArrayList<>(List.of(new ASTList(SyntaxContext.funcall, List.of(
+                new ArrayList<>(List.of(new Ident("print"), new IntLiteral(5)))
+        )))));
         val altExpected = new ASTList(SyntaxContext.curlyBraces, innards);
 
         val expected = new ASTList(SyntaxContext.curlyBraces);
