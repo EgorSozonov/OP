@@ -260,6 +260,11 @@ public final static class DotWordToken extends ExprBase {
     public String capitalizedPrefix;
 
 
+    public DotWordToken(WordToken wt) {
+        this.val = wt.val;
+        this.capitalizedPrefix = wt.capitalizedPrefix;
+    }
+
     public DotWordToken(String txt) {
         this.val = txt;
         this.capitalizedPrefix = "";

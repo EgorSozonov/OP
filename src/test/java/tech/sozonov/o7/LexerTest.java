@@ -84,7 +84,6 @@ public class LexerTest {
     void integer8() {
         val input = "_9_223_372_036_854_775_809";
         val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
-        assertNull(output.i1);
         assertNotNull(output.i1);
     }
 

@@ -151,8 +151,9 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
             } else if ((cChar >= ASCII.aLower && cChar <= ASCII.zLower)
                     || (cChar >= ASCII.aUpper && cChar <= ASCII.zUpper)
                     || (cChar == ASCII.underscore
-                        && inp[i + 1] >= ASCII.aLower && inp[i + 1] <= ASCII.zLower
-                        && inp[i + 1] >= ASCII.aUpper && inp[i + 1] <= ASCII.zUpper)) {
+                        && i < walkLen
+                        && ((inp[i + 1] >= ASCII.aLower && inp[i + 1] <= ASCII.zLower)
+                            || (inp[i + 1] >= ASCII.aUpper && inp[i + 1] <= ASCII.zUpper)))) {
                 mbToken = lexWord(inp, i, walkLen);
             } else if (i < walkLen && cChar == ASCII.dot
                     && ((inp[i + 1] >= ASCII.aLower && inp[i + 1] <= ASCII.zLower)
@@ -337,6 +338,9 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int st
             }
             startUncapitalized = prev;
         }
+        if (next <= walkLen && inp[next] == ASCII.underscore) {
+            return Either.left(new WordError("Snake case is forbidden in all identifiers. Underscores are only allowed in initial position"));
+        }
         if ((next <= walkLen && inp[next] != ASCII.dot) || next > walkLen) break;
         if (next == walkLen && inp[next] == ASCII.dot) {
             return Either.left(new WordError("Premature end of input after dot in word"));
@@ -411,8 +415,12 @@ static int lexWordSection(byte[] inp, int start, int walkLen, MutableBoolean was
  * Examples: ".foo", ".foo.x._y", ".Module.Submodule.foo.x.y"
  */
 static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexDotWord(byte[] inp, int start, int walkLen) {
-
-    return Either.right(new Tuple<ExprBase, Integer>(new WordToken(""), 0));
+    Either<LexErrorBase, Tuple<ExprBase, Integer>> wrd = lexWord(inp, start + 1, walkLen);
+    if (wrd.isRight()) {
+        return Either.right(new Tuple<>(new DotWordToken((WordToken)wrd.get().i0), wrd.get().i1));
+    } else {
+        return wrd;
+    }
 }
 
 /**

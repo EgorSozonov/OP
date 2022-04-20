@@ -18,7 +18,7 @@ class Program {
 public static void main(String[] args) {
 
 
-    val innp0 = "_a0";
+    val innp0 = ".x";
     val resL = Lexer.lexicallyAnalyze(innp0.getBytes(StandardCharsets.UTF_8));
     l(resL.toString());
     // val a = new ASTList(SyntaxContext.funcall);
