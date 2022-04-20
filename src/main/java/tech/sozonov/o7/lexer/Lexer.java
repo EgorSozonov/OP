@@ -8,6 +8,8 @@ import tech.sozonov.o7.utils.ByteList;
 import tech.sozonov.o7.utils.Tuple;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Either;
+import tech.sozonov.o7.utils.MutableBoolean;
+
 import static tech.sozonov.o7.utils.ListUtils.*;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
 import java.nio.charset.StandardCharsets;
@@ -316,22 +318,24 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int st
     int endCapitalized = -2;
     int startUncapitalized = -1;
     int endUncapitalized = -2;
-    Boolean prevCapitalized = true;
-    Boolean nextCapitalized = true;
+    val prevCapitalized = new MutableBoolean(true);
+    val nextCapitalized = new MutableBoolean(true);
     int prev = start;
     int next = -1;
 
     do {
         next = lexWordSection(inp, prev, walkLen, nextCapitalized);
 
-        if (!nextCapitalized.equals(prevCapitalized)) {
-            if (nextCapitalized == true) {
+        if (!MutableBoolean.eq(prevCapitalized, nextCapitalized)) {
+            if (nextCapitalized.v == true) {
                 return Either.left(new WordError("A word may not contain capitalized sections after uncapitalized ones"));
             }
-            prevCapitalized = nextCapitalized;
-            startCapitalized = start;
-            endCapitalized = next - 1;
-            startUncapitalized = next;
+            prevCapitalized.v = nextCapitalized.v;
+            if (prev > start) {
+                startCapitalized = start;
+                endCapitalized = prev - 2;
+            }
+            startUncapitalized = prev;
         }
         if ((next <= walkLen && inp[next] != ASCII.dot) || next > walkLen) break;
         if (next == walkLen && inp[next] == ASCII.dot) {
@@ -350,6 +354,10 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int st
     } while (next > start);
     if (startUncapitalized > -1) {
         endUncapitalized = next - 1;
+    } else {
+        // we've never encountered an uncapitalized section - i.e. they've all been capitalized
+        startCapitalized = start;
+        endCapitalized = next - 1;
     }
     if (endCapitalized >= startCapitalized && endUncapitalized >= startUncapitalized) {
         val wordToken = new WordToken(stringOfASCII(inp, startCapitalized, endCapitalized), stringOfASCII(inp, startUncapitalized, endUncapitalized));
@@ -378,14 +386,14 @@ static String stringOfASCII(byte[] inp, int start, int end) {
  * Returns next position and also sets a boolean flag if this section started with a capital letter.
  * Does NOT check that the word starts with a letter instead of a digit, because that's validated in the caller.
  */
-static int lexWordSection(byte[] inp, int start, int walkLen, Boolean wasCapitalized) {
+static int lexWordSection(byte[] inp, int start, int walkLen, MutableBoolean wasCapitalized) {
     int i = start;
     byte currByte = inp[i];
     if (currByte == ASCII.underscore) {
         ++i;
         if (i <= walkLen) currByte = inp[i];
     }
-    wasCapitalized = currByte >= ASCII.aUpper && (currByte <= ASCII.zUpper);
+    wasCapitalized.v = currByte >= ASCII.aUpper && (currByte <= ASCII.zUpper);
 
     while (i <= walkLen &&
         (  (currByte >= ASCII.aLower && currByte <= ASCII.zLower)
