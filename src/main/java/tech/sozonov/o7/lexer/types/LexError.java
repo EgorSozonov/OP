@@ -37,7 +37,7 @@ public static class UnexpectedSymbolError extends LexErrorBase {
 
     @Override
     public String toString() {
-        return "UnexpectedSymbolErrorextends " + val;
+        return "UnexpectedSymbolError " + val;
     }
 }
 
@@ -50,7 +50,7 @@ public static class IntError extends LexErrorBase {
 
     @Override
     public String toString() {
-        return "IntErrorextends " + val;
+        return "IntError " + val;
     }
 }
 
@@ -63,7 +63,7 @@ public static class FloatError extends LexErrorBase {
 
     @Override
     public String toString() {
-        return "FloatErrorextends $val";
+        return "FloatError " + val;
     }
 }
 
@@ -76,7 +76,7 @@ public static class WordError extends LexErrorBase {
 
     @Override
     public String toString() {
-        return "WordErrorextends $val";
+        return "WordError " + val;
     }
 }
 
@@ -89,7 +89,7 @@ public static class OperatorError extends LexErrorBase {
 
     @Override
     public String toString() {
-        return "OperatorErrorextends " + val;
+        return "OperatorError " + val;
     }
 }
 

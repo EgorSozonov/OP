@@ -148,8 +148,15 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
                 mbToken = lexNumber(inp, i, walkLen);
             } else if ((cChar >= ASCII.aLower && cChar <= ASCII.zLower)
                     || (cChar >= ASCII.aUpper && cChar <= ASCII.zUpper)
-                    || cChar == ASCII.underscore) {
+                    || (cChar == ASCII.underscore
+                        && inp[i + 1] >= ASCII.aLower && inp[i + 1] <= ASCII.zLower
+                        && inp[i + 1] >= ASCII.aUpper && inp[i + 1] <= ASCII.zUpper)) {
                 mbToken = lexWord(inp, i, walkLen);
+            } else if (i < walkLen && cChar == ASCII.dot
+                    && ((inp[i + 1] >= ASCII.aLower && inp[i + 1] <= ASCII.zLower)
+                        || (inp[i + 1] >= ASCII.aUpper && inp[i + 1] <= ASCII.zUpper)
+                        || inp[i + 1] == ASCII.underscore)) {
+                mbToken = lexDotWord(inp, i, walkLen);
             } else if (cChar == ASCII.hashtag) {
                 mbToken = lexComment(inp, i, walkLen);
             } else if (cChar == ASCII.quotationMarkDouble) {
@@ -300,18 +307,86 @@ static long intOfDigits(ByteList digits) {
     return result;
 }
 
-
+/**
+ * Lexically analyze a single word, i.e. a possibly dot-separated number of possibly underscore-initiated sections.
+ * Examples: "foo", "foo.x", "Module.Submodule.foo", "_x", "_x1._y2"
+ */
 static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int start, int walkLen) {
+    int startCapitalized = -1;
+    int endCapitalized = -2;
+    int startUncapitalized = -1;
+    int endUncapitalized = -2;
+    Boolean prevCapitalized = true;
+    Boolean nextCapitalized = true;
+    int prev = start;
+    int next = -1;
+
+    do {
+        next = lexWordSection(inp, prev, walkLen, nextCapitalized);
+
+        if (!nextCapitalized.equals(prevCapitalized)) {
+            if (nextCapitalized == true) {
+                return Either.left(new WordError("A word may not contain capitalized sections after uncapitalized ones"));
+            }
+            prevCapitalized = nextCapitalized;
+            startCapitalized = start;
+            endCapitalized = next - 1;
+            startUncapitalized = next;
+        }
+        if ((next <= walkLen && inp[next] != ASCII.dot) || next > walkLen) break;
+        if (next == walkLen && inp[next] == ASCII.dot) {
+            return Either.left(new WordError("Premature end of input after dot in word"));
+        }
+
+        byte afterDot = inp[next + 1];
+        if (afterDot == ASCII.underscore) {
+            if (next == walkLen - 1) return Either.left(new WordError("Premature end of input after underscore in word"));
+            afterDot = inp[next + 2];
+        }
+        if (afterDot < ASCII.aUpper || afterDot > ASCII.zLower && (afterDot > ASCII.zUpper && afterDot < ASCII.aLower)) {
+            return Either.left(new WordError("Unexpected character in word, expected a lowercase or uppercase letter, instead got value = " + afterDot));
+        }
+        prev = next + 1;
+    } while (next > start);
+    if (startUncapitalized > -1) {
+        endUncapitalized = next - 1;
+    }
+    if (endCapitalized >= startCapitalized && endUncapitalized >= startUncapitalized) {
+        val wordToken = new WordToken(stringOfASCII(inp, startCapitalized, endCapitalized), stringOfASCII(inp, startUncapitalized, endUncapitalized));
+        return Either.right(new Tuple<>(wordToken, next));
+    } else if (endCapitalized >= startCapitalized) {
+        val wordToken = new WordToken(stringOfASCII(inp, startCapitalized, endCapitalized));
+        return Either.right(new Tuple<>(wordToken, next));
+    } else if (endUncapitalized >= startUncapitalized) {
+        val wordToken = new WordToken(stringOfASCII(inp, startUncapitalized, endUncapitalized));
+        return Either.right(new Tuple<>(wordToken, next));
+    } else {
+        return Either.left(new WordError("Word did not contain any letters"));
+    }
+}
+
+static String stringOfASCII(byte[] inp, int start, int end) {
+    val subList = new byte[end - start + 1];
+    for (int j = start; j <= end; ++j) {
+        subList[j - start] = inp[j];
+    }
+    return new String(subList, StandardCharsets.US_ASCII);
+}
+
+/**
+ * Lexically analyze a single word section, i.e. the part of the word between the dots
+ * Returns next position and also sets a boolean flag if this section started with a capital letter.
+ * Does NOT check that the word starts with a letter instead of a digit, because that's validated in the caller.
+ */
+static int lexWordSection(byte[] inp, int start, int walkLen, Boolean wasCapitalized) {
     int i = start;
     byte currByte = inp[i];
-    while (i <= walkLen && (currByte == ASCII.underscore)) {
+    if (currByte == ASCII.underscore) {
         ++i;
         if (i <= walkLen) currByte = inp[i];
     }
-    int startOfLetters = i;
-    if (currByte < ASCII.aUpper || currByte > ASCII.zLower || (currByte > ASCII.zUpper && currByte < ASCII.aLower)) {
-        return Either.left(new UnexpectedSymbolError("Unexpected symbol, word with initial underscores must have an alpha character after them"));
-    }
+    wasCapitalized = currByte >= ASCII.aUpper && (currByte <= ASCII.zUpper);
+
     while (i <= walkLen &&
         (  (currByte >= ASCII.aLower && currByte <= ASCII.zLower)
         || (currByte >= ASCII.aUpper && currByte <= ASCII.zUpper)
@@ -319,17 +394,17 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int st
         ++i;
         if (i <= walkLen) currByte = inp[i];
     }
-    if (i == startOfLetters) {
-        return Either.left(new WordError("Word did not contain any letters"));
-    }
-    if (i <= walkLen && inp[i] == ASCII.underscore) {
-        return Either.left(new WordError("Snake-case identifier " + (new String(subArray(inp, start, i)))));
-    }
-    val subList = new byte[i - start];
-    for (int j = start; j < i; ++j) {
-        subList[j - start] = inp[j];
-    }
-    return Either.right(new Tuple<ExprBase, Integer>(new WordToken(new String(subList, StandardCharsets.US_ASCII)), i));
+    return i;
+}
+
+
+/**
+ * Lexically analyze a dot-word, i.e. a word preceded by a dot (used for function names in function calls).
+ * Examples: ".foo", ".foo.x._y", ".Module.Submodule.foo.x.y"
+ */
+static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexDotWord(byte[] inp, int start, int walkLen) {
+
+    return Either.right(new Tuple<ExprBase, Integer>(new WordToken(""), 0));
 }
 
 /**

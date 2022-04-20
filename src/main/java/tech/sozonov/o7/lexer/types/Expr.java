@@ -216,21 +216,27 @@ public final static class FloatToken extends ExprBase {
 
 /**
  * Identifier or a reserved word.
- * May be capitalized, may contain underscores initially but not otherwise.
+ * May be capitalized, may contain an underscore in initial position but not otherwise.
  * May contain dots, but not in the initial position.
  */
 public final static class WordToken extends ExprBase {
-    // TODO take care of the dots, including "._" in word-medial positions
     public String val;
+    public String capitalizedPrefix;
 
 
     public WordToken(String txt) {
+        this.val = txt;
+        capitalizedPrefix = "";
+    }
+
+    public WordToken(String capPref, String txt) {
+        this.capitalizedPrefix = capPref;
         this.val = txt;
     }
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof WordToken wt) ? this.val.equals(wt.val) : false;
+        return (o instanceof WordToken wt) ? this.val.equals(wt.val) && this.capitalizedPrefix.equals(wt.capitalizedPrefix) : false;
     }
 
     @Override
@@ -240,7 +246,7 @@ public final static class WordToken extends ExprBase {
 
     @Override
     public String toString() {
-        return "Word " + this.val;
+        return "Word " + (capitalizedPrefix == "" ? this.val : capitalizedPrefix + "." + val);
     }
 }
 
@@ -250,17 +256,23 @@ public final static class WordToken extends ExprBase {
  * May contain dots, but not in the initial position.
  */
 public final static class DotWordToken extends ExprBase {
-    // TODO write a lexing function
     public String val;
+    public String capitalizedPrefix;
 
 
     public DotWordToken(String txt) {
         this.val = txt;
+        this.capitalizedPrefix = "";
+    }
+
+    public DotWordToken(String capPrefix, String txt) {
+        this.val = txt;
+        this.capitalizedPrefix = capPrefix;
     }
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof WordToken wt) ? this.val.equals(wt.val) : false;
+        return (o instanceof WordToken wt) ? this.val.equals(wt.val) && this.capitalizedPrefix.equals(wt.capitalizedPrefix) : false;
     }
 
     @Override
@@ -270,7 +282,7 @@ public final static class DotWordToken extends ExprBase {
 
     @Override
     public String toString() {
-        return "DotWord " + this.val;
+        return "DotWord " + (capitalizedPrefix == "" ? this.val : capitalizedPrefix + "." + val);
     }
 }
 
