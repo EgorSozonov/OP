@@ -59,8 +59,8 @@ public static class ExprBase {
      * Wraps one token the way it would be wrapped when lexing a real text input.
      */
     public static ExprBase wrapOneToken(ExprBase token) {
-        val result = new ListExpr(ExprLexicalType.curlyBraces);
-        val stmt = new ListExpr(ExprLexicalType.statement);
+        val result = new ListExpr(LexicalContext.curlyBraces);
+        val stmt = new ListExpr(LexicalContext.statement);
         stmt.val.add(token);
         result.val.add(stmt);
         return result;
@@ -70,8 +70,8 @@ public static class ExprBase {
      * Wraps a list of tokens into a statement the way it would be wrapped when lexing a real text input.
      */
     public static ExprBase wrapListTokens(List<ExprBase> tokens) {
-        val result = new ListExpr(ExprLexicalType.curlyBraces);
-        val stmt = new ListExpr(ExprLexicalType.statement);
+        val result = new ListExpr(LexicalContext.curlyBraces);
+        val stmt = new ListExpr(LexicalContext.statement);
         stmt.val = tokens;
         result.val.add(stmt);
         return result;
@@ -90,9 +90,9 @@ public static class ExprBase {
 */
 public final static class ListExpr extends ExprBase {
     public List<ExprBase> val;
-    public ExprLexicalType lType;
+    public LexicalContext lType;
 
-    public ListExpr(ExprLexicalType pType) {
+    public ListExpr(LexicalContext pType) {
         this.val = new ArrayList<ExprBase>();
         this.lType = pType;
     }
@@ -123,11 +123,11 @@ public final static class ListExpr extends ExprBase {
                         backtrack.push(new Tuple<ListExpr, Integer>(curr, i));
                         curr = listElem;
                         i = 0;
-                        if (listElem.lType == ExprLexicalType.curlyBraces) {
+                        if (listElem.lType == LexicalContext.curlyBraces) {
                             result.append("{ ");
-                        } else if (listElem.lType == ExprLexicalType.dataInitializer) {
+                        } else if (listElem.lType == LexicalContext.dataInitializer) {
                             result.append("[ ");
-                        } else if (listElem.lType == ExprLexicalType.parens){
+                        } else if (listElem.lType == LexicalContext.parens){
                             result.append("( ");
                         } else {
                             result.append("| ");
@@ -144,11 +144,11 @@ public final static class ListExpr extends ExprBase {
                 }
             }
             if (backtrack.peek() != null) {
-                if (curr.lType == ExprLexicalType.curlyBraces) {
+                if (curr.lType == LexicalContext.curlyBraces) {
                     result.append(" }, ");
-                } else if (curr.lType == ExprLexicalType.dataInitializer) {
+                } else if (curr.lType == LexicalContext.dataInitializer) {
                     result.append(" ], ");
-                } else if (curr.lType == ExprLexicalType.parens) {
+                } else if (curr.lType == LexicalContext.parens) {
                     result.append(" ), ");
                 } else {
                     result.append(" |, ");

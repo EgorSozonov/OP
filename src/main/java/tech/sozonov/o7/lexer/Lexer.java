@@ -1,7 +1,7 @@
 package tech.sozonov.o7.lexer;
-import tech.sozonov.o7.lexer.types.LexError.*;
+import tech.sozonov.o7.lexer.types.LexError;
 import tech.sozonov.o7.lexer.types.Expr.*;
-import tech.sozonov.o7.lexer.types.ExprLexicalType;
+import tech.sozonov.o7.lexer.types.LexicalContext;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.utils.ASCII;
 import tech.sozonov.o7.utils.ByteList;
@@ -9,7 +9,6 @@ import tech.sozonov.o7.utils.Tuple;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Either;
 import tech.sozonov.o7.utils.MutableBoolean;
-
 import static tech.sozonov.o7.utils.ListUtils.*;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
 import java.nio.charset.StandardCharsets;
@@ -20,65 +19,65 @@ import lombok.val;
 
 
 public class Lexer {
-public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
-    LexErrorBase err = null;
-    if (inp.length < 1) return new Tuple<ExprBase, LexErrorBase>(new ListExpr(ExprLexicalType.curlyBraces), err);
+public static Tuple<ExprBase, LexError> lexicallyAnalyze(byte[] inp) {
+    LexError err = null;
+    if (inp.length < 1) return new Tuple<ExprBase, LexError>(new ListExpr(LexicalContext.curlyBraces), err);
 
     int i = 0;
-    ListExpr curr = new ListExpr(ExprLexicalType.curlyBraces);
+    ListExpr curr = new ListExpr(LexicalContext.curlyBraces);
     val result = curr;
     val backtrack = new Stack<ListExpr>();
     backtrack.push(curr);
-    val firstList = new ListExpr(ExprLexicalType.statement);
+    val firstList = new ListExpr(LexicalContext.statement);
     curr.val.add(firstList);
     curr = firstList;
 
     int walkLen = inp.length - 1;
     while (i <= walkLen) {
         byte cChar = inp[i];
-        if (cChar > 127) return new Tuple<ExprBase, LexErrorBase>(result, new NonAsciiError());
-        Either<LexErrorBase, Tuple<ExprBase, Integer>> mbToken;
+        if (cChar > 127) return new Tuple<ExprBase, LexError>(result, new LexError("Non-ASCII symbol in code " + cChar));
+        Either<LexError, Tuple<ExprBase, Integer>> mbToken;
 
         if (cChar == ASCII.space || cChar == ASCII.emptyCR) {
             ++i;
         } else if (cChar == ASCII.emptyLF) {
             if (backtrack.peek() != null
-              && backtrack.peek().lType == ExprLexicalType.curlyBraces
+              && backtrack.peek().lType == LexicalContext.curlyBraces
               && curr.val.size() > 0) {
                 // we are in a CurlyBraces context, so a newline means a new statement
                 val back = backtrack.peek();
-                val newStatement = new ListExpr(ExprLexicalType.statement);
+                val newStatement = new ListExpr(LexicalContext.statement);
                 back.val.add(newStatement);
                 curr = newStatement;
             }
             ++i;
 
         } else if (cChar == ASCII.colonSemi) {
-            if (curr.lType == ExprLexicalType.parens) {
-                return new Tuple<ExprBase, LexErrorBase>(result, new UnexpectedSymbolError(
+            if (curr.lType == LexicalContext.parens) {
+                return new Tuple<ExprBase, LexError>(result, new LexError(
                     "Semi-colons are not allowed in inline expressions (i.e. directly inside parentheses)"));
             }
             val prevList = backtrack.peek();
 
             if (prevList != null) {
-                curr = new ListExpr(ExprLexicalType.statement);
+                curr = new ListExpr(LexicalContext.statement);
                 prevList.val.add(curr);
             } else {
-                return new Tuple<ExprBase, LexErrorBase>(result, new EmptyStackError());
+                return new Tuple<ExprBase, LexError>(result, new LexError("Lexer error: empty stack"));
             }
 
             ++i;
         } else if (cChar == ASCII.curlyOpen) {
-            if (curr.lType == ExprLexicalType.statement && curr.val.isEmpty()) {
-                curr.lType = ExprLexicalType.curlyBraces;
-                val newCurr = new ListExpr(ExprLexicalType.statement);
+            if (curr.lType == LexicalContext.statement && curr.val.isEmpty()) {
+                curr.lType = LexicalContext.curlyBraces;
+                val newCurr = new ListExpr(LexicalContext.statement);
                 curr.val.add(newCurr);
                 backtrack.push(curr);
                 curr = newCurr;
 
             } else {
-                val newList = new ListExpr(ExprLexicalType.curlyBraces);
-                val newCurr = new ListExpr(ExprLexicalType.statement);
+                val newList = new ListExpr(LexicalContext.curlyBraces);
+                val newCurr = new ListExpr(LexicalContext.statement);
                 newList.val.add(newCurr);
                 curr.val.add(newList);
                 backtrack.push(curr);
@@ -88,12 +87,12 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
 
             ++i;
         } else if (cChar == ASCII.curlyClose) {
-            if (backtrack.peek() == null || backtrack.peek().lType != ExprLexicalType.curlyBraces) {
-                return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingCurlyBraceError());
+            if (backtrack.peek() == null || backtrack.peek().lType != LexicalContext.curlyBraces) {
+                return new Tuple<ExprBase, LexError>(result, new LexError("Extra '}'"));
             }
             backtrack.pop();
             if (backtrack.peek() == null) {
-                return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingCurlyBraceError());
+                return new Tuple<ExprBase, LexError>(result, new LexError("Missing parent for '{}' context"));
             }
 
             val back = backtrack.pop();
@@ -105,14 +104,14 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
             curr = back;
             ++i;
         } else if (cChar == ASCII.parenthesisOpen) {
-            val newList = new ListExpr(ExprLexicalType.parens);
+            val newList = new ListExpr(LexicalContext.parens);
             curr.val.add(newList);
             backtrack.push(curr);
             curr = newList;
             ++i;
         } else if (cChar == ASCII.parenthesisClose) {
-            if (backtrack.peek() == null || curr.lType != ExprLexicalType.parens) {
-                return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingParenError());
+            if (backtrack.peek() == null || curr.lType != LexicalContext.parens) {
+                return new Tuple<ExprBase, LexError>(result, new LexError("Extra ')'"));
             }
             val back = backtrack.pop();
 
@@ -124,15 +123,15 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
             curr = back;
             ++i;
         }  else if (cChar == ASCII.bracketOpen) {
-            val newList = new ListExpr(ExprLexicalType.dataInitializer);
+            val newList = new ListExpr(LexicalContext.dataInitializer);
             curr.val.add(newList);
             backtrack.push(curr);
             curr = newList;
             ++i;
         } else if (cChar == ASCII.bracketClose) {
 
-            if (backtrack.peek() == null || curr.lType != ExprLexicalType.dataInitializer) {
-                return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingBracketError());
+            if (backtrack.peek() == null || curr.lType != LexicalContext.dataInitializer) {
+                return new Tuple<ExprBase, LexError>(result, new LexError("Extra ']'"));
             }
             val back = backtrack.pop();
 
@@ -167,10 +166,10 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
             } else if (isOperatorSymb(cChar) != OperatorSymb.notASymb) {
                 mbToken = lexOperator(inp, i, walkLen);
             } else {
-                mbToken = Either.left(new UnexpectedSymbolError(inp[i]));
+                mbToken = Either.left(new LexError("Unexpected symbol " + inp[i]));
             }
             if (mbToken.isLeft()) {
-                return new Tuple<ExprBase, LexErrorBase>(result, mbToken.getLeft());
+                return new Tuple<ExprBase, LexError>(result, mbToken.getLeft());
             } else {
                 val rt = mbToken.get();
                 curr.val.add(rt.i0);
@@ -187,7 +186,7 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
             }
         }
     }
-    return new Tuple<ExprBase, LexErrorBase>(result, err);
+    return new Tuple<ExprBase, LexError>(result, err);
 }
 
 /**
@@ -216,8 +215,8 @@ static byte[] maxInt = new byte[] {
         56, 48, 55,
     };
 
-static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexNumber(byte[] inp, int start, int walkLen) {
-    if (start > walkLen) return Either.left(new EndOfInputError());
+static Either<LexError, Tuple<ExprBase, Integer>> lexNumber(byte[] inp, int start, int walkLen) {
+    if (start > walkLen) return Either.left(new LexError("Unexpected end of input"));
 
     int ind = start;
     byte currByte = inp[start];
@@ -226,7 +225,9 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexNumber(byte[] inp, int 
     if (isNegative) {
         ++ind;
         currByte = inp[ind];
-        if (currByte < ASCII.digit0 || currByte > ASCII.digit9) return Either.left(new UnexpectedSymbolError("Expected a digit but got char " + currByte));
+        if (currByte < ASCII.digit0 || currByte > ASCII.digit9) {
+            return Either.left(new LexError("Unexpected symbol error: Expected a digit but got char " + currByte));
+        }
     }
     boolean isFloating = false;
 
@@ -261,7 +262,7 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexNumber(byte[] inp, int 
 }
 
 
-static Either<LexErrorBase, ExprBase> lexInt(byte[] inp, int start, int endInclusive, boolean isNegative) {
+static Either<LexError, ExprBase> lexInt(byte[] inp, int start, int endInclusive, boolean isNegative) {
     val digitList = filterBytes(inp, start, endInclusive, x -> x != ASCII.underscore);
 
     if (checkIntRange(digitList, isNegative)) {
@@ -269,17 +270,17 @@ static Either<LexErrorBase, ExprBase> lexInt(byte[] inp, int start, int endInclu
         return Either.right(new IntToken(isNegative ? (-1)*actualInt : actualInt));
     } else {
         return
-            Either.left(new IntError("Int lexical error: number outside range [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807]"));
+            Either.left(new LexError("Int lexical error: number outside range [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807]"));
     }
 }
 
 
-static Either<LexErrorBase, ExprBase> lexFloat(byte[] inp, int start, int endInclusive, boolean isNegative) {
+static Either<LexError, ExprBase> lexFloat(byte[] inp, int start, int endInclusive, boolean isNegative) {
     ByteList digitList = filterBytes(inp, start, endInclusive, (x) -> x != ASCII.underscore);
     val str = (isNegative ? "-" : "") + (digitList.toAsciiString());
     double result = tryParseDouble(str);
     return Double.isNaN(result)
-        ? Either.left(new IntError("Float lexical error: '$str' not parsing as a floating-point number"))
+        ? Either.left(new LexError("Float lexical error: '" + str + "' not parsing as a floating-point number"))
         : Either.right(new FloatToken(result));
 }
 
@@ -314,7 +315,7 @@ static long intOfDigits(ByteList digits) {
  * Lexically analyze a single word, i.e. a possibly dot-separated number of possibly underscore-initiated sections.
  * Examples: "foo", "foo.x", "Module.Submodule.foo", "_x", "_x1._y2"
  */
-static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int start, int walkLen) {
+static Either<LexError, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int start, int walkLen) {
     int startCapitalized = -1;
     int endCapitalized = -2;
     int startUncapitalized = -1;
@@ -329,7 +330,7 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int st
 
         if (!MutableBoolean.eq(prevCapitalized, nextCapitalized)) {
             if (nextCapitalized.v == true) {
-                return Either.left(new WordError("A word may not contain capitalized sections after uncapitalized ones"));
+                return Either.left(new LexError("A word may not contain capitalized sections after uncapitalized ones"));
             }
             prevCapitalized.v = nextCapitalized.v;
             if (prev > start) {
@@ -339,20 +340,20 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int st
             startUncapitalized = prev;
         }
         if (next <= walkLen && inp[next] == ASCII.underscore) {
-            return Either.left(new WordError("Snake case is forbidden in all identifiers. Underscores are only allowed in initial position"));
+            return Either.left(new LexError("Snake case is forbidden in all identifiers. Underscores are only allowed in initial position"));
         }
         if ((next <= walkLen && inp[next] != ASCII.dot) || next > walkLen) break;
         if (next == walkLen && inp[next] == ASCII.dot) {
-            return Either.left(new WordError("Premature end of input after dot in word"));
+            return Either.left(new LexError("Premature end of input after dot in word"));
         }
 
         byte afterDot = inp[next + 1];
         if (afterDot == ASCII.underscore) {
-            if (next == walkLen - 1) return Either.left(new WordError("Premature end of input after underscore in word"));
+            if (next == walkLen - 1) return Either.left(new LexError("Premature end of input after underscore in word"));
             afterDot = inp[next + 2];
         }
         if (afterDot < ASCII.aUpper || afterDot > ASCII.zLower && (afterDot > ASCII.zUpper && afterDot < ASCII.aLower)) {
-            return Either.left(new WordError("Unexpected character in word, expected a lowercase or uppercase letter, instead got value = " + afterDot));
+            return Either.left(new LexError("Unexpected character in word, expected a lowercase or uppercase letter, instead got value " + afterDot));
         }
         prev = next + 1;
     } while (next > start);
@@ -373,7 +374,7 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexWord(byte[] inp, int st
         val wordToken = new WordToken(stringOfASCII(inp, startUncapitalized, endUncapitalized));
         return Either.right(new Tuple<>(wordToken, next));
     } else {
-        return Either.left(new WordError("Word did not contain any letters"));
+        return Either.left(new LexError("Word did not contain any letters"));
     }
 }
 
@@ -414,8 +415,8 @@ static int lexWordSection(byte[] inp, int start, int walkLen, MutableBoolean was
  * Lexically analyze a dot-word, i.e. a word preceded by a dot (used for function names in function calls).
  * Examples: ".foo", ".foo.x._y", ".Module.Submodule.foo.x.y"
  */
-static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexDotWord(byte[] inp, int start, int walkLen) {
-    Either<LexErrorBase, Tuple<ExprBase, Integer>> wrd = lexWord(inp, start + 1, walkLen);
+static Either<LexError, Tuple<ExprBase, Integer>> lexDotWord(byte[] inp, int start, int walkLen) {
+    Either<LexError, Tuple<ExprBase, Integer>> wrd = lexWord(inp, start + 1, walkLen);
     if (wrd.isRight()) {
         return Either.right(new Tuple<>(new DotWordToken((WordToken)wrd.get().i0), wrd.get().i1));
     } else {
@@ -428,7 +429,7 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexDotWord(byte[] inp, int
  * Lexes a sequence of 1 to 3 of any of the following symbols:
  * & + - / * ! ~ $ % ^ | > < ? =
  */
-static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexOperator(byte[] inp, int start, int walkLen) {
+static Either<LexError, Tuple<ExprBase, Integer>> lexOperator(byte[] inp, int start, int walkLen) {
     int i = start;
     val result = new ArrayList<OperatorSymb>();
     byte currByte = inp[i];
@@ -441,7 +442,7 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexOperator(byte[] inp, in
         if (i <= walkLen) currByte = inp[i];
     }
     if (i <= walkLen && isOperatorSymb(inp[i]) != OperatorSymb.notASymb) {
-        return Either.left(new OperatorError("Operators longer than 3 symbols are not allowed"));
+        return Either.left(new LexError("Operators longer than 3 symbols are not allowed"));
     }
     return Either.right(new Tuple<ExprBase, Integer>(new OperatorToken(result), i));
 }
@@ -473,7 +474,7 @@ static OperatorSymb isOperatorSymb(byte symb) {
  * Reads symbols from '#' until a newline, or until the '.#' combination
  * Accepts arbitrary UTF-8 text (i.e. does not check that the byte is within ASCII range)
  */
-static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexComment(byte[] inp, int start, int walkLen) {
+static Either<LexError, Tuple<ExprBase, Integer>> lexComment(byte[] inp, int start, int walkLen) {
     int i = start + 1;
     int startContent = start + 1;
     int endContent = -1;
@@ -501,7 +502,7 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexComment(byte[] inp, int
  * Reads symbols from '"' until another '"', while skipping '\"' combination.
  * Accepts arbitrary UTF-8 text (i.e. does not check that the byte is within ASCII range)
  */
-static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexStringLiteral(byte[] inp, int start, int walkLen) {
+static Either<LexError, Tuple<ExprBase, Integer>> lexStringLiteral(byte[] inp, int start, int walkLen) {
     // TODO replace the escaped double quote characters in the input
     int i = start + 1;
     int startContent = start + 1;
@@ -519,7 +520,7 @@ static Either<LexErrorBase, Tuple<ExprBase, Integer>> lexStringLiteral(byte[] in
         }
         ++i;
     }
-    if (endContent == -1) return Either.left(new EndOfInputError());
+    if (endContent == -1) return Either.left(new LexError("End of input error"));
     if (startContent == endContent) return Either.right(new Tuple<ExprBase, Integer>(new StringToken(""), i));
     val subList = new byte[endContent - startContent + 1];
     for (int j = startContent; j <= endContent; ++j) {

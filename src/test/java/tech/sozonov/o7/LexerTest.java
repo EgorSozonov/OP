@@ -8,7 +8,9 @@ import java.nio.charset.StandardCharsets;
 import lombok.val;
 import tech.sozonov.o7.lexer.Lexer;
 import tech.sozonov.o7.lexer.types.Expr.*;
+import tech.sozonov.o7.lexer.types.OperatorSymb;
 import java.util.Arrays;
+import java.util.List;
 
 
 @DisplayName("Lexer tests")
@@ -225,6 +227,19 @@ void statement1() {
     val input = "abc _5 4.21";
     val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
     val expected = ExprBase.wrapListTokens(Arrays.asList(new WordToken("abc"), new IntToken(-5), new FloatToken(4.21)));
+    assertNull(output.i1);
+    assertTrue(ExprBase.checkEquality(expected, output));
+}
+
+@Test
+@DisplayName("Given a statement with no spaces between tokens, they should be lexed correctly")
+void statement2() {
+    val input = "abc+5/7";
+    val output = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
+    val expected = ExprBase.wrapListTokens(Arrays.asList(
+        new WordToken("abc"), new OperatorToken(List.of(OperatorSymb.plus)), new IntToken(5),
+        new OperatorToken(List.of(OperatorSymb.slash)), new IntToken(7)
+    ));
     assertNull(output.i1);
     assertTrue(ExprBase.checkEquality(expected, output));
 }
