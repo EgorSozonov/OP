@@ -15,7 +15,6 @@ import tech.sozonov.o7.utils.ArrayUtils;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Triple;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
-import tech.sozonov.o7.parser.types.ParseError.ParseErrorBase;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import static tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext.*;
 
@@ -232,7 +231,7 @@ public final static class ASTList extends ASTUntypedBase {
     /**
      * Try to add a new item to the current AST node. Returns a syntax error if unsuccessful.
      */
-    public Optional<ParseErrorBase> add(ASTUntypedBase newItem) {
+    public Optional<SyntaxError> add(ASTUntypedBase newItem) {
         // TODO adding of stuff in accordance to parse context
         // TODO forbid core form initial words in any position except initial
         if (isAssignment()) {

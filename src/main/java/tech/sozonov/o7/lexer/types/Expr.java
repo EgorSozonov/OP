@@ -2,7 +2,6 @@ package tech.sozonov.o7.lexer.types;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
-import tech.sozonov.o7.lexer.types.LexError.LexErrorBase;
 import tech.sozonov.o7.utils.Stack;
 import tech.sozonov.o7.utils.Tuple;
 import lombok.val;
@@ -80,7 +79,7 @@ public static class ExprBase {
     /**
      * Simplifies checking of equality between results of lexing and expected values.
      */
-    public static boolean checkEquality(ExprBase a, Tuple<ExprBase, LexErrorBase> b) {
+    public static boolean checkEquality(ExprBase a, Tuple<ExprBase, LexError> b) {
         return b.i1 == null && ListExpr.equal(a, b.i0);
     }
 }

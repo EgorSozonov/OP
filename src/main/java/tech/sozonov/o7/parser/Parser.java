@@ -8,7 +8,7 @@ import tech.sozonov.o7.parser.types.Syntax;
 import tech.sozonov.o7.parser.types.ASTUntyped.*;
 import static tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext.*;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
-import tech.sozonov.o7.parser.types.ParseError.*;
+import tech.sozonov.o7.parser.types.SyntaxError;
 import tech.sozonov.o7.utils.Tuple;
 import tech.sozonov.o7.utils.Either;
 import tech.sozonov.o7.utils.Stack;
@@ -24,14 +24,14 @@ public class Parser {
  * For example, what was "if x > 5 -> (f)" becomes "if (x > 5) (f)".
  * Full list of new punctuation symbols: -> : $
  */
-public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
+public static Tuple<ASTUntypedBase, SyntaxError> parse(ExprBase inp) {
     var result = new ASTList(curlyBraces);
     val syntax = new Syntax();
     var backtrack = new Stack<Tuple<ListExpr, Integer>>();
     var resultBacktrack = new Stack<ASTList>();
 
     if (!(inp instanceof ListExpr le)) {
-        return new Tuple<ASTUntypedBase, ParseErrorBase>(parseAtom(inp, syntax), null);
+        return new Tuple<ASTUntypedBase, SyntaxError>(parseAtom(inp, syntax), null);
     }
 
     int i = 0;
@@ -147,7 +147,7 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
         }
     }
     // TODO check if the stack in resultBacktrack is empty
-    return new Tuple<ASTUntypedBase, ParseErrorBase>(result, null);
+    return new Tuple<ASTUntypedBase, SyntaxError>(result, null);
 }
 
 
@@ -191,7 +191,7 @@ static Tuple<SyntaxContext, Boolean> determineListTypeNoErrCheck(ListExpr input,
  * Determines the syntactic type of the expression: a function call, an assignment/definition, a core syntactic form, or a type declaration.
  * Returns: either a parse error, or a tuple of SyntaxContext and a boolean of whether to skip the first token (useful for core syntax forms).
  */
-static Either<ParseErrorBase, Tuple<SyntaxContext, Boolean>> determineListType(ListExpr input, Map<String, SyntaxContext> syntaxContexts) {
+static Either<SyntaxError, Tuple<SyntaxContext, Boolean>> determineListType(ListExpr input, Map<String, SyntaxContext> syntaxContexts) {
     val tuple = determineListTypeNoErrCheck(input, syntaxContexts);
     if (input.lType == LexicalContext.parens && ASTUntypedBase.isAssignment(tuple.i0)) {
         return Either.left(new SyntaxError("Assignments are not allowed in parentheses, only on the statement level (i.e. inside curly braces)"));
