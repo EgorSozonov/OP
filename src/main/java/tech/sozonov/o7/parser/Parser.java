@@ -128,7 +128,7 @@ public static Tuple<ASTUntypedBase, SyntaxError> parse(ExprBase inp) {
                 i = skipFirstToken ? 1 : 0;
             } else {
                 val atom = parseAtom(сurrToken, syntax);
-                val mbError = curr.add(atom);
+                val mbError = curr.addAtom(atom);
                 if (mbError.isPresent()) return new Tuple<>(result, mbError.get());
                 ++i;
             }
@@ -146,7 +146,9 @@ public static Tuple<ASTUntypedBase, SyntaxError> parse(ExprBase inp) {
             }
         }
     }
-    // TODO check if the stack in resultBacktrack is empty
+    if (resultBacktrack.peek() != null) {
+        return new Tuple<>(result, new SyntaxError("Strange error: non-empty result stack at the end"));
+    }
     return new Tuple<ASTUntypedBase, SyntaxError>(result, null);
 }
 
@@ -165,7 +167,7 @@ static ASTList cleanPop(Stack<ASTList> backtrack, ASTList curr) {
  * or a tuple of SyntaxContext and a boolean of whether to skip the first token (necessary for the case of a core syntax form).
  */
 static Tuple<SyntaxContext, Boolean> determineListTypeNoErrCheck(ListExpr input, Map<String, SyntaxContext> syntaxContexts) {
-    val mbCore = getMbCore(input, syntaxContexts);
+    val mbCore = checkListIsCore(input, syntaxContexts);
     if (mbCore.isPresent())  return new Tuple<>(mbCore.get(), true);
 
     if (input.val.size() >= 3 && input.val.get(1) instanceof OperatorToken ot) {
@@ -204,7 +206,7 @@ static Either<SyntaxError, Tuple<SyntaxContext, Boolean>> determineListType(List
 /**
  * Determines core syntactical forms, but only judging on the first token (or first 2 tokens for unbounded-able forms).
  */
-static Optional<SyntaxContext> getMbCore(ListExpr expr, Map<String, SyntaxContext> reservedWords) {
+static Optional<SyntaxContext> checkListIsCore(ListExpr expr, Map<String, SyntaxContext> reservedWords) {
     if (!(expr.val.get(0) instanceof WordToken)) return Optional.empty();
     val word = (WordToken)expr.val.get(0);
     if (!reservedWords.containsKey(word.val)) return Optional.empty();

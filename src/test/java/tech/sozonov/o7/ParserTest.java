@@ -1,6 +1,8 @@
 package tech.sozonov.o7;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.charset.StandardCharsets;
@@ -49,7 +51,6 @@ public class ParserTest {
         assertNull(lexResult.i1);
         var parseRes = Parser.parse(lexed);
         assertNull(parseRes.i1);
-
         assertTrue(ASTUntypedBase.equal(parseRes.i0, expected));
     }
 
@@ -106,6 +107,20 @@ public class ParserTest {
         assertNull(parseRes.i1);
 
         assertTrue(ASTUntypedBase.equal(parseRes.i0, expected));
+    }
+
+    @Test
+    @DisplayName("Given a statement with a core form marker in non-initial position, parsing should fail")
+    void reserved1() {
+        val input = """
+        if x > 5 && while x < 10
+        """;
+
+        val lexResult = Lexer.lexicallyAnalyze(input.getBytes(StandardCharsets.UTF_8));
+        var lexed = lexResult.i0;
+        assertNull(lexResult.i1);
+        var parseRes = Parser.parse(lexed);
+        assertNotNull(parseRes.i1);
     }
 
 }

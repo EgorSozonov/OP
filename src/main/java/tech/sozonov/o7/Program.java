@@ -1,30 +1,18 @@
 package tech.sozonov.o7;
 import tech.sozonov.o7.lexer.Lexer;
 import tech.sozonov.o7.parser.Parser;
-import tech.sozonov.o7.parser.types.ASTUntyped.*;
-import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
-import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
-import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import java.nio.charset.StandardCharsets;
 import lombok.val;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
-import java.util.ArrayList;
-import java.util.List;
 
 
 class Program {
 public static void main(String[] args) {
 
     val innp = """
-    if x > 5 -> ({
-            if
-                y < 10 -> 11
-                else -> _1
-            })
-       z > 1 -> 2
-       else  -> 0
-
-    print 5
+    if x > 5 && (x < 10) -> 0
+           x > 1 -> 10
+           else  -> 20
     """;
 
     val res = Lexer.lexicallyAnalyze(innp.getBytes(StandardCharsets.UTF_8));
@@ -44,48 +32,9 @@ public static void main(String[] args) {
             l(parseRes.i1.toString());
             l(parseRes.i0.toString());
         } else {
-            List<ArrayList<ASTUntypedBase>> innards = List.of(
-                    new ArrayList<>(
-                        List.of(
-                            new ASTList(SyntaxContext.iff, List.of(
-                                new ArrayList<>(
-                                    List.of(new Ident("x"), new FunctionOperatorAST(CoreOperator.greaterThan), new IntLiteral(5))),
-                                new ArrayList<>(List.of(new ASTList(SyntaxContext.curlyBraces, List.of(
-                                    new ArrayList<>(List.of(new ASTList(SyntaxContext.curlyBraces,
-                                        List.of(new ArrayList<>(List.of( new ASTList(SyntaxContext.iff, List.of(
-                                                new ArrayList<>(List.of(new Ident("y"),
-                                                                        new FunctionOperatorAST(CoreOperator.lessThan),
-                                                                        new IntLiteral(10))),
-                                                new ArrayList<>(List.of(new IntLiteral(11))),
-                                                new ArrayList<>(List.of(new ReservedLiteral(ReservedWord.elsee))),
-                                                new ArrayList<>(List.of(new IntLiteral(-1)))
-                                            )
-                                        ))))
-                                    ))))))
-                                ),
-                                new ArrayList<>(List.of(new Ident("z"), new FunctionOperatorAST(CoreOperator.greaterThan), new IntLiteral(1))),
-                                new ArrayList<>(List.of(new IntLiteral(2))),
-                                new ArrayList<>(List.of(new ReservedLiteral(ReservedWord.elsee))),
-                                new ArrayList<>(List.of( new IntLiteral(0)))
-                            )
-                        ),
-
-                        new ASTList(SyntaxContext.funcall, List.of(
-                            new ArrayList<>(List.of(new Ident("print"), new IntLiteral(5)))
-                            ))
-                        )));
-            val expected = new ASTList(SyntaxContext.curlyBraces, innards);
-
-            l(ASTUntypedBase.equal(parseRes.i0, expected) + "");
-
-            l(expected.toString());
-
             l("Parser successful");
-            //l(parseRes.i0.toString());
+            l(parseRes.i0.toString());
         }
-
-        // print("Expected:");
-        // print(expected);
     }
 }
 

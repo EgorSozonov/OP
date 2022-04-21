@@ -503,7 +503,7 @@ static Either<LexError, Tuple<ExprBase, Integer>> lexComment(byte[] inp, int sta
  * Accepts arbitrary UTF-8 text (i.e. does not check that the byte is within ASCII range)
  */
 static Either<LexError, Tuple<ExprBase, Integer>> lexStringLiteral(byte[] inp, int start, int walkLen) {
-    // TODO replace the escaped double quote characters in the input
+    // TODO replace the escaped double quote characters in the string literals
     int i = start + 1;
     int startContent = start + 1;
     int endContent = -1;

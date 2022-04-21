@@ -27,7 +27,6 @@ public static class ASTUntypedBase {
                 || ctx == structt || ctx == sumTypee);
     }
 
-
     public static boolean isAssignment(SyntaxContext ctx) {
         return EnumSet.range(assignImmutable, assignMutableDiv).contains(ctx);
     }
@@ -233,7 +232,35 @@ public final static class ASTList extends ASTUntypedBase {
      */
     public Optional<SyntaxError> add(ASTUntypedBase newItem) {
         // TODO adding of stuff in accordance to parse context
-        // TODO forbid core form initial words in any position except initial
+        if (isAssignment()) {
+            if (newItem instanceof CoreOperatorAST co && EnumSet.range(CoreOperator.defineImm, CoreOperator.divideMut).contains(co.val)) {
+                newStatement();
+                return Optional.empty();
+            }
+        } else if (isClauseBased()) {
+            if (newItem instanceof CoreOperatorAST co) {
+                if ((co.val == CoreOperator.arrow && (ctx == matchh || ctx == iff))
+                    || (co.val == CoreOperator.pipe && (ctx == sumTypee) )
+                    || (co.val == CoreOperator.colon && (ctx == structt))) {
+                    newStatement();
+                    return Optional.empty();
+                }
+            }
+        }
+        curr.add(newItem);
+        // ind++;
+        return Optional.empty();
+    }
+
+    /**
+     * Try to add a new item to the current AST node. Returns a syntax error if unsuccessful.
+     */
+    public Optional<SyntaxError> addAtom(ASTUntypedBase newItem) {
+        if (newItem instanceof ASTList lst && lst.isCoreForm()) {
+            val ctxName = lst.ctx.toString();
+            return Optional.of(new SyntaxError("Core form markers like " + ctxName.substring(0, ctxName.length() - 1)
+                                                + " are only allowed in initial position"));
+        }
         if (isAssignment()) {
             if (newItem instanceof CoreOperatorAST co && EnumSet.range(CoreOperator.defineImm, CoreOperator.divideMut).contains(co.val)) {
                 newStatement();
@@ -305,7 +332,6 @@ public final static class ASTList extends ASTUntypedBase {
     public boolean statementFitsCoreForm(ListExpr le) {
         final int len = le.val.size();
 
-        // TODO forbid new core forms within the current one
         if (ctx == iff) {
             // Must be of the form "a .func b -> b"
             if (len < 3) return false;
