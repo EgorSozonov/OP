@@ -43,7 +43,7 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
             ++i;
         } else if (cChar == ASCII.emptyLF) {
             if (backtrack.peek() != null
-              && backtrack.peek().pType == ExprLexicalType.curlyBraces
+              && backtrack.peek().lType == ExprLexicalType.curlyBraces
               && curr.val.size() > 0) {
                 // we are in a CurlyBraces context, so a newline means a new statement
                 val back = backtrack.peek();
@@ -54,7 +54,7 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
             ++i;
 
         } else if (cChar == ASCII.colonSemi) {
-            if (curr.pType == ExprLexicalType.parens) {
+            if (curr.lType == ExprLexicalType.parens) {
                 return new Tuple<ExprBase, LexErrorBase>(result, new UnexpectedSymbolError(
                     "Semi-colons are not allowed in inline expressions (i.e. directly inside parentheses)"));
             }
@@ -69,8 +69,8 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
 
             ++i;
         } else if (cChar == ASCII.curlyOpen) {
-            if (curr.pType == ExprLexicalType.statement && curr.val.isEmpty()) {
-                curr.pType = ExprLexicalType.curlyBraces;
+            if (curr.lType == ExprLexicalType.statement && curr.val.isEmpty()) {
+                curr.lType = ExprLexicalType.curlyBraces;
                 val newCurr = new ListExpr(ExprLexicalType.statement);
                 curr.val.add(newCurr);
                 backtrack.push(curr);
@@ -88,7 +88,7 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
 
             ++i;
         } else if (cChar == ASCII.curlyClose) {
-            if (backtrack.peek() == null || backtrack.peek().pType != ExprLexicalType.curlyBraces) {
+            if (backtrack.peek() == null || backtrack.peek().lType != ExprLexicalType.curlyBraces) {
                 return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingCurlyBraceError());
             }
             backtrack.pop();
@@ -111,7 +111,7 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
             curr = newList;
             ++i;
         } else if (cChar == ASCII.parenthesisClose) {
-            if (backtrack.peek() == null || curr.pType != ExprLexicalType.parens) {
+            if (backtrack.peek() == null || curr.lType != ExprLexicalType.parens) {
                 return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingParenError());
             }
             val back = backtrack.pop();
@@ -131,7 +131,7 @@ public static Tuple<ExprBase, LexErrorBase> lexicallyAnalyze(byte[] inp) {
             ++i;
         } else if (cChar == ASCII.bracketClose) {
 
-            if (backtrack.peek() == null || curr.pType != ExprLexicalType.dataInitializer) {
+            if (backtrack.peek() == null || curr.lType != ExprLexicalType.dataInitializer) {
                 return new Tuple<ExprBase, LexErrorBase>(result, new ExtraClosingBracketError());
             }
             val back = backtrack.pop();

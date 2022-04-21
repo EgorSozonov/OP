@@ -57,7 +57,7 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                 // paren -> funcall | core form
                 // dataInit -> dataInit
 
-                if (le2.pType == ExprLexicalType.curlyBraces) {
+                if (le2.lType == ExprLexicalType.curlyBraces) {
                     if (curr.isUnbounded()) {
                         if (curr.isEmpty()) return new Tuple<>(result, new SyntaxError("Curly braces are not allowed in an unbounded core syntax form like " + curr.ctx));
                         curr = cleanPop(resultBacktrack, curr);
@@ -68,7 +68,7 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                         resultBacktrack.push(curr);
                         curr = newList;
                     }
-                } else if (le2.pType == ExprLexicalType.statement) {
+                } else if (le2.lType == ExprLexicalType.statement) {
                     if (curr.ctx != curlyBraces && !curr.isCoreForm()) {
                         return new Tuple<>(result, new SyntaxError("Statements are only allowed in curly braces or core syntax forms, not inside " + curr.ctx));
                     }
@@ -93,7 +93,7 @@ public static Tuple<ASTUntypedBase, ParseErrorBase> parse(ExprBase inp) {
                         resultBacktrack.push(curr);
                         curr = newList;
                     }
-                } else if (le2.pType == ExprLexicalType.parens) {
+                } else if (le2.lType == ExprLexicalType.parens) {
                     if (curr.isUnbounded()) {
                         if (curr.isEmpty()) new Tuple<>(result, new SyntaxError("Parentheses are not allowed in an unbounded core syntax form like " + curr.ctx));
                     }
@@ -180,7 +180,7 @@ static Tuple<SyntaxContext, Boolean> determineListTypeNoErrCheck(ListExpr input,
         }
         if (ot.val.size() == 2 && firstOper == OperatorSymb.colon && ot.val.get(1) == OperatorSymb.colon) return new Tuple<>(typeDeclaration, false);
     }
-    if (input.val.size() == 1 && input.val.get(0) instanceof ListExpr le && le.pType == ExprLexicalType.curlyBraces) {
+    if (input.val.size() == 1 && input.val.get(0) instanceof ListExpr le && le.lType == ExprLexicalType.curlyBraces) {
         return new Tuple<>(curlyBraces, false);
     }
     return new Tuple<>(funcall, false);
@@ -193,7 +193,7 @@ static Tuple<SyntaxContext, Boolean> determineListTypeNoErrCheck(ListExpr input,
  */
 static Either<ParseErrorBase, Tuple<SyntaxContext, Boolean>> determineListType(ListExpr input, Map<String, SyntaxContext> syntaxContexts) {
     val tuple = determineListTypeNoErrCheck(input, syntaxContexts);
-    if (input.pType == ExprLexicalType.parens && ASTUntypedBase.isAssignment(tuple.i0)) {
+    if (input.lType == ExprLexicalType.parens && ASTUntypedBase.isAssignment(tuple.i0)) {
         return Either.left(new SyntaxError("Assignments are not allowed in parentheses, only on the statement level (i.e. inside curly braces)"));
     } else {
         return Either.right(tuple);

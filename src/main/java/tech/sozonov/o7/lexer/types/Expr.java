@@ -11,6 +11,49 @@ import lombok.val;
 public class Expr {
 
 public static class ExprBase {
+    public static boolean equal(ExprBase a, ExprBase b) {
+        if (!(a instanceof ListExpr) || !(b instanceof ListExpr)) return a == b;
+
+        var backtrackA = new Stack<Tuple<ListExpr, Integer>>();
+        var backtrackB = new Stack<ListExpr>();
+
+        backtrackA.push(new Tuple<ListExpr, Integer>((ListExpr)a, 0));
+        backtrackB.push((ListExpr)b);
+        int i = 0;
+
+        while (backtrackA.peek() != null) {
+            if (backtrackB.peek() == null) return false;
+
+            var listA = backtrackA.pop();
+            var listB = backtrackB.pop();
+            i = listA.i1;
+            if (listA.i0.lType != listB.lType || listA.i0.val.size() != listB.val.size()) {
+                return false;
+            }
+
+            while (i < listA.i0.val.size()) {
+                var itmA = listA.i0.val.get(i);
+                var itmB = listB.val.get(i);
+
+                if (itmA instanceof ListExpr le1 && itmB instanceof ListExpr le2) {
+                    listA = new Tuple<>(le1, 0);
+                    listB = le2;
+
+                    if (listA.i0.lType != listB.lType || listA.i0.val.size() != listB.val.size()) {
+                        return false;
+                    }
+                    backtrackA.push(new Tuple<>(listA.i0, i + 1));
+                    backtrackB.push(listB);
+                    i = 0;
+                } else if (!itmA.equals(itmB)) {
+                    return false;
+                } else {
+                    ++i;
+                }
+            }
+        }
+        return true;
+    }
 
     /**
      * Wraps one token the way it would be wrapped when lexing a real text input.
@@ -35,69 +78,24 @@ public static class ExprBase {
     }
 
     /**
-     * Wraps a list of tokens into a statement the way it would be wrapped when lexing a real text input.
+     * Simplifies checking of equality between results of lexing and expected values.
      */
     public static boolean checkEquality(ExprBase a, Tuple<ExprBase, LexErrorBase> b) {
         return b.i1 == null && ListExpr.equal(a, b.i0);
     }
-
 }
+
 /** A list of tokens, which can be a statement, a list of statements,
  * or a data initializer
 */
 public final static class ListExpr extends ExprBase {
     public List<ExprBase> val;
-    public ExprLexicalType pType;
+    public ExprLexicalType lType;
 
     public ListExpr(ExprLexicalType pType) {
         this.val = new ArrayList<ExprBase>();
-        this.pType = pType;
+        this.lType = pType;
     }
-
-    public static boolean equal(ExprBase a, ExprBase b) {
-        if (!(a instanceof ListExpr) || !(b instanceof ListExpr)) return a == b;
-
-        var backtrackA = new Stack<Tuple<ListExpr, Integer>>();
-        var backtrackB = new Stack<ListExpr>();
-
-        backtrackA.push(new Tuple<ListExpr, Integer>((ListExpr)a, 0));
-        backtrackB.push((ListExpr)b);
-        int i = 0;
-
-        while (backtrackA.peek() != null) {
-            if (backtrackB.peek() == null) return false;
-
-            var listA = backtrackA.pop();
-            var listB = backtrackB.pop();
-            i = listA.i1;
-            if (listA.i0.pType != listB.pType || listA.i0.val.size() != listB.val.size()) {
-                return false;
-            }
-
-            while (i < listA.i0.val.size()) {
-                var itmA = listA.i0.val.get(i);
-                var itmB = listB.val.get(i);
-
-                if (itmA instanceof ListExpr && itmB instanceof ListExpr) {
-                    listA = new Tuple<ListExpr, Integer>((ListExpr)itmA, 0);
-                    listB = (ListExpr)itmB;
-
-                    if (listA.i0.pType != listB.pType || listA.i0.val.size() != listB.val.size()) {
-                        return false;
-                    }
-                    backtrackA.push(new Tuple<ListExpr, Integer>(listA.i0, i + 1));
-                    backtrackB.push(listB);
-                    i = 0;
-                } else if (!itmA.equals(itmB)) {
-                    return false;
-                } else {
-                    ++i;
-                }
-            }
-        }
-        return true;
-    }
-
 
     @Override
     public boolean equals(Object o) {
@@ -125,18 +123,18 @@ public final static class ListExpr extends ExprBase {
                         backtrack.push(new Tuple<ListExpr, Integer>(curr, i));
                         curr = listElem;
                         i = 0;
-                        if (listElem.pType == ExprLexicalType.curlyBraces) {
+                        if (listElem.lType == ExprLexicalType.curlyBraces) {
                             result.append("{ ");
-                        } else if (listElem.pType == ExprLexicalType.dataInitializer) {
+                        } else if (listElem.lType == ExprLexicalType.dataInitializer) {
                             result.append("[ ");
-                        } else if (listElem.pType == ExprLexicalType.parens){
+                        } else if (listElem.lType == ExprLexicalType.parens){
                             result.append("( ");
                         } else {
                             result.append("| ");
                         }
 
                     } else {
-                        result.append("!!empty " + listElem.pType + "!! ");
+                        result.append("!!empty " + listElem.lType + "!! ");
                         ++i;
                     }
                 } else {
@@ -146,11 +144,11 @@ public final static class ListExpr extends ExprBase {
                 }
             }
             if (backtrack.peek() != null) {
-                if (curr.pType == ExprLexicalType.curlyBraces) {
+                if (curr.lType == ExprLexicalType.curlyBraces) {
                     result.append(" }, ");
-                } else if (curr.pType == ExprLexicalType.dataInitializer) {
+                } else if (curr.lType == ExprLexicalType.dataInitializer) {
                     result.append(" ], ");
-                } else if (curr.pType == ExprLexicalType.parens) {
+                } else if (curr.lType == ExprLexicalType.parens) {
                     result.append(" ), ");
                 } else {
                     result.append(" |, ");
@@ -277,7 +275,7 @@ public final static class DotWordToken extends ExprBase {
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof WordToken wt) ? this.val.equals(wt.val) && this.capitalizedPrefix.equals(wt.capitalizedPrefix) : false;
+        return (o instanceof DotWordToken wt) ? val.equals(wt.val) && capitalizedPrefix.equals(wt.capitalizedPrefix) : false;
     }
 
     @Override

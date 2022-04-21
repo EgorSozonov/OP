@@ -1,6 +1,5 @@
 package tech.sozonov.o7;
 import tech.sozonov.o7.lexer.Lexer;
-import tech.sozonov.o7.lexer.types.Expr.*;
 import tech.sozonov.o7.parser.Parser;
 import tech.sozonov.o7.parser.types.ASTUntyped.*;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
@@ -9,37 +8,13 @@ import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import java.nio.charset.StandardCharsets;
 import lombok.val;
 import static tech.sozonov.o7.utils.ArrayUtils.*;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
 
 class Program {
 public static void main(String[] args) {
 
-
-    val innp0 = ".x";
-    val resL = Lexer.lexicallyAnalyze(innp0.getBytes(StandardCharsets.UTF_8));
-    l(resL.toString());
-    // val a = new ASTList(SyntaxContext.funcall);
-    // a.data.get(0).add(new IntLiteral(5));
-
-    // val b = new ASTList(SyntaxContext.funcall);
-    // b.data.get(0).add(new IntLiteral(5));
-    // b.data.get(0).add(new FloatLiteral(5.2));
-
-    // l(ASTUntypedBase.equal(a, b) + "");
-
-
-
-    if (2 > 1) return;
-
-//         val innp = """
-//         while x > 5 {
-//             print x
-//             x += 1
-//         }
-// """;
     val innp = """
     if x > 5 -> ({
             if

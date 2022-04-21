@@ -59,7 +59,7 @@ public class ParserTest {
         val input = """
         if x > 5 -> ({
                 if
-                    y < 10 -> 11
+                    y.z < 10 -> 11
                     else -> _1
                 })
            z > 1 -> 2
@@ -76,7 +76,7 @@ public class ParserTest {
                         new ArrayList<>(List.of(new ASTList(SyntaxContext.curlyBraces, List.of(
                             new ArrayList<>(List.of(new ASTList(SyntaxContext.curlyBraces,
                                 List.of(new ArrayList<>(List.of( new ASTList(SyntaxContext.iff, List.of(
-                                        new ArrayList<>(List.of(new Ident("y"),
+                                        new ArrayList<>(List.of(new Ident("y.z"),
                                                                 new FunctionOperatorAST(CoreOperator.lessThan),
                                                                 new IntLiteral(10))),
                                         new ArrayList<>(List.of(new IntLiteral(11))),
