@@ -14,7 +14,7 @@ import tech.sozonov.o7.parser.Parser;
 import tech.sozonov.o7.parser.types.SyntaxContexts.CoreOperator;
 import tech.sozonov.o7.parser.types.SyntaxContexts.ReservedWord;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
-import tech.sozonov.o7.parser.types.ASTUntyped.*;
+import tech.sozonov.o7.parser.types.AST.*;
 
 
 public class ParserTest {
@@ -26,7 +26,7 @@ public class ParserTest {
            x > 1 -> 10
            else  -> 20
         """;
-        List<ArrayList<ASTUntypedBase>> innards = List.of(
+        List<ArrayList<ASTBase>> innards = List.of(
             new ArrayList<>(
                 List.of(
                     new ASTList(SyntaxContext.iff, List.of(
@@ -51,7 +51,7 @@ public class ParserTest {
         assertNull(lexResult.i1);
         var parseRes = Parser.parse(lexed);
         assertNull(parseRes.i1);
-        assertTrue(ASTUntypedBase.equal(parseRes.i0, expected));
+        assertTrue(ASTBase.equal(parseRes.i0, expected));
     }
 
     @Test
@@ -68,7 +68,7 @@ public class ParserTest {
 
         print 5
         """;
-        List<ArrayList<ASTUntypedBase>> innards = List.of(
+        List<ArrayList<ASTBase>> innards = List.of(
             new ArrayList<>(
                 List.of(
                     new ASTList(SyntaxContext.iff, List.of(
@@ -106,7 +106,7 @@ public class ParserTest {
         var parseRes = Parser.parse(lexed);
         assertNull(parseRes.i1);
 
-        assertTrue(ASTUntypedBase.equal(parseRes.i0, expected));
+        assertTrue(ASTBase.equal(parseRes.i0, expected));
     }
 
     @Test

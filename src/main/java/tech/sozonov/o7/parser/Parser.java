@@ -5,7 +5,7 @@ import tech.sozonov.o7.lexer.types.LexicalContext;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
 import tech.sozonov.o7.lexer.types.Expr.*;
 import tech.sozonov.o7.parser.types.Syntax;
-import tech.sozonov.o7.parser.types.ASTUntyped.*;
+import tech.sozonov.o7.parser.types.AST.*;
 import static tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext.*;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import tech.sozonov.o7.parser.types.SyntaxError;
@@ -24,14 +24,14 @@ public class Parser {
  * For example, what was "if x > 5 -> (f)" becomes "if (x > 5) (f)".
  * Full list of new punctuation symbols: -> : $
  */
-public static Tuple<ASTUntypedBase, SyntaxError> parse(ExprBase inp) {
+public static Tuple<ASTBase, SyntaxError> parse(ExprBase inp) {
     var result = new ASTList(curlyBraces);
     val syntax = new Syntax();
     var backtrack = new Stack<Tuple<ListExpr, Integer>>();
     var resultBacktrack = new Stack<ASTList>();
 
     if (!(inp instanceof ListExpr le)) {
-        return new Tuple<ASTUntypedBase, SyntaxError>(parseAtom(inp, syntax), null);
+        return new Tuple<ASTBase, SyntaxError>(parseAtom(inp, syntax), null);
     }
 
     int i = 0;
@@ -149,7 +149,7 @@ public static Tuple<ASTUntypedBase, SyntaxError> parse(ExprBase inp) {
     if (resultBacktrack.peek() != null) {
         return new Tuple<>(result, new SyntaxError("Strange error: non-empty result stack at the end"));
     }
-    return new Tuple<ASTUntypedBase, SyntaxError>(result, null);
+    return new Tuple<ASTBase, SyntaxError>(result, null);
 }
 
 
@@ -195,7 +195,7 @@ static Tuple<SyntaxContext, Boolean> determineListTypeNoErrCheck(ListExpr input,
  */
 static Either<SyntaxError, Tuple<SyntaxContext, Boolean>> determineListType(ListExpr input, Map<String, SyntaxContext> syntaxContexts) {
     val tuple = determineListTypeNoErrCheck(input, syntaxContexts);
-    if (input.lType == LexicalContext.parens && ASTUntypedBase.isAssignment(tuple.i0)) {
+    if (input.lType == LexicalContext.parens && ASTBase.isAssignment(tuple.i0)) {
         return Either.left(new SyntaxError("Assignments are not allowed in parentheses, only on the statement level (i.e. inside curly braces)"));
     } else {
         return Either.right(tuple);
@@ -216,7 +216,7 @@ static Optional<SyntaxContext> checkListIsCore(ListExpr expr, Map<String, Syntax
 }
 
 
-static ASTUntypedBase parseAtom(ExprBase inp, Syntax syntax) {
+static ASTBase parseAtom(ExprBase inp, Syntax syntax) {
     if (inp instanceof IntToken it) {
         return new IntLiteral(it.val);
     } else if (inp instanceof FloatToken ft) {

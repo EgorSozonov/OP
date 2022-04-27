@@ -19,9 +19,9 @@ import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import static tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext.*;
 
 
-public class ASTUntyped {
+public class AST {
 
-public static class ASTUntypedBase {
+public static class ASTBase {
     public static boolean isContextUnbounded(SyntaxContext ctx) {
         return (ctx == iff || ctx == matchh
                 || ctx == structt || ctx == sumTypee);
@@ -31,7 +31,7 @@ public static class ASTUntypedBase {
         return EnumSet.range(assignImmutable, assignMutableDiv).contains(ctx);
     }
 
-    public static boolean equal(ASTUntypedBase a, ASTUntypedBase b) {
+    public static boolean equal(ASTBase a, ASTBase b) {
         if (a.getClass() != b.getClass()) return false;
 
         if (a instanceof ASTList l1) {
@@ -204,11 +204,12 @@ public static class ASTUntypedBase {
     }
 }
 
-public final static class ASTList extends ASTUntypedBase {
-    public ArrayList<ArrayList<ASTUntypedBase>> data;
-    public ArrayList<ASTUntypedBase> curr;
+public final static class ASTList extends ASTBase {
+    public ArrayList<ArrayList<ASTBase>> data;
+    public ArrayList<ASTBase> curr;
     public SyntaxContext ctx;
     private int itemsIngested;
+    // TODO in case it's a curlyBraces, this will contain the lists of bindings and unidentified identifiers
 
     public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
@@ -218,9 +219,9 @@ public final static class ASTList extends ASTUntypedBase {
         itemsIngested = 0;
     }
 
-    public ASTList(SyntaxContext ctx, List<ArrayList<ASTUntypedBase>> _data) {
+    public ASTList(SyntaxContext ctx, List<ArrayList<ASTBase>> _data) {
         this.ctx = ctx;
-        data = new ArrayList<ArrayList<ASTUntypedBase>>(_data);
+        data = new ArrayList<ArrayList<ASTBase>>(_data);
         curr = data.get(0);
         itemsIngested = 0;
     }
@@ -230,7 +231,7 @@ public final static class ASTList extends ASTUntypedBase {
     /**
      * Try to add a new item to the current AST node. Returns a syntax error if unsuccessful.
      */
-    public Optional<SyntaxError> add(ASTUntypedBase newItem) {
+    public Optional<SyntaxError> add(ASTBase newItem) {
         // TODO adding of stuff in accordance to parse context
         if (isAssignment()) {
             if (newItem instanceof CoreOperatorAST co && EnumSet.range(CoreOperator.defineImm, CoreOperator.divideMut).contains(co.val)) {
@@ -255,7 +256,7 @@ public final static class ASTList extends ASTUntypedBase {
     /**
      * Try to add a new item to the current AST node. Returns a syntax error if unsuccessful.
      */
-    public Optional<SyntaxError> addAtom(ASTUntypedBase newItem) {
+    public Optional<SyntaxError> addAtom(ASTBase newItem) {
         if (newItem instanceof ASTList lst && lst.isCoreForm()) {
             val ctxName = lst.ctx.toString();
             return Optional.of(new SyntaxError("Core form markers like " + ctxName.substring(0, ctxName.length() - 1)
@@ -373,7 +374,7 @@ public final static class ASTList extends ASTUntypedBase {
     }
 
     public boolean isAssignment() {
-        return EnumSet.range(assignImmutable, assignMutableDiv).contains(ctx);
+        return EnumSet.range(assignImmutable, assignFunction).contains(ctx);
     }
 
     public boolean isCoreForm() {
@@ -412,21 +413,21 @@ public final static class ASTList extends ASTUntypedBase {
         }
     }
 
-    static Optional<SyntaxContext> getOperatorAssignmentType(OperatorToken ot) {
-        if (ot.val.size() == 1 && ot.val.get(0) == OperatorSymb.equals) return Optional.of(assignImmutable);
-        if (ot.val.size() == 2 && ot.val.get(1) == OperatorSymb.equals) {
-            var f = ot.val.get(0);
-            if (f == OperatorSymb.colon) return Optional.of(assignMutable);
-            if (f == OperatorSymb.plus) return Optional.of(assignMutablePlus);
-            if (f == OperatorSymb.minus) return Optional.of(assignMutableMinus);
-            if (f == OperatorSymb.asterisk) return Optional.of(assignMutableTimes);
-            if (f == OperatorSymb.slash) return Optional.of(assignMutableDiv);
-        }
-        return Optional.empty();
-    }
+    // static Optional<SyntaxContext> getOperatorAssignmentType(OperatorToken ot) {
+    //     if (ot.val.size() == 1 && ot.val.get(0) == OperatorSymb.equals) return Optional.of(assignImmutable);
+    //     if (ot.val.size() == 2 && ot.val.get(1) == OperatorSymb.equals) {
+    //         var f = ot.val.get(0);
+    //         if (f == OperatorSymb.colon) return Optional.of(assignMutable);
+    //         if (f == OperatorSymb.plus) return Optional.of(assignMutablePlus);
+    //         if (f == OperatorSymb.minus) return Optional.of(assignMutableMinus);
+    //         if (f == OperatorSymb.asterisk) return Optional.of(assignMutableTimes);
+    //         if (f == OperatorSymb.slash) return Optional.of(assignMutableDiv);
+    //     }
+    //     return Optional.empty();
+    // }
 }
 
-public final static class Ident extends ASTUntypedBase {
+public final static class Ident extends ASTBase {
     public String name;
 
     public Ident(String name) {
@@ -434,21 +435,21 @@ public final static class Ident extends ASTUntypedBase {
     }
 }
 
-public final static class IntLiteral extends ASTUntypedBase {
+public final static class IntLiteral extends ASTBase {
     public long val;
     public IntLiteral(long val) {
         this.val = val;
     }
 }
 
-public final static class FloatLiteral extends ASTUntypedBase {
+public final static class FloatLiteral extends ASTBase {
     public double val;
     public FloatLiteral(double val) {
         this.val = val;
     }
 }
 
-public final static class BoolLiteral extends ASTUntypedBase {
+public final static class BoolLiteral extends ASTBase {
     public boolean val;
     public BoolLiteral(boolean val) {
         this.val = val;
@@ -458,14 +459,14 @@ public final static class BoolLiteral extends ASTUntypedBase {
 /**
  * Reserved words which are not markers for core forms (i.e. do not occur in the initial position)
  */
-public final static class ReservedLiteral extends ASTUntypedBase {
+public final static class ReservedLiteral extends ASTBase {
     public ReservedWord val;
     public ReservedLiteral(ReservedWord val) {
         this.val = val;
     }
 }
 
-public final static class StringLiteral extends ASTUntypedBase {
+public final static class StringLiteral extends ASTBase {
     public String val;
     public StringLiteral(String val) {
         this.val = val;
@@ -475,7 +476,7 @@ public final static class StringLiteral extends ASTUntypedBase {
 /**
  * Built-in operators that are functions (arithmetic, bitwise etc).
  */
-public final static class FunctionOperatorAST extends ASTUntypedBase {
+public final static class FunctionOperatorAST extends ASTBase {
     public CoreOperator val;
     public FunctionOperatorAST(CoreOperator val) {
         this.val = val;
@@ -485,21 +486,21 @@ public final static class FunctionOperatorAST extends ASTUntypedBase {
 /**
  * Built-in operators that are syntactical markers (arrows, pipes etc).
  */
-public final static class CoreOperatorAST extends ASTUntypedBase {
+public final static class CoreOperatorAST extends ASTBase {
     public CoreOperator val;
     public CoreOperatorAST(CoreOperator val) {
         this.val = val;
     }
 }
 
-public final static class OperatorAST extends ASTUntypedBase {
+public final static class OperatorAST extends ASTBase {
     public List<OperatorSymb> val;
     public OperatorAST(List<OperatorSymb> val) {
         this.val = val;
     }
 }
 
-public final static class CommentAST extends ASTUntypedBase {
+public final static class CommentAST extends ASTBase {
     public String val;
     public CommentAST(String val) {
         this.val = val;

@@ -40,6 +40,7 @@ public static enum SyntaxContext {
     assignMutableMinus,
     assignMutableTimes,
     assignMutableDiv,
+    assignFunction,
 
     // Bounded core syntax forms (i.e. ones that span a fixed number of items - curlyBraces, parens and/or statements)
     whilee, // 2 items, except as part of "do-while" when it has 1
@@ -50,6 +51,7 @@ public static enum SyntaxContext {
     catchh, // 1 item
     finallyy, // 1 item
     typeDeclaration, // 1 item after 1 identifier
+    withh,
     //macroo, // for the future
 
     // Unbounded core syntax forms (i.e. ones that span an unbouned number of statements following them)
