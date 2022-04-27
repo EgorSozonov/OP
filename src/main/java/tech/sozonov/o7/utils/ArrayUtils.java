@@ -7,7 +7,7 @@ import tech.sozonov.o7.lexer.types.OperatorSymb;
 
 public class ArrayUtils {
 
-public static boolean areEqual(byte[] a, byte[] b) {
+public static boolean areEqual(final byte[] a, final byte[] b) {
     if (a.length != b.length) return false;
     for (int i = 0; i < a.length; ++i) {
         if (a[i] != b[i]) return false;
@@ -30,12 +30,12 @@ public static double tryParseDouble(String inp) {
 }
 
 
-public static byte[] subArray(byte[] arr, int start, int end) {
+public static byte[] subArray(final byte[] arr, final int start, final int end) {
     return Arrays.copyOfRange(arr, start, end + 1);
 }
 
 
-public static boolean arraysEqual(List<OperatorSymb> a, List<OperatorSymb> b) {
+public static boolean arraysEqual(final List<OperatorSymb> a, final List<OperatorSymb> b) {
     if (a.isEmpty() || a.size() != b.size())
         return false;
     for (int i = 0; i < a.size(); ++i) {

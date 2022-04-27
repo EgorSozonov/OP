@@ -2,6 +2,7 @@ package tech.sozonov.o7.parser.types;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.val;
 import tech.sozonov.o7.lexer.types.OperatorSymb;
@@ -209,7 +210,12 @@ public final static class ASTList extends ASTBase {
     public ArrayList<ASTBase> curr;
     public SyntaxContext ctx;
     private int itemsIngested;
-    // TODO in case it's a curlyBraces, this will contain the lists of bindings and unidentified identifiers
+
+    /** Non-empty only in case this is a curlyBraces list */
+    private Map<String, Binding> bindings;
+
+    /** Non-empty only in case this is a curlyBraces list */
+    private List<Ident> unknownIdents;
 
     public ASTList(SyntaxContext ctx) {
         this.ctx = ctx;
@@ -429,9 +435,11 @@ public final static class ASTList extends ASTBase {
 
 public final static class Ident extends ASTBase {
     public String name;
+    public Optional<Binding> binding;
 
     public Ident(String name) {
         this.name = name;
+        this.binding = Optional.empty();
     }
 }
 

@@ -13,11 +13,11 @@ public abstract class Either<L, R>{
     }
 
 
-    public static <L, R> Either<L, R> right(R right) {
+    public static <L, R> Either<L, R> right(final R right) {
         return new Right<>(right);
     }
 
-    public static <L, R> Either<L, R> left(L left) {
+    public static <L, R> Either<L, R> left(final L left) {
         return new Left<>(left);
     }
 

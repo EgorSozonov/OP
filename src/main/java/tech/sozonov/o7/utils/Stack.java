@@ -8,7 +8,7 @@ public final class Stack<T> {
         this.list = new ArrayList<T>();
     }
 
-    public void push(T newItem) {
+    public void push(final T newItem) {
         list.add(newItem);
     }
 

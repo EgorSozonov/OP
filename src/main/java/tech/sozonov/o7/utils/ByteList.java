@@ -21,7 +21,7 @@ public class ByteList {
         length = 0;
     }
 
-    public void add(byte newByte) {
+    public void add(final byte newByte) {
         if (length == capacity) {
             capacity *= 2;
             val newData = new byte[capacity];
@@ -34,10 +34,10 @@ public class ByteList {
         ++length;
     }
 
-    public void removeLast(int ind) {
+    public void removeLast(final int ind) {
     }
 
-    public byte get(int ind) {
+    public byte get(final int ind) {
         return data[ind];
     }
 

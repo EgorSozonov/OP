@@ -8,7 +8,7 @@ public final class MutableBoolean {
         v = _v;
     }
 
-    public static boolean eq(MutableBoolean a, MutableBoolean b) {
+    public static boolean eq(final MutableBoolean a, final MutableBoolean b) {
         return a.v == b.v;
     }
 }

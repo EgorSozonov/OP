@@ -7,7 +7,7 @@ import tech.sozonov.o7.typechecker.types.TypeError;
 
 public class Typechecker {
 
-public static Optional<TypeError> resolveIdentifiers(AST inp) {
+public static Optional<TypeError> resolveIdentifiers(final AST inp) {
     return Optional.empty();
 }
 

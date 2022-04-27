@@ -24,7 +24,7 @@ public class Parser {
  * For example, what was "if x > 5 -> (f)" becomes "if (x > 5) (f)".
  * Full list of new punctuation symbols: -> : $
  */
-public static Tuple<ASTBase, SyntaxError> parse(ExprBase inp) {
+public static Tuple<ASTBase, SyntaxError> parse(final ExprBase inp) {
     var result = new ASTList(curlyBraces);
     val syntax = new Syntax();
     var backtrack = new Stack<Tuple<ListExpr, Integer>>();
@@ -153,7 +153,7 @@ public static Tuple<ASTBase, SyntaxError> parse(ExprBase inp) {
 }
 
 
-static ASTList cleanPop(Stack<ASTList> backtrack, ASTList curr) {
+static ASTList cleanPop(final Stack<ASTList> backtrack, final ASTList curr) {
     if (last(curr.data).isEmpty()) {
         removeLast(curr.data);
     }
