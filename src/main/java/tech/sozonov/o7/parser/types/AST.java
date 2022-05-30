@@ -19,10 +19,12 @@ import static tech.sozonov.o7.utils.ArrayUtils.*;
 import tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext;
 import static tech.sozonov.o7.parser.types.SyntaxContexts.SyntaxContext.*;
 
-
 public class AST {
 
-public static class ASTBase {
+
+public static sealed class ASTBase
+        permits ASTList, Ident, IntLiteral, FloatLiteral, BoolLiteral, ReservedLiteral, StringLiteral,
+            FunctionOperatorAST, CoreOperatorAST, OperatorAST, CommentAST {
     public static boolean isContextUnbounded(SyntaxContext ctx) {
         return (ctx == iff || ctx == matchh
                 || ctx == structt || ctx == sumTypee);

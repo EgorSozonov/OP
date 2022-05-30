@@ -9,7 +9,8 @@ import lombok.val;
 
 public class Expr {
 
-public static class ExprBase {
+public static sealed class ExprBase
+        permits ListExpr, WordToken, StringToken, CommentToken, IntToken, FloatToken, DotWordToken, OperatorToken {
     public static boolean equal(ExprBase a, ExprBase b) {
         if (!(a instanceof ListExpr) || !(b instanceof ListExpr)) return a == b;
 
