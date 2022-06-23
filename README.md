@@ -1,4 +1,7 @@
-# O7
+# OP
+
 (WORK IN PROGRESS!)
 
-A functional-imperative Lisp-like static language compiling to Java
+A functional-imperative Lisp-like embedded language in the vein of Lua
+
+Release date: 2023
