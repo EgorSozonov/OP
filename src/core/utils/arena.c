@@ -1,52 +1,88 @@
 #include <stdio.h>
-#include <stddef.h>
-#include <stdalign.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <inttypes.h>
+#include "arena.h"
 
-#define MIN_SLAB_SIZE // 32768 - 32;
+#define CHUNK_QUANT 32768
 
 
-typedef struct arenaSlab arenaSlab;
-typedef struct arena arena;
+struct arenaChunk {
+    size_t size;
+    arenaChunk* next;
+    char memory[]; // flexible array member
+};
 
 struct arena {
-    arenaSlab* slabs;
-    arenaSlab* currSlab;
+    arenaChunk* slabs;
+    arenaChunk* currChunk;
     int currInd;
 };
 
 
-// void* ptr = nullptr;
-// char buffer[sizeof(void*)];
-// memcpy(buffer, &ptr, sizeof(void*));
 
-// And back:
+size_t minChunkSize() {
+    return (size_t)(CHUNK_QUANT - 32);
+}
 
-// memcpy(&ptr, buffer, sizeof(void*));
+size_t calculateChunkSize(size_t allocSize) {
+    // 32 for any possible padding malloc might use internally,
+    // so that the total allocation size is a good even number of OS memory pages.
+    size_t minSize = CHUNK_QUANT - 32;
+    if (allocSize < minSize) return minSize;
+    int tmp = allocSize / CHUNK_QUANT + 1;
+    return (size_t)(tmp*CHUNK_QUANT - 32);
+}
 
-struct arenaSlab {
-    size_t size;
-    char memory[];
-    arenaSlab* next;
-};
 
-void* allocate(arena* a, size_t sz) {
-    if (a->currInd + sz >= a->currSlab->size) {
-        size_t newSize = alignof(max_align_t);
-        (sz, MIN_SLAB_SIZE) + sizeof(size_t) + sizeof(arenaSlab*);
-        arenaSlab* newSlab = malloc(newSize);
-        if (!newSlab) {
+arena* mkArena() {
+    printf("mkArena %zu\n", sizeof(arenaChunk));
+    arena* result = malloc(sizeof(arena));
+
+    result->currInd = 0;
+    size_t firstChunkSize = minChunkSize();
+
+    arenaChunk* firstChunk = malloc(firstChunkSize);
+
+    printf("after first chunk allocation\n");
+
+    firstChunk->size = firstChunkSize - sizeof(arenaChunk);
+    firstChunk->next = NULL;
+
+    result->slabs = firstChunk;
+    result->currChunk = firstChunk;
+    result->currInd = 0;
+    return result;
+}
+
+void* allocate(arena* ar, size_t allocSize) {
+    if (ar->currInd + allocSize >= ar->currChunk->size) {
+        size_t newSize = calculateChunkSize(allocSize);
+
+        arenaChunk* newChunk = malloc(newSize);
+        if (!newChunk) {
             perror("malloc make_employees");
             exit(EXIT_FAILURE);
         };
-        newSlab->size = newSize;
+        // sizeof includes everything but the flexible array member, that's why we subtract it
+        newChunk->size = newSize - sizeof(arenaChunk);
+        printf("Allocated a new chunk with bookkeep size %zu, array size %zu", sizeof(arenaChunk), newChunk->size);
+        newChunk->next = NULL;
+        ar->currChunk->next = newChunk;
     }
+    void* result = (void*)(ar->currChunk->memory[ar->currInd]);
+    ar->currInd += allocSize;
+    return result;
 }
 
-void deallocate(arena* a) {
 
+void delete(arena* ar) {
+    arenaChunk* curr = ar->currChunk;
+    while (curr != NULL) {
+        printf("freeing a chunk of size %zu", curr->size);
+        free(curr);
+        curr = curr->next;
+    }
+    printf("freeing arena itself");
+    free(ar);
 }
 
 
