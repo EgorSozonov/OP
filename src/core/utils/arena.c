@@ -5,18 +5,17 @@
 #define CHUNK_QUANT 32768
 
 
-struct arenaChunk {
+struct ArenaChunk {
     size_t size;
-    arenaChunk* next;
+    ArenaChunk* next;
     char memory[]; // flexible array member
 };
 
-struct arena {
-    arenaChunk* slabs;
-    arenaChunk* currChunk;
+struct Arena {
+    ArenaChunk* slabs;
+    ArenaChunk* currChunk;
     int currInd;
 };
-
 
 
 size_t minChunkSize() {
@@ -33,55 +32,54 @@ size_t calculateChunkSize(size_t allocSize) {
 }
 
 
-arena* mkArena() {
-    printf("mkArena %zu\n", sizeof(arenaChunk));
-    arena* result = malloc(sizeof(arena));
+Arena* mkArena() {
+    Arena* result = malloc(sizeof(Arena));
 
     result->currInd = 0;
     size_t firstChunkSize = minChunkSize();
 
-    arenaChunk* firstChunk = malloc(firstChunkSize);
+    ArenaChunk* firstChunk = malloc(firstChunkSize);
 
-    printf("after first chunk allocation\n");
-
-    firstChunk->size = firstChunkSize - sizeof(arenaChunk);
+    firstChunk->size = firstChunkSize - sizeof(ArenaChunk);
     firstChunk->next = NULL;
 
     result->slabs = firstChunk;
     result->currChunk = firstChunk;
     result->currInd = 0;
+
     return result;
 }
 
-void* allocate(arena* ar, size_t allocSize) {
+void* allocate(Arena* ar, size_t allocSize) {
     if (ar->currInd + allocSize >= ar->currChunk->size) {
         size_t newSize = calculateChunkSize(allocSize);
 
-        arenaChunk* newChunk = malloc(newSize);
+        ArenaChunk* newChunk = malloc(newSize);
         if (!newChunk) {
             perror("malloc make_employees");
             exit(EXIT_FAILURE);
         };
         // sizeof includes everything but the flexible array member, that's why we subtract it
-        newChunk->size = newSize - sizeof(arenaChunk);
-        printf("Allocated a new chunk with bookkeep size %zu, array size %zu", sizeof(arenaChunk), newChunk->size);
+        newChunk->size = newSize - sizeof(ArenaChunk);
+        printf("Allocated a new chunk with bookkeep size %zu, array size %zu\n", sizeof(ArenaChunk), newChunk->size);
         newChunk->next = NULL;
         ar->currChunk->next = newChunk;
+        ar->currInd = 0;
     }
-    void* result = (void*)(ar->currChunk->memory[ar->currInd]);
+    void* result = (void*)(ar->currChunk->memory + (ar->currInd));
     ar->currInd += allocSize;
     return result;
 }
 
 
-void delete(arena* ar) {
-    arenaChunk* curr = ar->currChunk;
+void delete(Arena* ar) {
+    ArenaChunk* curr = ar->currChunk;
     while (curr != NULL) {
-        printf("freeing a chunk of size %zu", curr->size);
+        printf("freeing a chunk of size %zu\n", curr->size);
         free(curr);
         curr = curr->next;
     }
-    printf("freeing arena itself");
+    printf("freeing arena itself\n");
     free(ar);
 }
 

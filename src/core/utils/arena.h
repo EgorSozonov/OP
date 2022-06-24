@@ -1,6 +1,6 @@
-typedef struct arenaChunk arenaChunk;
-typedef struct arena arena;
+typedef struct ArenaChunk ArenaChunk;
+typedef struct Arena Arena;
 
-arena* mkArena();
-void* allocate(arena* ar, size_t allocSize);
-void delete(arena* ar);
+Arena* mkArena();
+void* allocate(Arena* ar, size_t allocSize);
+void delete(Arena* ar);
