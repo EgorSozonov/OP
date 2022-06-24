@@ -12,7 +12,19 @@ struct Expr {
         StringToken,
         CommentToken,
     } tag;
-
+    union {
+        struct AST_NUMBER {
+            int number;
+        } AST_NUMBER;
+        struct AST_ADD {
+            Expr *left;
+            Expr *right;
+        } AST_ADD;
+        struct AST_MUL {
+            Expr *left;
+            Expr *right;
+        } AST_MUL;
+    } content;
 };
 
 enum LexicalContext {

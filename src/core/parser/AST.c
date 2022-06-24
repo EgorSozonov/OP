@@ -1,5 +1,7 @@
+#include "AST.h"
+
 struct AST {
-}
+};
 
 
 enum ParsePunctuation {
@@ -7,10 +9,10 @@ enum ParsePunctuation {
     pipe,
     colon,
     dollar,
-}
+};
 
 
-public static enum SyntaxContext {
+enum SyntaxContext {
     funcall,
 
     // The name of a type, or a type constructor, or a type constructor application
@@ -47,12 +49,12 @@ public static enum SyntaxContext {
     matchh,
     structt,
     sumTypee,
-}
+};
 
 /**
  * The reserved words except the ones which are used to mark syntax contexts (like "if", "while" etc).
  */
-public static enum ReservedWord {
+enum ReservedWord {
     elsee,
     exportt,
     importt,
@@ -70,9 +72,9 @@ public static enum ReservedWord {
     yieldd,
     assertt,
     nodestructt,
-}
+};
 
-public static enum CoreOperator {
+enum CoreOperator {
     plus,
     minus,
     times,
@@ -102,4 +104,4 @@ public static enum CoreOperator {
     typeDecl,
     colon,
     pipe,
-}
+};
