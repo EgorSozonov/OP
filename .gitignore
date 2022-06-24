@@ -31,6 +31,7 @@ gradle/wrapper/*
 .VSCodeCounter/*
 
 **/CMakeFiles/*
+CMakeFiles/*
 Makefile
 CMakeCache.txt
 cmake_install.cmake
