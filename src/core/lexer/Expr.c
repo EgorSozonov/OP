@@ -1,5 +1,17 @@
 #include "Expr.h"
 
+enum LexicalContext {
+    statement,
+    dataInitializer,
+    curlyBraces,
+    parens,
+};
+
+struct ListExpr {
+    enum LexicalContext lType;
+    VectorExpr content;
+
+};
 
 struct Expr {
     enum {
@@ -13,9 +25,9 @@ struct Expr {
         CommentToken,
     } tag;
     union {
-        struct AST_NUMBER {
+        struct ListExpr {
             int number;
-        } AST_NUMBER;
+        } ListExpr;
         struct AST_ADD {
             Expr *left;
             Expr *right;
@@ -27,12 +39,8 @@ struct Expr {
     } content;
 };
 
-enum LexicalContext {
-    statement,
-    dataInitializer,
-    curlyBraces,
-    parens,
-};
+
+
 
 /**
  * & + - / * ! ~ $ % ^ | > < ? =

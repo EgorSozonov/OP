@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     printf("Hello world\n");
 
     Arena *ar = mkArena();
-    Foo* firstStruct = (Foo*) allocate(ar, sizeof(Foo));
+    Foo* firstStruct = (Foo*) arenaAllocate(ar, sizeof(Foo));
 
     firstStruct->i = 500;
     firstStruct->f = 5.4;

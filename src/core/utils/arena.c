@@ -26,9 +26,11 @@ size_t calculateChunkSize(size_t allocSize) {
     // 32 for any possible padding malloc might use internally,
     // so that the total allocation size is a good even number of OS memory pages.
     size_t minSize = CHUNK_QUANT - 32;
+
     if (allocSize < minSize) return minSize;
-    int tmp = allocSize / CHUNK_QUANT + 1;
-    return (size_t)(tmp*CHUNK_QUANT - 32);
+    size_t requiredSize = allocSize + sizeof(ArenaChunk);
+    int numChunks = requiredSize % CHUNK_QUANT > 0 ? (requiredSize/CHUNK_QUANT + 1) : (requiredSize/CHUNK_QUANT);
+    return (size_t)(numChunks*CHUNK_QUANT - 32);
 }
 
 
@@ -50,7 +52,10 @@ Arena* mkArena() {
     return result;
 }
 
-void* allocate(Arena* ar, size_t allocSize) {
+/**
+ *
+ */
+void* arenaAllocate(Arena* ar, size_t allocSize) {
     if (ar->currInd + allocSize >= ar->currChunk->size) {
         size_t newSize = calculateChunkSize(allocSize);
 
@@ -61,8 +66,9 @@ void* allocate(Arena* ar, size_t allocSize) {
         };
         // sizeof includes everything but the flexible array member, that's why we subtract it
         newChunk->size = newSize - sizeof(ArenaChunk);
-        printf("Allocated a new chunk with bookkeep size %zu, array size %zu\n", sizeof(ArenaChunk), newChunk->size);
         newChunk->next = NULL;
+        printf("Allocated a new chunk with bookkeep size %zu, array size %zu\n", sizeof(ArenaChunk), newChunk->size);
+
         ar->currChunk->next = newChunk;
         ar->currInd = 0;
     }
