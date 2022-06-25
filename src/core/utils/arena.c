@@ -25,6 +25,7 @@ size_t minChunkSize() {
 size_t calculateChunkSize(size_t allocSize) {
     // 32 for any possible padding malloc might use internally,
     // so that the total allocation size is a good even number of OS memory pages.
+    // TODO review
     size_t minSize = CHUNK_QUANT - 32;
 
     if (allocSize < minSize) return minSize;

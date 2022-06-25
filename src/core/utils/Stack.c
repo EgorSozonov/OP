@@ -3,48 +3,47 @@
 #include <stdbool.h>
 
 
-typedef struct {
+struct Foo {
     int a;
     double b;
-} Foo;
+};
 
 struct Stack {
     int capacity;
     int length;
     Arena* arena;
-    Foo* content[];
+    Foo (* content)[];
 };
 
-Stack* makeStack(Arena* ar, int length) {
+Stack* mkStack(Arena* ar, int length) {
     if (length < 4) return arenaAllocate(ar, 4*sizeof(Foo));
     arenaAllocate(ar, length*sizeof(Foo));
 }
-
 
 bool hasValues(Stack* st) {
     return st->length > 0;
 }
 
 Foo pop(Stack* st) {
-    Foo result = st->content[st->length - 1];
     --st->length;
-    return result;
+    Foo arr[] = st->content;
+    return arr[st->length - 1];
 }
 
 void push(Stack* st, Foo newItem) {
+    //Foo* ctnt = st->content;
     if (st->length < st->capacity) {
-        st->content[st->length] = newItem;
+        memcpy((Foo*)(st->content) + (st->length), &newItem, sizeof(Foo));
         ++st->length;
     } else {
-        Foo newContent[] = arenaAllocate(st->arena, 2*(st->capacity)*sizeof(Foo));
+        Foo* newContent[] = arenaAllocate(st->arena, 2*(st->capacity)*sizeof(Foo));
+        memcpy(newContent, st->content, st->length*sizeof(Foo));
+        memcpy(newContent + (st->length), &newItem, sizeof(Foo));
 
-        for (int i = 0; i < st->length; ++i) {
-            newContent[i] = st->content[i];
-        }
-        newContent[st->length] = newItem;
         st->capacity *= 2;
         ++st->length;
         free(st->content);
+
         st->content = newContent;
     }
 }
@@ -52,3 +51,14 @@ void push(Stack* st, Foo newItem) {
 void clear(Stack* st) {
     st->length = 0;
 }
+
+
+// #define DEFINE_LL_NODE(CONCRETE_TYPE) \
+//   struct node_of_ ## CONCRETE_TYPE \
+//     { \
+//       CONCRETE_TYPE data; \
+//       struct node_of_ ## CONCRETE_TYPE *next; \
+//     };
+
+// #define DECLARE_LL_NODE(CONCRETE_TYPE,VARIABLE_NAME) \
+//   struct node_of_ ## CONCRETE_TYPE VARIABLE_NAME;
