@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "core/utils/arena.h"
 #include "core/utils/Stack.h"
+#include "core/utils/String.h"
 
 
 
@@ -17,6 +18,13 @@ int main(int argc, char* argv[]) {
 
     Foo bar = pop(st);
     printf("After popping, a = %d, b = %f\n", bar.a, bar.b);
+
+    String *s;
+    for (int i = 0; i < 10000; ++i) {
+        s = allocateString(ar, 10, "asdf asdfg");
+    }
+
+    printf("String '%s' of length %d\n", s->content, s->length);
     // Arena *ar = mkArena();
     // Foo* firstStruct = (Foo*) arenaAllocate(ar, sizeof(Foo));
 
