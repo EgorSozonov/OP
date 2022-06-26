@@ -3,12 +3,6 @@
 
 
 #define DEFINE_STACK(CONCRETE_TYPE)                                          \
-    typedef struct {                                                         \
-        int capacity;                                                        \
-        int length;                                                          \
-        Arena* arena;                                                        \
-        CONCRETE_TYPE (* content)[];                                         \
-    } Stack ## CONCRETE_TYPE;                                                                  \
     Stack ## CONCRETE_TYPE * mkStack ## CONCRETE_TYPE (Arena* ar, int initCapacity) {          \
         int capacity = initCapacity < 4 ? 4 : initCapacity;                                    \
         Stack ## CONCRETE_TYPE * result = arenaAllocate(ar, sizeof(Stack ## CONCRETE_TYPE));   \

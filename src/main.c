@@ -1,9 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "core/utils/arena.h"
 #include "core/utils/Stack.h"
 #include "core/utils/String.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 
 typedef struct {
