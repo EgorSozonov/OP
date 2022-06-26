@@ -3,21 +3,21 @@
 #include "core/utils/arena.h"
 #include "core/utils/Stack.h"
 #include "core/utils/String.h"
+#include <stdbool.h>
 
 
+typedef struct {
+    int x;
+    int y;
+    float z;
+} Bar;
+
+DEFINE_STACK(Bar);
 
 int main(int argc, char* argv[]) {
     printf("Hello world\n");
     Arena *ar = mkArena();
 
-
-    Stack* st = mkStack(ar, 10);
-    Foo foo = {.a = 5, .b = 1.2};
-
-    push(st, foo);
-
-    Foo bar = pop(st);
-    printf("After popping, a = %d, b = %f\n", bar.a, bar.b);
 
     String *s;
     for (int i = 0; i < 10000; ++i) {
