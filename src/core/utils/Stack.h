@@ -1,6 +1,11 @@
+#include <stdbool.h>
+#include "arena.h"
 typedef struct Stack Stack;
 
-typedef struct Foo Foo;
+typedef struct {
+    int a;
+    double b;
+} Foo;
 
 Stack* mkStack(Arena* ar, int length);
 bool hasValues(Stack* st);

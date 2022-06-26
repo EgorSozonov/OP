@@ -1,1 +1,1 @@
-target_sources(app PRIVATE Expr.c Lexer.c)
+#target_sources(app PRIVATE Expr.c Lexer.c)

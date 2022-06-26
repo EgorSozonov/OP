@@ -1,6 +1,7 @@
+#include <stdlib.h>
 typedef struct ArenaChunk ArenaChunk;
 typedef struct Arena Arena;
 
 Arena* mkArena();
 void* arenaAllocate(Arena* ar, size_t allocSize);
-void delete(Arena* ar);
+void arenaDelete(Arena* ar);

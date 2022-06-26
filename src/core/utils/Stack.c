@@ -1,12 +1,8 @@
 #include "Stack.h"
 #include "arena.h"
-#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
 
-
-struct Foo {
-    int a;
-    double b;
-};
 
 struct Stack {
     int capacity;
@@ -15,9 +11,15 @@ struct Stack {
     Foo (* content)[];
 };
 
-Stack* mkStack(Arena* ar, int length) {
-    if (length < 4) return arenaAllocate(ar, 4*sizeof(Foo));
-    arenaAllocate(ar, length*sizeof(Foo));
+Stack* mkStack(Arena* ar, int initCapacity) {
+    int capacity = initCapacity < 4 ? 4 : initCapacity;
+    Stack* result = arenaAllocate(ar, sizeof(Stack));
+    result->capacity = capacity;
+    result->length = 4;
+    result->arena = ar;
+    Foo (* arr)[] = arenaAllocate(ar, capacity*sizeof(Foo));
+    result->content = arr;
+    return result;
 }
 
 bool hasValues(Stack* st) {
@@ -26,25 +28,23 @@ bool hasValues(Stack* st) {
 
 Foo pop(Stack* st) {
     --st->length;
-    Foo arr[] = st->content;
-    return arr[st->length - 1];
+    return *((Foo*)st->content + st->length);
 }
 
 void push(Stack* st, Foo newItem) {
-    //Foo* ctnt = st->content;
     if (st->length < st->capacity) {
         memcpy((Foo*)(st->content) + (st->length), &newItem, sizeof(Foo));
         ++st->length;
     } else {
-        Foo* newContent[] = arenaAllocate(st->arena, 2*(st->capacity)*sizeof(Foo));
-        memcpy(newContent, st->content, st->length*sizeof(Foo));
+        Foo* newContent = arenaAllocate(st->arena, 2*(st->capacity)*sizeof(Foo));
+        memcpy(newContent, (Foo*)st->content, st->length*sizeof(Foo));
         memcpy(newContent + (st->length), &newItem, sizeof(Foo));
 
         st->capacity *= 2;
         ++st->length;
         free(st->content);
 
-        st->content = newContent;
+        st->content = (Foo(*)[])newContent;
     }
 }
 

@@ -8,10 +8,15 @@
 int main(int argc, char* argv[]) {
     printf("Hello world\n");
     Arena *ar = mkArena();
+
+
     Stack* st = mkStack(ar, 10);
     Foo foo = {.a = 5, .b = 1.2};
+
     push(st, foo);
 
+    Foo bar = pop(st);
+    printf("After popping, a = %d, b = %f\n", bar.a, bar.b);
     // Arena *ar = mkArena();
     // Foo* firstStruct = (Foo*) arenaAllocate(ar, sizeof(Foo));
 
@@ -25,6 +30,6 @@ int main(int argc, char* argv[]) {
     // printf("i = %d, f = %f, code = %s\n", firstStruct->i, firstStruct->f, firstStruct->code);
     // delete(ar);
 
-
+    arenaDelete(ar);
     return 0;
 }

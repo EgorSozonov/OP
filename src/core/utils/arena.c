@@ -38,7 +38,6 @@ size_t calculateChunkSize(size_t allocSize) {
 Arena* mkArena() {
     Arena* result = malloc(sizeof(Arena));
 
-    result->currInd = 0;
     size_t firstChunkSize = minChunkSize();
 
     ArenaChunk* firstChunk = malloc(firstChunkSize);
@@ -62,7 +61,7 @@ void* arenaAllocate(Arena* ar, size_t allocSize) {
 
         ArenaChunk* newChunk = malloc(newSize);
         if (!newChunk) {
-            perror("malloc make_employees");
+            perror("malloc error when allocating arena chunk");
             exit(EXIT_FAILURE);
         };
         // sizeof includes everything but the flexible array member, that's why we subtract it
@@ -79,7 +78,7 @@ void* arenaAllocate(Arena* ar, size_t allocSize) {
 }
 
 
-void delete(Arena* ar) {
+void arenaDelete(Arena* ar) {
     ArenaChunk* curr = ar->currChunk;
     while (curr != NULL) {
         printf("freeing a chunk of size %zu\n", curr->size);
