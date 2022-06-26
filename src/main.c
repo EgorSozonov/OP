@@ -7,14 +7,6 @@
 #include <string.h>
 
 
-typedef struct {
-    int x;
-    int y;
-    float z;
-} Bar;
-
-DEFINE_STACK(Bar);
-
 int main(int argc, char* argv[]) {
     printf("Hello world\n");
     Arena *ar = mkArena();
