@@ -3,13 +3,12 @@ project(O7)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "~/Exes/OP")
 set(CMAKE_BUILD_TYPE "Debug")
 
-#set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(CMAKE_C_FLAGS "-std=c11")
 
 include_directories(${PROJECT_SOURCE_DIR})
 
-add_executable(opco main.c)
-add_subdirectory(core)
+add_executable(op main.c)
+#add_subdirectory(core)
 
-target_link_libraries(opco)
+target_link_libraries(op)

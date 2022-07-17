@@ -1,1 +1,1 @@
-target_sources(app PRIVATE AST.c Parser.c Syntax.c)
+target_sources(opco PRIVATE AST.c Parser.c Syntax.c)

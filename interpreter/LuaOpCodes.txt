@@ -1,0 +1,6 @@
+GETTABUP A B C   R(A) := UpValue[B][RK(C)]
+SETTABUP A B C   UpValue[A][RK(B)] := RK(C)
+OP_GETTABUP and OP_SETTABUP instructions are similar to the OP_GETTABLE and OP_SETTABLE instructions except that the table is referenced as an upvalue. These instructions are used to access global variables, which since Lua 5.2 are accessed via the upvalue named _ENV.
+
+CONCAT A B C   R(A) := R(B).. ... ..R(C)
+Performs concatenation of two or more strings. In a Lua source, this is equivalent to one or more concatenation operators (‘..’) between two or more expressions. The source registers must be consecutive, and C must always be greater than B. The result is placed in R(A).
