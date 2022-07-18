@@ -3,6 +3,4 @@
 #include "../utils/Stack.h"
 #include "stdbool.h"
 
-
-
 DEFINE_STACK(Expr)

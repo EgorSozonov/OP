@@ -9,6 +9,6 @@ set(CMAKE_C_FLAGS "-std=c11")
 include_directories(${PROJECT_SOURCE_DIR})
 
 add_executable(op main.c)
-#add_subdirectory(core)
+add_subdirectory(../utils utils)
 
 target_link_libraries(op)

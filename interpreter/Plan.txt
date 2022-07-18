@@ -1,0 +1,93 @@
+
+# only 4 arithmetic operators, function definitions, and function calls.
+# only immutable local variables
+# only integer types
+# print primitive function to print to stdout
+
+
+foo x y = fn {
+    return x + y
+}
+
+FUNCTION 0
+OP_ADD -1 0 1
+RETURN1
+ENDFUNCTION
+
+
+
+
+bar x y z = fn {
+    return z*(x + y)
+}
+
+FUNCTION 1
+OP_ADD 3 1 2
+OP_MUL -1 0 3 # -1 means the return address, on the previous frame
+RETURN1
+ENDFUNCTION
+
+
+
+entrypoint {
+    print 7
+    x = 5
+    y = 6
+    summed = foo x y
+    print summed
+
+    z = 100
+    summedMulted = bar x y z
+    print summedMulted
+
+    divided = summedMulted/summed
+    print divided
+}
+
+ENTRYPOINT
+OP_LOADI 0 7
+OP_PRINT 0
+# result of foo will be stored in 0th register, its args in 1 and 2
+OP_LOADI 1 5 # x =
+OP_LOADI 2 6 # y =
+OP_LOADI 3 0 # foo function ID
+OP_MOVE 4 1
+OP_MOVE 5 2
+OP_CALL 0 3 # foo call, result will be in R0
+OP_PRINT 0 # print summed
+OP_LOADI 3 100 # z =
+
+OP_LOADI 5 1 # bar function ID
+OP_MOVE 6 1
+OP_MOVE 7 2
+OP_MOVE 8 3
+OP_CALL 4 5 # bar call
+OP_PRINT 4 # print summedMulted
+
+OP_DIV 5 0 4 # R[5] = divided
+OP_PRINT 5
+
+OP_PRINT 2
+OP_LOADI 3 100
+ENDENTRYPOINT
+
+
+# Desired output:
+# 11
+# 1100
+# 100
+
+
+
+### OP codes
+##############
+OP_ADD,       /* A B C	R[A] := R[B] + R[C]                     */
+OP_SUB,       /* A B C	R[A] := R[B] - R[C]	                    */
+OP_MUL,       /* A B C	R[A] := R[B] * R[C]                     */
+OP_DIV,       /* A B C	R[A] := R[B] / R[C]	                    */
+OP_LOADI      /*    A sBx   R[A] := sBx                         */
+OP_PRINT,     /*	A       print R[A]                          */
+OP_READGLOB,  /* A i     R[A] := Glob[i]                        */
+OP_WRITEGLOB, /* A i     Glob[i] := R[A]                        */
+OP_CALL,      /* A B     Call R[B] and store the result in R[A] */
+OP_MOVE,      /* A B     R[A] := R[B]                           */
