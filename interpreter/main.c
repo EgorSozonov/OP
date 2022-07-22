@@ -14,10 +14,6 @@
 int main(int argc, char* argv[]) {
     printf("HW\n");
 
-    char *buf;
-    buf=(char *)malloc(100*sizeof(char));
-    getcwd(buf,100);
-    printf("\n %s \n",buf);
 
     Arena *ar = mkArena();
     BytecodeRead res = readBytecode("./bytecode.txt", ar);

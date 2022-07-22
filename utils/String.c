@@ -1,8 +1,9 @@
 #include "String.h"
 #include "Arena.h"
 #include <string.h>
+#include <math.h>
 
-
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 String* allocateString(Arena* ar, int length, char* content) {
     String* result = arenaAllocate(ar, length + 1 + sizeof(String));
     result->length = length;
@@ -17,7 +18,7 @@ String* allocateFromSubstring(Arena* ar, char* content, int start, int length) {
         ++i;
     }
     if (i < start) return NULL;
-    int realLength = min(i - start, length);
+    int realLength = MIN(i - start, length);
 
     String* result = arenaAllocate(ar, realLength + 1 + sizeof(String));
     result->length = realLength;
