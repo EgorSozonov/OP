@@ -2,7 +2,7 @@
 #define STRING_H
 
 
-#include "arena.h"
+#include "Arena.h"
 
 
 typedef struct {

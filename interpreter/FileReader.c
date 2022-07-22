@@ -1,26 +1,21 @@
 #include "FileReader.h"
-#include "../utils/String.h"
 
-DEFINE_STACK(Expr)
-
-typedef struct {
-    StackExpr opcodes;
-    String* errMsg;
-} BytecodeRead;
+#include <stdio.h>
+#include <string.h>
 
 
+DEFINE_STACK(Instr)
 
-BytecodeRead readBytecode(char* fName) {
-    Arena *ar = mkArena();
-    printf("Hello world\n");
+BytecodeRead readBytecode(char* fName, Arena* ar) {
+    StackInstr* stack = mkStackInstr(ar, 100);
+
     FILE * fp;
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
-
-    fp = fopen("/etc/motd", "r");
-    if (fp == NULL)
-        exit(EXIT_FAILURE);
+    fp = fopen(fName, "r");
+    printf("%s %p\n", fName, fp);
+    if (fp == NULL) exit(EXIT_FAILURE);
 
     while ((read = getline(&line, &len, fp)) != -1) {
         printf("Retrieved line of length %zu:\n", read);
@@ -30,6 +25,6 @@ BytecodeRead readBytecode(char* fName) {
     fclose(fp);
     if (line)
         free(line);
-    exit(EXIT_SUCCESS);
-    arenaDelete(ar);
+    BytecodeRead result = {.opcodes = stack, .errMsg = NULL};
+    return result;
 }

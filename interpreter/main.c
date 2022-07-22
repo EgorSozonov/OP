@@ -1,36 +1,27 @@
-#include "../utils/arena.h"
+#include "../utils/Arena.h"
 #include "../utils/Stack.h"
 #include "../utils/String.h"
+#include "FileReader.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 
-
+#include <unistd.h>
 
 
 
 int main(int argc, char* argv[]) {
-    printf("Hello world\n");
-    FILE * fp;
-    char * line = NULL;
-    size_t len = 0;
-    ssize_t read;
+    printf("HW\n");
 
-    fp = fopen("/etc/motd", "r");
-    if (fp == NULL)
-        exit(EXIT_FAILURE);
+    char *buf;
+    buf=(char *)malloc(100*sizeof(char));
+    getcwd(buf,100);
+    printf("\n %s \n",buf);
 
-    while ((read = getline(&line, &len, fp)) != -1) {
-        printf("Retrieved line of length %zu:\n", read);
-        printf("%s", line);
-    }
-
-    fclose(fp);
-    if (line)
-        free(line);
-    exit(EXIT_SUCCESS);
-
+    Arena *ar = mkArena();
+    BytecodeRead res = readBytecode("./bytecode.txt", ar);
+    arenaDelete(ar);
     return 0;
 
 

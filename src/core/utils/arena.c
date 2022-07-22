@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "arena.h"
+#include "Arena.h"
 
 #define CHUNK_QUANT 32768
 

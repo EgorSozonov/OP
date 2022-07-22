@@ -1,5 +1,5 @@
 #include "String.h"
-#include "arena.h"
+#include "Arena.h"
 #include <string.h>
 
 
