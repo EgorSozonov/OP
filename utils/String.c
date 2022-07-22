@@ -9,3 +9,19 @@ String* allocateString(Arena* ar, int length, char* content) {
     memcpy(result->content, content, length + 1);
     return result;
 }
+
+String* allocateFromSubstring(Arena* ar, char* content, int start, int length) {
+    if (length <= 0 || start < 0) return NULL;
+    int i = 0;
+    while (content[i] != '\0') {
+        ++i;
+    }
+    if (i < start) return NULL;
+    int realLength = min(i - start, length);
+
+    String* result = arenaAllocate(ar, realLength + 1 + sizeof(String));
+    result->length = realLength;
+    strncpy(result->content, content, realLength);
+    result->content[realLength] = '\0';
+    return result;
+}

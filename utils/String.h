@@ -10,5 +10,6 @@ typedef struct {
 } String;
 
 String* allocateString(Arena* ar, int length, char* content);
+String* allocateFromSubstring(Arena* ar, char* content, int start, int length);
 
 #endif
