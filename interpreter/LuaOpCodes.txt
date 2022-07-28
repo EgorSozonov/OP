@@ -1,0 +1,95 @@
+OP_LOADK 	Loads constant number Bx into register R(A). Constants are usually numbers or strings. Each function prototype has its own constant list, or pool.
+ /*	A Bx	R[A] := K[Bx]					*/
+OP_LOADKX 	Load a constant into a register /*	A	R[A] := K[extra arg]				*/
+
+OP_LOADBOOL 	Load a boolean into a register
+OP_LOADNIL 	Load nil values into a range of registers
+OP_LOADI, /*	A sBx	R[A] := sBx					*/
+OP_LOADF, /*	A sBx	R[A] := (lua_Number)sBx				*/
+
+OP_ADDI,  /*	A B sC	R[A] := R[B] + sC				*/
+OP_ADDK,  /*	A B C	R[A] := R[B] + K[C]:number			*/
+OP_SUBK,  /*	A B C	R[A] := R[B] - K[C]:number			*/
+OP_MULK,  /*	A B C	R[A] := R[B] * K[C]:number			*/
+OP_MODK,  /*	A B C	R[A] := R[B] % K[C]:number			*/
+OP_POWK,  /*	A B C	R[A] := R[B] ^ K[C]:number			*/
+OP_DIVK,  /*	A B C	R[A] := R[B] / K[C]:number			*/
+OP_IDIVK, /*	A B C	R[A] := R[B] // K[C]:number			*/
+
+OP_MMBIN, /*	A B C	call C metamethod over R[A] and R[B]	(*)	*/
+OP_MMBINI, /*	A sB C k	call C metamethod over R[A] and sB	*/
+OP_MMBINK, /*	A B C k		call C metamethod over R[A] and K[B]	*/
+
+OP_RETURN, /*	A B C k	return R[A], ... ,R[A+B-2]	(see note)	*/
+OP_RETURN0, /*		return						*/
+OP_RETURN1, /*	A	return R[A]					*/
+
+OP_ADD,/*	A B C	R[A] := R[B] + R[C]				*/
+OP_SUB,/*	A B C	R[A] := R[B] - R[C]				*/
+OP_MUL,/*	A B C	R[A] := R[B] * R[C]				*/
+OP_MOD,/*	A B C	R[A] := R[B] % R[C]				*/
+OP_POW,/*	A B C	R[A] := R[B] ^ R[C]				*/
+OP_DIV,/*	A B C	R[A] := R[B] / R[C]				*/
+OP_IDIV,/*	A B C	R[A] := R[B] // R[C]		    */
+
+
+
+
+OP_GETTABUP A B C   /* R(A) := UpValue[B][RK(C)] */
+OP_SETTABUP A B C   UpValue[A][RK(B)] := RK(C)
+OP_GETTABUP and OP_SETTABUP instructions are similar to the OP_GETTABLE and OP_SETTABLE instructions except that the table is referenced as an upvalue. These instructions are used to access global variables, which since Lua 5.2 are accessed via the upvalue named _ENV.
+
+
+CONCAT A B C   R(A) := R(B).. ... ..R(C)
+Performs concatenation of two or more strings. In a Lua source, this is equivalent to one or more concatenation operators (‘..’) between two or more expressions. The source registers must be consecutive, and C must always be greater than B. The result is placed in R(A).
+
+
+OP_CALL A B C    R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
+Performs a function call, with register R(A) holding the reference to the function object to be called. Parameters to the function are placed in the registers following R(A). If B is 1, the function has no parameters. If B is 2 or more, there are (B-1) parameters. If B >= 2, then upon entry to the called function, R(A+1) will become the base.
+
+If B is 0, then B = ‘top’, i.e., the function parameters range from R(A+1) to the top of the stack. This form is used when the number of parameters to pass is set by the previous VM instruction, which has to be one of OP_CALL or OP_VARARG.
+
+If C is 1, no return results are saved. If C is 2 or more, (C-1) return values are saved. If C == 0, then ‘top’ is set to last_result+1, so that the next open instruction (OP_CALL, OP_RETURN, OP_SETLIST) can use ‘top’.
+
+
+
+OP_RETURN  A B return R(A), ... ,R(A+B-2)
+Returns to the calling function, with optional return values.
+
+First OP_RETURN closes any open upvalues by calling luaF_close().
+
+If B is 1, there are no return values. If B is 2 or more, there are (B-1) return values, located in consecutive registers from R(A) onwards. If B is 0, the set of values range from R(A) to the top of the stack.
+
+It is assumed that if the VM is returning to a Lua function then it is within the same invocation of the luaV_execute(). Else it is assumed that luaV_execute() is being invoked from a C function.
+
+If B is 0 then the previous instruction (which must be either OP_CALL or OP_VARARG ) would have set L->top to indicate how many values to return. The number of values to be returned in this case is R(A) to L->top.
+
+If B > 0 then the number of values to be returned is simply B-1.
+
+OP_RETURN calls luaD_poscall() which is responsible for copying return values to the caller - the first result is placed at the current closure’s address. luaD_poscall() leaves L->top just past the last result that was copied.
+
+If OP_RETURN is returning to a Lua function and if the number of return values expected was indeterminate - i.e. OP_CALL had operand C = 0, then L->top is left where luaD_poscall() placed it - just beyond the top of the result list. This allows the OP_CALL instruction to figure out how many results were returned. If however OP_CALL had invoked with a value of C > 0 then the expected number of results is known, and in that case, L->top is reset to the calling function’s C->top.
+
+If luaV_execute() was called externally then OP_RETURN leaves L->top unchanged - so it will continue to be just past the top of the results list. This is because luaV_execute() does not have a way of informing callers how many values were returned; so the caller can determine the number of results by inspecting L->top.
+
+
+
+OP_JMP A sBx   pc+=sBx; if (A) close all upvalues >= R(A - 1)
+Performs an unconditional jump, with sBx as a signed displacement. sBx is added to the program counter (PC), which points to the next instruction to be executed. If sBx is 0, the VM will proceed to the next instruction.
+
+If R(A) is not 0 then all upvalues >= R(A-1) will be closed by calling luaF_close().
+
+OP_JMP is used in loops, conditional statements, and in expressions when a boolean true/false need to be generated.
+
+
+
+OP_CLOSURE A Bx    R(A) := closure(KPROTO[Bx])
+Creates an instance (or closure) of a function prototype. The Bx parameter identifies the entry in the parent function’s table of closure prototypes (the field p in the struct Proto). The indices start from 0, i.e., a parameter of Bx = 0 references the first closure prototype in the table.
+
+The OP_CLOSURE instruction also sets up the upvalues for the closure being defined. This is an involved process that is worthy of detailed discussion, and will be described through examples.
+
+
+
+
+Lua employs two stacks. The Callinfo stack tracks activation frames. There is the secondary stack L->stack that is an array of TValue objects. The Callinfo objects index into this array. Registers are basically slots in the L->stack array.
+For each Lua function, the base of the stack is set to the first fixed parameter or local. All register addressing is done as offset from base - so R(0) is at base+0 on the stack.

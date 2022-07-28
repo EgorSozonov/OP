@@ -12,7 +12,7 @@ pub fn build(b: *std.build.Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
-    const exe = b.addExecutable("tmp", "src/main.zig");
+    const exe = b.addExecutable("tmp", "compiler/main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.install();
@@ -26,7 +26,7 @@ pub fn build(b: *std.build.Builder) void {
     const runStep = b.step("run", "Run the app");
     runStep.dependOn(&runCmd.step);
 
-    const exeTests = b.addTest("src/main.zig");
+    const exeTests = b.addTest("compiler/main.zig");
     exeTests.setTarget(target);
     exeTests.setBuildMode(mode);
 
