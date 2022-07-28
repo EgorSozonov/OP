@@ -37,3 +37,6 @@ CMakeCache.txt
 cmake_install.cmake
 bin/*
 interp.sh
+
+zig-cache/*
+zig-out/*
