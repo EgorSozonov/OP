@@ -40,3 +40,4 @@ interp.sh
 
 zig-cache/*
 zig-out/*
+*.kate-swp
