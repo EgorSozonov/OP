@@ -1,7 +1,7 @@
 #include "FileReader.h"
-
 #include <stdio.h>
 #include <string.h>
+#include "../utils/Stack.h"
 
 
 DEFINE_STACK(Instr)
