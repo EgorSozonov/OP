@@ -1,6 +1,7 @@
 ﻿#ifndef RUNTIME_H
 #define RUNTIME_H
 #include "../utils/String.h"
+#include "../utils/BoxedStackHeader.h"
 #include "../types/Types.h"
 
 
@@ -16,21 +17,23 @@ typedef struct {
         String* str;
     } value;
 } OConstant;
+DEFINE_BOXED_STACK_HEADER(OConstant)
 
 typedef struct {
     String* name;
-    Instr* instructions;
+    StackInstr* instructions;
 } OFunction;
-
-
-
+DEFINE_BOXED_STACK_HEADER(OFunction)
 
 typedef struct {
-    OConstant** constants;
-    OFunction** functions;
+    BoxedStackOConstant* constants;
+    BoxedStackOFunction* functions;
     OFunction* entryPoint;
 } OPackage;
 
+OPackage makeForTest(Arena* ar);
+
+int runPackage(OPackage package);
 
 
 #endif

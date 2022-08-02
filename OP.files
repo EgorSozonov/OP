@@ -13,6 +13,8 @@ interpreter/utils/ASCII.c
 interpreter/utils/ASCII.h
 interpreter/utils/Arena.c
 interpreter/utils/Arena.h
+interpreter/utils/BoxedStack.h
+interpreter/utils/BoxedStackHeader.h
 interpreter/utils/CMakeLists.txt
 interpreter/utils/Either.h
 interpreter/utils/EitherHeader.h

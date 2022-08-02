@@ -1,7 +1,5 @@
-#include "../utils/Arena.h"
-#include "../utils/Stack.h"
-#include "../utils/String.h"
-#include "FileReader.h"
+﻿#include "utils/Arena.h"
+#include "runtime/Runtime.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -16,7 +14,12 @@ int main(int argc, char* argv[]) {
 
 
     Arena *ar = mkArena();
-    BytecodeRead res = readBytecode("./bytecode.txt", ar);
+    //BytecodeRead res = readBytecode("./bytecode.txt", ar);
+
+
+    OPackage p = makeForTest(ar);
+    int r = runPackage(p);
+    printf("%d", r);
     arenaDelete(ar);
     return 0;
 
