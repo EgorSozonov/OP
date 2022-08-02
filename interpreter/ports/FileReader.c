@@ -1,11 +1,12 @@
-#include "FileReader.h"
+﻿#include "FileReader.h"
 #include <stdio.h>
 #include <string.h>
 #include "../utils/Stack.h"
+#include "../utils/Arena.h"
+#include "../types/Types.h"
 
 
 DEFINE_STACK(Instr)
-
 
 String* splitString(char* inp, Arena* localAr) {
     int prev = 0;
@@ -47,7 +48,7 @@ BytecodeRead readBytecode(char* fName, Arena* ar) {
     FILE * fp;
     char * line = NULL;
     size_t len = 0;
-    ssize_t read;
+    size_t read;
     fp = fopen(fName, "r");
     if (fp == NULL) exit(EXIT_FAILURE);
 

@@ -1,6 +1,7 @@
-#ifndef TYPES_H
+﻿#ifndef TYPES_H
 #define TYPES_H
 #include "../utils/StackHeader.h"
+#include "../utils/Arena.h"
 
 
 enum OpCode {
@@ -26,10 +27,6 @@ typedef struct {
 DEFINE_STACK_HEADER(Instr)
 
 
-typedef struct {
-    StackInstr* opcodes;
-    String* errMsg;
-} BytecodeRead;
 
 
 #endif

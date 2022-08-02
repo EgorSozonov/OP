@@ -41,3 +41,4 @@ interp.sh
 zig-cache/*
 zig-out/*
 *.kate-swp
+.qtc_clangd/*
