@@ -1,8 +1,7 @@
-#ifndef STRING_H
+﻿#ifndef STRING_H
 #define STRING_H
-
-
 #include "Arena.h"
+
 
 typedef struct {
     int length;

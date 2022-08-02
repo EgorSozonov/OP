@@ -1,4 +1,4 @@
-#ifndef ARENA_H
+﻿#ifndef ARENA_H
 #define ARENA_H
 
 
@@ -8,6 +8,7 @@ typedef struct Arena Arena;
 
 Arena* mkArena();
 void* arenaAllocate(Arena* ar, size_t allocSize);
+void* arenaAllocateArray(Arena* ar, size_t allocSize, int numElems);
 void arenaDelete(Arena* ar);
 
 

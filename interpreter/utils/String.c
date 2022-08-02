@@ -1,9 +1,19 @@
-#include "String.h"
+﻿#include "String.h"
 #include "Arena.h"
 #include <string.h>
 #include <math.h>
 
+
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
+///
+/// \brief allocateString allocates a C string literal into an arena. The length of the literal has to be provided in an arg.
+/// It should NOT include +1 for the \0 character, as that will be added automatically.
+/// \param ar
+/// \param length
+/// \param content
+/// \return
+///
 String* allocateString(Arena* ar, int length, char* content) {
     String* result = arenaAllocate(ar, length + 1 + sizeof(String));
     result->length = length;
